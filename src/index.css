@@ -1,0 +1,79 @@
+/* Google Fonts are loaded in index.html */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; }
+body {
+  font-family: var(--now-font-body);
+  font-size: 16px;
+  color: var(--now-text);
+  background: var(--now-bg);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* CSS variables */
+:root {
+  --now-font-body: 'Lato', sans-serif;
+  --now-font-heading: 'Cabin', sans-serif;
+  --now-primary: #1a3a6b;
+  --now-primary-light: #e7ecf5;
+  --now-primary-dark: #12294a;
+  --now-bg: #f6f7f7;
+  --now-surface: #ffffff;
+  --now-border: #e4e6e7;
+  --now-divider: #c8cccf;
+  --now-text: #1d2f36;
+  --now-text-secondary: #6b767b;
+  --now-text-disabled: #c8cccf;
+  --now-success: #1b823f;
+  --now-success-bg: #e8f5ee;
+  --now-warning: #b06b00;
+  --now-warning-bg: #fff3d6;
+  --now-error: #b91f1f;
+  --now-error-bg: #fdecea;
+  --now-info: #1a3a6b;
+  --now-info-bg: #e7ecf5;
+  --space-xxs: 2px; --space-xs: 4px; --space-sm: 8px; --space-md: 12px;
+  --space-lg: 16px; --space-xl: 24px; --space-2xl: 32px; --space-3xl: 40px;
+  --radius-sm: 2px; --radius-md: 6px; --radius-lg: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+  --shadow-md: 0 4px 8px rgba(0,0,0,0.12);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.14);
+}
+
+button { cursor: pointer; font-family: inherit; }
+
+/* Step spinner animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* AI overlay fade-in animation */
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Card entrance animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Pulsing ring for active stepper step */
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(26, 58, 107, 0.4); }
+  70%  { box-shadow: 0 0 0 8px rgba(26, 58, 107, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(26, 58, 107, 0); }
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Cursor blink for typing animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}

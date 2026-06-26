@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(osascript -e ' *)",
+      "Bash(screencapture -x /tmp/app_login.png)",
+      "Bash(screencapture /tmp/app_login.png)",
+      "Bash(node -e \"require.resolve\\('puppeteer'\\)\")",
+      "Bash(npm run *)",
+      "Bash('/Users/akshatmalviya/Projects: VsCode folders/UPS: ServiceNow/InvoiceProcessing-V5/node_modules/.bin/vite' --port 5173 --root '/Users/akshatmalviya/Projects: VsCode folders/UPS: ServiceNow/InvoiceProcessing-V5')",
+      "Bash('/Users/akshatmalviya/Projects: VsCode folders/UPS: ServiceNow/InvoiceProcessing-V5/node_modules/.bin/vite' --port 5173)",
+      "Bash(awk '{print $NF}')",
+      "Bash('/Users/akshatmalviya/Projects: VsCode folders/UPS: ServiceNow/InvoiceProcessing-V5/node_modules/.bin/tsc' --noEmit)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(find \"/Users/akshatmalviya\" -name \"INSVN50181*\" 2>/dev/null | head -10 *)",
+      "Read(//Users/akshatmalviya/**)",
+      "Bash(find /private/tmp /var/folders -name \"*.png\" -newer \"/Users/akshatmalviya/Projects: VsCode folders/UPS: ServiceNow/InvoiceProcessing-V5/src/components/ScannedInvoice.tsx\" 2>/dev/null | head -10 *)",
+      "Read(//private/var/folders/**)",
+      "Read(//c/Users/r.thothadri.iyengar/.claude/projects/**)",
+      "Read(//c/Users/r.thothadri.iyengar/Downloads/**)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell($orig = \\(Get-ChildItem -Path \"c:\\\\Users\\\\r.thothadri.iyengar\\\\Downloads\\\\InvoiceProcessing-Bertelsmann\" -Recurse | Measure-Object\\).Count; $copy = \\(Get-ChildItem -Path \"c:\\\\Users\\\\r.thothadri.iyengar\\\\Downloads\\\\InvoiceProcessing-Bertelsmann-Backup-20260626\" -Recurse | Measure-Object\\).Count; Write-Output \"Original: $orig files | Copy: $copy files\")",
+      "PowerShell(cd \"c:\\\\Users\\\\r.thothadri.iyengar\\\\Downloads\\\\InvoiceProcessing-Bertelsmann\"; $job = Start-Job { Set-Location \"c:\\\\Users\\\\r.thothadri.iyengar\\\\Downloads\\\\InvoiceProcessing-Bertelsmann\"; npm run dev 2>&1 }; Start-Sleep -Seconds 10; Receive-Job $job; Stop-Job $job; Remove-Job $job)",
+      "Read(//c/Users/RTHOTH~1.IYE/AppData/Local/Temp/**)",
+      "PowerShell(Get-Process -Name \"node\" -ErrorAction SilentlyContinue)",
+      "PowerShell(netstat -ano)",
+      "PowerShell(npm install -g @azure/static-web-apps-cli 2>&1)",
+      "PowerShell(node -e \"require\\('puppeteer'\\)\" 2>&1)",
+      "PowerShell(npm list -g puppeteer 2>&1)",
+      "PowerShell(npm install -g puppeteer 2>&1)",
+      "PowerShell($chromePaths = @\\(\"C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe\",\"C:\\\\Program Files \\(x86\\)\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe\",\"C:\\\\Program Files\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe\"\\); foreach \\($p in $chromePaths\\) { if \\(Test-Path $p\\) { Write-Output \"FOUND: $p\"; break } })"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\r.thothadri.iyengar\\Downloads\\InvoiceProcessing-Bertelsmann"
+    ]
+  }
+}
