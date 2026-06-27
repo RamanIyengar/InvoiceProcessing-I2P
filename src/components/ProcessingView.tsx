@@ -3436,7 +3436,8 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
   const cc = catColors[invoice.category] ?? { bg: '#f0f1f1', text: '#6b767b' }
 
   const isGLResolved = ((glApprovalEmailReceived || glInvoiceApproved) && invoice.failType === 'gl-missing' && invoice.glMissingVariant !== 'internal-approval' && invoice.glMissingVariant !== 'prt-coding') || (metroInvoiceApproved && invoice.failType === 'gl-missing' && invoice.glMissingVariant === 'internal-approval') || (prtInvoiceApproved && invoice.failType === 'gl-missing' && invoice.glMissingVariant === 'prt-coding')
-  const effectiveFailed = isFailed && !isGLResolved
+  const isRoyaltyResolved = invoice.failType === 'royalty-mismatch' && !!royaltyMismatchAutoResolved
+  const effectiveFailed = isFailed && !isGLResolved && !isRoyaltyResolved
 
   const scrollContent = steps.length === 0 ? (
     <div style={{ textAlign: 'center', padding: '60px', color: '#6b767b', fontSize: '16px', fontStyle: 'italic' }}>This invoice is queued for processing. Check back shortly.</div>
@@ -3493,7 +3494,7 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
         <ManualApprovalCard invoice={invoice} />
       )}
       <CompletionCards invoice={invoice} completed={completed} />
-      {(isDone || (isGLResolved && glEmailsViewed)) && <FinalSummary invoice={invoice} onShowAudit={() => setShowAudit(true)} />}
+      {(isDone || (isGLResolved && glEmailsViewed) || isRoyaltyResolved) && <FinalSummary invoice={invoice} onShowAudit={() => setShowAudit(true)} />}
     </>
   )
 
@@ -3548,12 +3549,12 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
 
   const processingPanel = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      {steps.length > 0 && <Stepper steps={steps} currentStep={currentStep} completed={isGLResolved ? new Set(steps.map((_, i) => i)) : completed} failed={effectiveFailed} />}
-      {steps.length > 0 && !isDone && !isGLResolved && (
+      {steps.length > 0 && <Stepper steps={steps} currentStep={currentStep} completed={(isGLResolved || isRoyaltyResolved) ? new Set(steps.map((_, i) => i)) : completed} failed={effectiveFailed} />}
+      {steps.length > 0 && !isDone && !isGLResolved && !isRoyaltyResolved && (
         <AgentStatusBar step={steps[currentStep]} progress={progress} agentIdx={agentIdx} stepNum={currentStep} total={steps.length} failed={effectiveFailed} isPaused={isPaused} onTogglePause={togglePause} />
       )}
       <div style={{ height: agentActivityCollapsed ? '40px' : contentScrolled ? '128px' : '290px', flexShrink: 0, overflow: 'hidden', transition: 'height 0.25s ease' }}>
-        <AgentHuddle steps={steps} currentStep={currentStep} progress={progress} completed={isGLResolved ? new Set(steps.map((_, i) => i)) : completed} isFailed={effectiveFailed} isDone={isDone || isGLResolved} isCollapsed={agentActivityCollapsed} onToggle={() => { setAgentActivityCollapsed(v => !v); setContentScrolled(false) }} invoice={invoice} />
+        <AgentHuddle steps={steps} currentStep={currentStep} progress={progress} completed={(isGLResolved || isRoyaltyResolved) ? new Set(steps.map((_, i) => i)) : completed} isFailed={effectiveFailed} isDone={isDone || isGLResolved || isRoyaltyResolved} isCollapsed={agentActivityCollapsed} onToggle={() => { setAgentActivityCollapsed(v => !v); setContentScrolled(false) }} invoice={invoice} />
       </div>
       <DocumentPanel scrollRef={contentScrollRef} onScroll={() => setContentScrolled((contentScrollRef.current?.scrollTop ?? 0) > 40)} hasContent={completed.size > 0 || isFailed}>
         {scrollContent}
