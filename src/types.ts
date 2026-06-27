@@ -137,6 +137,16 @@ export interface ReplyEmail {
   attachmentInvoiceId?: string;
 }
 
+export interface SentEmail {
+  id: string;
+  toName: string;
+  toEmail: string;
+  subject: string;
+  time: string;
+  body: string;
+  relatedInvoiceId: string;
+}
+
 export interface Invoice {
   id: string;
   invoiceNumber: string;

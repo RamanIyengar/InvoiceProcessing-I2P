@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Invoice, ReplyEmail } from '../types'
+import { Invoice, ReplyEmail, SentEmail } from '../types'
 import { ScannedInvoice } from './ScannedInvoice'
 import { correctedTaxInvoice } from '../data/mockData'
 
@@ -10,6 +10,7 @@ const ATTACHMENT_INVOICE_MAP: Record<string, Invoice> = {
 interface Props {
   invoices: Invoice[]
   replyEmails: ReplyEmail[]
+  sentEmails?: SentEmail[]
   onMarkReplyRead: (id: string) => void
   onClose: () => void
 }
@@ -17,6 +18,7 @@ interface Props {
 type SelectedItem =
   | { kind: 'invoice'; invoice: Invoice }
   | { kind: 'reply'; reply: ReplyEmail }
+  | { kind: 'sent'; sent: SentEmail }
   | null
 
 const AVATAR_COLORS = [
@@ -61,8 +63,9 @@ function EmptyStateIcon() {
 }
 
 
-export function OutlookInbox({ invoices, replyEmails, onMarkReplyRead, onClose }: Props) {
+export function OutlookInbox({ invoices, replyEmails, sentEmails = [], onMarkReplyRead, onClose }: Props) {
   const [selectedItem, setSelectedItem] = useState<SelectedItem>(null)
+  const [activeFolder, setActiveFolder] = useState<'inbox' | 'sent'>('inbox')
 
   const handleSelectInvoice = (invoice: Invoice) => {
     setSelectedItem({ kind: 'invoice', invoice })
@@ -73,8 +76,13 @@ export function OutlookInbox({ invoices, replyEmails, onMarkReplyRead, onClose }
     if (reply.isUnread) onMarkReplyRead(reply.id)
   }
 
+  const handleSelectSent = (sent: SentEmail) => {
+    setSelectedItem({ kind: 'sent', sent })
+  }
+
   const selectedInvoice = selectedItem?.kind === 'invoice' ? selectedItem.invoice : null
   const selectedReply = selectedItem?.kind === 'reply' ? selectedItem.reply : null
+  const selectedSent = selectedItem?.kind === 'sent' ? selectedItem.sent : null
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Segoe UI', sans-serif" }}>
@@ -163,10 +171,10 @@ export function OutlookInbox({ invoices, replyEmails, onMarkReplyRead, onClose }
           </button>
 
           <div style={{ padding: '8px 12px 4px', fontSize: '11px', fontWeight: 700, color: '#6b767b', textTransform: 'uppercase', letterSpacing: '0.07em' }}>AP Invoice Mailbox</div>
-          <FolderItem label="Inbox" isActive={true} />
-          <FolderItem label="Sent Items" isActive={false} />
-          <FolderItem label="Archive" isActive={false} />
-          <FolderItem label="Junk Email" isActive={false} count={1} />
+          <FolderItem label="Inbox" isActive={activeFolder === 'inbox'} onClick={() => { setActiveFolder('inbox'); setSelectedItem(null) }} />
+          <FolderItem label="Sent Items" isActive={activeFolder === 'sent'} onClick={() => { setActiveFolder('sent'); setSelectedItem(null) }} count={sentEmails.length > 0 ? sentEmails.length : undefined} countColor="#1b823f" />
+          <FolderItem label="Archive" isActive={false} onClick={() => {}} />
+          <FolderItem label="Junk Email" isActive={false} onClick={() => {}} count={1} />
         </div>
 
         {/* Message list */}
@@ -192,7 +200,7 @@ export function OutlookInbox({ invoices, replyEmails, onMarkReplyRead, onClose }
               flexShrink: 0,
             }}
           >
-            <span style={{ fontSize: '14px', fontWeight: 700, color: '#1d2f36' }}>Inbox</span>
+            <span style={{ fontSize: '14px', fontWeight: 700, color: '#1d2f36' }}>{activeFolder === 'sent' ? 'Sent Items' : 'Inbox'}</span>
             <select style={{ fontSize: '12px', border: 'none', background: 'transparent', color: '#6b767b', cursor: 'pointer' }}>
               <option>Date ↓</option>
               <option>From</option>
@@ -200,8 +208,54 @@ export function OutlookInbox({ invoices, replyEmails, onMarkReplyRead, onClose }
             </select>
           </div>
 
-          {/* Reply emails at top */}
-          {replyEmails.map(reply => {
+          {/* Sent items view */}
+          {activeFolder === 'sent' && sentEmails.map(sent => {
+            const isSelected = selectedSent?.id === sent.id
+            return (
+              <div
+                key={sent.id}
+                onClick={() => handleSelectSent(sent)}
+                style={{
+                  padding: '12px',
+                  borderBottom: '1px solid #f0f1f1',
+                  cursor: 'pointer',
+                  background: isSelected ? '#deecf9' : 'rgba(27,130,63,0.05)',
+                  borderLeft: isSelected ? '3px solid #0078d4' : '3px solid rgba(27,130,63,0.4)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1b823f', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, flexShrink: 0 }}>
+                    AP
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 500, color: '#1d2f36', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>
+                        To: {sent.toName}
+                      </span>
+                      <span style={{ fontSize: '12px', color: '#6b767b', flexShrink: 0 }}>{sent.time}</span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#1d2f36', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sent.subject}</div>
+                    <div style={{ fontSize: '12px', color: '#6b767b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ fontSize: '10px', background: 'rgba(27,130,63,0.12)', color: '#1b823f', borderRadius: '4px', padding: '1px 5px', fontWeight: 700, flexShrink: 0 }}>Sent</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sent.body.substring(0, 60)}...</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+
+          {activeFolder === 'sent' && sentEmails.length === 0 && (
+            <div style={{ padding: '32px 16px', textAlign: 'center', color: '#6b767b', fontSize: '13px', fontFamily: "'Segoe UI', sans-serif" }}>
+              No sent items
+            </div>
+          )}
+
+          {/* Reply emails at top (inbox only) */}
+          {activeFolder === 'inbox' && replyEmails.map(reply => {
             const isSelected = selectedReply?.id === reply.id
             return (
               <div
@@ -258,8 +312,8 @@ export function OutlookInbox({ invoices, replyEmails, onMarkReplyRead, onClose }
             )
           })}
 
-          {/* Invoice emails */}
-          {invoices.map(invoice => {
+          {/* Invoice emails (inbox only) */}
+          {activeFolder === 'inbox' && invoices.map(invoice => {
             const isSelected = selectedInvoice?.id === invoice.id
             return (
               <div
@@ -345,6 +399,8 @@ export function OutlookInbox({ invoices, replyEmails, onMarkReplyRead, onClose }
                 Select a message to read
               </div>
             </div>
+          ) : selectedSent ? (
+            <SentReadingPane sent={selectedSent} />
           ) : selectedReply ? (
             <ReplyReadingPane reply={selectedReply} />
           ) : selectedInvoice ? (
@@ -356,9 +412,10 @@ export function OutlookInbox({ invoices, replyEmails, onMarkReplyRead, onClose }
   )
 }
 
-function FolderItem({ label, isActive, count, countColor }: { label: string; isActive: boolean; count?: number; countColor?: string }) {
+function FolderItem({ label, isActive, count, countColor, onClick }: { label: string; isActive: boolean; count?: number; countColor?: string; onClick?: () => void }) {
   return (
     <div
+      onClick={onClick}
       style={{
         height: '36px',
         display: 'flex',
@@ -586,6 +643,40 @@ function ReplyReadingPane({ reply }: { reply: ReplyEmail }) {
       {showAttachment && attachmentInvoice && (
         <AttachmentPreviewModal invoice={attachmentInvoice} onClose={() => setShowAttachment(false)} />
       )}
+    </div>
+  )
+}
+
+function SentReadingPane({ sent }: { sent: SentEmail }) {
+  return (
+    <div>
+      <div style={{ padding: '24px 28px 16px', borderBottom: '1px solid #e4e6e7' }}>
+        <h1 style={{ fontFamily: 'Cabin, sans-serif', fontSize: '24px', fontWeight: 700, color: '#1d2f36', margin: '0 0 16px' }}>
+          {sent.subject}
+        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1b823f', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, flexShrink: 0 }}>
+            AP
+          </div>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: '#1d2f36', fontFamily: "'Segoe UI', sans-serif" }}>
+              Bertelsmann AP Team
+            </div>
+            <div style={{ fontSize: '12px', color: '#6b767b', fontFamily: "'Segoe UI', sans-serif" }}>
+              accounts.payable@bertelsmann.de
+            </div>
+          </div>
+        </div>
+        <div style={{ fontSize: '13px', color: '#6b767b', marginBottom: '4px', fontFamily: "'Segoe UI', sans-serif" }}>
+          <span style={{ fontWeight: 600, color: '#1d2f36' }}>To:</span> {sent.toName} &lt;{sent.toEmail}&gt;
+        </div>
+        <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: "'Segoe UI', sans-serif" }}>
+          <span style={{ fontWeight: 600, color: '#1d2f36' }}>Sent:</span> {sent.time}
+        </div>
+      </div>
+      <div style={{ padding: '24px 28px', fontFamily: "'Segoe UI', sans-serif", fontSize: '14px', lineHeight: '1.7', color: '#1d2f36' }}>
+        <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'Lato, sans-serif', fontSize: '14px', lineHeight: '1.7' }}>{sent.body}</div>
+      </div>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { Invoice, ReplyEmail } from '../types'
+import { Invoice, ReplyEmail, SentEmail } from '../types'
 
 // ─── Agentic pipeline definitions (SAP / OpenText VIM stack, playbook agent vocabulary) ──
 
@@ -954,6 +954,41 @@ Best regards,
 Claire Newton
 Royalties Manager — Penguin Random House LLC
 c.newton@penguinrandomhouse.com`,
+}
+
+// Sent email — AP team notifies Claire Newton of royalty rate deviation
+export const royaltyDeviationSentEmail: SentEmail = {
+  id: 'sent-royalty-deviation',
+  toName: 'Claire Newton',
+  toEmail: 'c.newton@penguinrandomhouse.com',
+  subject: 'Royalty Rate Deviation — WYL-RY-2026-0312 — Eleanor Vance, "The Long Horizon"',
+  time: 'just now',
+  relatedInvoiceId: 'inv-13',
+  body: `Dear Claire,
+
+We are writing to flag a royalty rate deviation on the following invoice received from The Wylie Agency LLC.
+
+Invoice Details:
+  Invoice Number:   WYL-RY-2026-0312
+  Author:           Eleanor Vance
+  Title:            The Long Horizon
+  Contract Ref:     PRH-CTR-2023-4471
+  Invoice Date:     15 June 2026
+
+Rate Deviation Detected:
+  Invoiced Rate:    15.0% on hardback net receipts
+  Contract Rate:    12.5% on hardback net receipts (per SAP contract master)
+  Amount at 15.0%:  $32,400.00
+  Amount at 12.5%:  $27,000.00
+  Variance:         $5,400.00 USD
+
+Our AI agent has cross-referenced the invoice against the abstracted contract terms (PRH-CTR-2023-4471) and identified a deviation of $5,400.00. Could you please confirm the correct rate and authorise payment at the appropriate amount?
+
+Please reply to this email with your confirmation. No action is required from your side if the invoiced rate of 15.0% is correct and reflects an agreed contract amendment we are not yet aware of.
+
+Kind regards,
+Bertelsmann AP Team
+accounts.payable@bertelsmann.de`,
 }
 
 // Corrected invoice submitted by supplier after rejection

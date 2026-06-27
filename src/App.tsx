@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Invoice, ReplyEmail } from './types'
+import { Invoice, ReplyEmail, SentEmail } from './types'
 import { LoginScreen } from './components/LoginScreen'
 import { OutlookLoginScreen } from './components/OutlookLoginScreen'
 import { AppHeader } from './components/AppHeader'
@@ -7,7 +7,7 @@ import { Sidebar, SidebarTab } from './components/Sidebar'
 import { DashboardView } from './components/DashboardView'
 import { InvoiceWorkspace } from './components/InvoiceWorkspace'
 import { AuditTrailPage } from './components/AuditTrailPage'
-import { taxMismatchReplyEmails, glApprovalReplyEmail, metroGLReplyEmails, prtGLReplyEmails, missingGRReplyEmail, royaltyMismatchReplyEmail, mockInvoices } from './data/mockData'
+import { taxMismatchReplyEmails, glApprovalReplyEmail, metroGLReplyEmails, prtGLReplyEmails, missingGRReplyEmail, royaltyMismatchReplyEmail, royaltyDeviationSentEmail, mockInvoices } from './data/mockData'
 import { LandingScreen } from './components/LandingScreen'
 import { OutlookInbox } from './components/OutlookInbox'
 import { TicketsView } from './components/TicketsView'
@@ -412,6 +412,7 @@ export default function App() {
   const [metroGLApprovalSent, setMetroGLApprovalSent] = useState(false)
   const [metroApprovedIds, setMetroApprovedIds] = useState<Set<string>>(new Set())
   const [royaltySent, setRoyaltySent] = useState(false)
+  const [sentEmails, setSentEmails] = useState<SentEmail[]>([])
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | null>(null)
@@ -481,6 +482,7 @@ export default function App() {
   const handleRoyaltySent = () => {
     if (royaltySent) return
     setRoyaltySent(true)
+    setSentEmails(prev => prev.some(e => e.id === royaltyDeviationSentEmail.id) ? prev : [royaltyDeviationSentEmail, ...prev])
     setToastMessage('Royalty deviation routed to Claire Newton · c.newton@penguinrandomhouse.com')
     setToastAction(null)
     setToastVisible(true)
@@ -612,6 +614,7 @@ export default function App() {
       <OutlookInbox
         invoices={mockInvoices}
         replyEmails={replyEmails}
+        sentEmails={sentEmails}
         onMarkReplyRead={handleMarkReplyRead}
         onClose={() => {
           if (prtGLBothApproved && selectedInvoice?.glMissingVariant === 'prt-coding') {
