@@ -582,7 +582,7 @@ function RoyaltyInvoice({ vc }: { vc: number }) {
       </div>
 
       <div style={{ borderTop: '1px solid #ddd', paddingTop: '12px', fontSize: '10px', color: '#888', lineHeight: '1.7', fontFamily: 'Arial, sans-serif' }}>
-        Royalty invoiced at 15.0% on hardback net receipts. Per contract PRH-CTR-2023-4471, the agreed hardback rate is 12.5%. Remit to The Wylie Agency LLC client account.
+        Royalty calculated at 15.0% on hardback net receipts (H1 2026). Remit to The Wylie Agency LLC client account. Contract Ref: PRH-CTR-2023-4471.
       </div>
     </div>
   )

@@ -2371,13 +2371,17 @@ function StickyResolvePanel({ title, subtitle, buttonLabel, onResolve }: { title
   )
 }
 
-function AutoApprovePanel({ invoice, variant = 'auto', onViewPosting }: { invoice: Invoice; variant?: 'auto' | 'gl-resolved'; onViewPosting?: () => void }) {
+function AutoApprovePanel({ invoice, variant = 'auto', onViewPosting }: { invoice: Invoice; variant?: 'auto' | 'gl-resolved' | 'royalty-resolved'; onViewPosting?: () => void }) {
   const title = variant === 'gl-resolved'
     ? 'GL Code Approved — Sent to SAP Payment Run'
-    : 'Auto-Approved · Sent to SAP Payment Run'
+    : variant === 'royalty-resolved'
+      ? 'Approved at Contract Rate — Sent to SAP Payment Run'
+      : 'Auto-Approved · Sent to SAP Payment Run'
   const subtitle = variant === 'gl-resolved'
     ? `${invoice.invoiceNumber} — GL code approved by all required parties, invoice routed for payment`
-    : `${invoice.invoiceNumber} — all validations passed, no manual approval required`
+    : variant === 'royalty-resolved'
+      ? `${invoice.invoiceNumber} — payment authorised at contract rate 12.5% ($27,000.00 USD). No corrected invoice required — Royalties Management confirmation on file.`
+      : `${invoice.invoiceNumber} — all validations passed, no manual approval required`
   return (
     <div style={{ flexShrink: 0, borderTop: '2px solid #1b823f', background: '#e8f5ee', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
       <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1b823f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><CheckIcon size={22} /></div>
@@ -3189,12 +3193,13 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
   // Compute before any state — GL approval already granted means we skip animation
   const cachedGL = invoice.failType === 'gl-missing' ? (glCodeCache.get(invoice.id) ?? null) : null
   const skipGLAnimation = invoice.failType === 'gl-missing' && !!(cachedGL?.glApprovalEmailSent || cachedGL?.glApprovalEmailReceived)
+  const skipRoyaltyAnimation = invoice.failType === 'royalty-mismatch' && royaltyMismatchAutoResolved
   void (invoice.failType === 'tax-mismatch' ? taxMismatchCache.get(invoice.id) : null)
   const _stepsForInit = invoice.agentSteps
   const _failStepForInit = invoice.failAtStep ?? Math.max(0, _stepsForInit.length - 1)
 
-  const [currentStep, setCurrentStep] = useState(skipGLAnimation ? _failStepForInit : 0)
-  const [progress, setProgress] = useState(skipGLAnimation ? 100 : 0)
+  const [currentStep, setCurrentStep] = useState((skipGLAnimation || skipRoyaltyAnimation) ? _failStepForInit : 0)
+  const [progress, setProgress] = useState((skipGLAnimation || skipRoyaltyAnimation) ? 100 : 0)
   const [agentIdx, setAgentIdx] = useState(skipGLAnimation ? Math.max(0, (_stepsForInit[_failStepForInit]?.agents.length ?? 1) - 1) : 0)
   const [completed, setCompleted] = useState<Set<number>>(() =>
     skipGLAnimation ? new Set(Array.from({ length: _failStepForInit }, (_, i) => i)) : new Set()
@@ -3481,7 +3486,7 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
           </div>
         </div>
       )}
-      {isFailed && invoice.failType === 'royalty-mismatch' && royaltyMismatchAutoResolved && <AutoApprovePanel invoice={invoice} onViewPosting={() => setShowSAPPosting(true)} />}
+      {isFailed && invoice.failType === 'royalty-mismatch' && royaltyMismatchAutoResolved && <AutoApprovePanel invoice={invoice} variant="royalty-resolved" onViewPosting={() => setShowSAPPosting(true)} />}
       {isFailed && invoice.failType === 'tax-mismatch' && !taxMismatchAutoResolved && (
         <StickyTaxMismatchPanel notificationSent={taxNotificationSent} onOpenComms={() => setShowCommsModal(true)} supplierName={invoice.supplier} />
       )}
