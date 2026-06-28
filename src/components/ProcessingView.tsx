@@ -22,6 +22,10 @@ interface Props {
   glEmailsViewed?: boolean
   onRoyaltySent?: () => void
   royaltyMismatchAutoResolved?: boolean
+  onICMismatchSend?: () => void
+  icMismatchAutoResolved?: boolean
+  onRescanSent?: () => void
+  rescanReplyReceived?: boolean
 }
 
 const STEP_DURATION_MS = 4000
@@ -799,7 +803,7 @@ function OutlookModal({ invoice, onClose }: { invoice: Invoice; onClose: () => v
             <p style={{ fontSize: '13px', color: '#333', lineHeight: '1.6' }}>
               Dear {invoice.supplier} Finance Team,<br /><br />
               We are processing invoice <strong>{invoice.invoiceNumber}</strong> and require clarification before we can proceed.<br /><br />
-              <em style={{ color: '#6b767b' }}>— Sent via Bertelsmann AP Automation · ServiceNow S2P</em>
+              <em style={{ color: '#6b767b' }}>— Sent via Bertelsmann AP Automation · SAP S/4HANA VIM</em>
             </p>
           </div>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
@@ -956,12 +960,27 @@ function AgentHuddle({ steps, currentStep, progress, completed, isFailed, isDone
         })
       : step.agents
 
+    // Which agent in this step should show as failed, based on failType
+    const effectiveFailingIdx = (() => {
+      if (!stepFailed) return -1
+      const agentForFailType: Record<string, string> = {
+        'missing-gr':       'Matching & GL Advisor (Ma)',
+        'duplicate':        'Payment Validator (Pv)',
+        'tax-mismatch':     '3-Way Match Agent',
+        'ic-mismatch':      'Predictive IC & Royalty Agent',
+        'royalty-mismatch': 'Predictive IC & Royalty Agent',
+      }
+      const target = agentForFailType[invoice?.failType ?? '']
+      const idx = target ? step.agents.indexOf(target) : -1
+      return idx >= 0 ? idx : step.agents.length - 1
+    })()
+
     for (let ai = 0; ai < visibleAgents.length; ai++) {
       const agentName = visibleAgents[ai]
-      const isLastInStep = ai === step.agents.length - 1
       const isCurrentEntry = stepCurrent && ai === visibleAgents.length - 1
-      const isEntryFailed = stepFailed && isLastInStep
-      const isEntryComplete = stepCompleted || (!isCurrentEntry && !isEntryFailed)
+      const isEntryFailed = stepFailed && ai === effectiveFailingIdx
+      const isAfterFailing = stepFailed && ai > effectiveFailingIdx
+      const isEntryComplete = !isAfterFailing && (stepCompleted || (!isCurrentEntry && !isEntryFailed))
 
       entries.push({ agentName, isCurrentEntry, isEntryFailed, isEntryComplete, stepIdx: si })
     }
@@ -1064,6 +1083,15 @@ function AgentHuddle({ steps, currentStep, progress, completed, isFailed, isDone
                     if (entry.agentName === 'Predictive IC & Royalty Agent' && entry.isEntryFailed && invoice?.failType === 'royalty-mismatch') {
                       const info = invoice.royaltyMismatchInfo
                       return `Royalty rate deviation detected — invoiced at ${info?.invoicedRate}, contract rate ${info?.contractRate} (${info?.contractRef}). Variance $${info?.variance?.toLocaleString('en-US', { minimumFractionDigits: 2 })} flagged for Royalties Management review`
+                    }
+                    if (entry.agentName === 'Matching & GL Advisor (Ma)' && entry.isEntryFailed && invoice?.failType === 'missing-gr') {
+                      return 'Service Entry Sheet not found — milestone not booked in SAP. Processing halted pending SES confirmation'
+                    }
+                    if (entry.agentName === 'Payment Validator (Pv)' && entry.isEntryFailed && invoice?.failType === 'duplicate') {
+                      return 'Duplicate detected — invoice reference already present in 12-month payment history'
+                    }
+                    if (entry.agentName === '3-Way Match Agent' && entry.isEntryFailed && invoice?.failType === 'tax-mismatch') {
+                      return 'Tax rate mismatch — VAT on invoice differs from statutory rate in SAP DRC. Routed to Tax Review Queue'
                     }
                     if (entry.agentName === 'Matching & GL Advisor (Ma)' && isNonPO) {
                       return isInternalApproval
@@ -1251,7 +1279,7 @@ function LineItemsAccordion({ items, showStatus }: { items: LineItem[]; showStat
 
 // ─── Completion Cards ─────────────────────────────────────────────────────────
 
-function CompletionCards({ invoice, completed }: { invoice: Invoice; completed: Set<number> }) {
+function CompletionCards({ invoice, completed, appliedGLCode, isGLResolved }: { invoice: Invoice; completed: Set<number>; appliedGLCode?: string | null; isGLResolved?: boolean }) {
   const f = invoice.extractedFields
   const isPO = invoice.category === 'PO'
   const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: f.currency }).format(n)
@@ -1264,7 +1292,10 @@ function CompletionCards({ invoice, completed }: { invoice: Invoice; completed: 
           <FieldRow label="Email subject" value={invoice.emailSubject} />
           <FieldRow label="Detected at" value={`${invoice.emailTime} · ${invoice.receivedAt}`} />
           <FieldRow label="Classification" value={isPO ? 'Purchase Invoice (PO-backed)' : 'Service Invoice (Non-PO)'} status="ok" />
-          <ConfidenceRagRow label="Confidence" score={Math.min(Math.round(Object.values(invoice.extractedFields.fieldConfidences).reduce((a, b) => a + b, 0) / Object.values(invoice.extractedFields.fieldConfidences).length), (invoice.id === 'inv-9' || invoice.id === 'inv-10' || invoice.id === 'inv-11') ? 89 : 100)} />
+          {isGLResolved
+            ? <FieldRow label="Confidence" value="Verified — fields confirmed by AP analyst" status="ok" />
+            : <ConfidenceRagRow label="Confidence" score={Math.min(Math.round(Object.values(invoice.extractedFields.fieldConfidences).reduce((a, b) => a + b, 0) / Object.values(invoice.extractedFields.fieldConfidences).length), (invoice.id === 'inv-9' || invoice.id === 'inv-10') ? 89 : 100)} />
+          }
           {f.lineItems && f.lineItems.length > 0 && <LineItemsAccordion items={f.lineItems} />}
         </InfoCard>
       )}
@@ -1282,10 +1313,11 @@ function CompletionCards({ invoice, completed }: { invoice: Invoice; completed: 
         <>
           {(() => {
             const isGLMissing = !isPO && invoice.failType === 'gl-missing' && (f.conflictingGLCodes?.length ?? 0) > 0
+            const glResolved = isGLMissing && !!isGLResolved
             const conflictCodes = f.conflictingGLCodes ?? []
             const highestConf = conflictCodes.length > 0 ? Math.max(...conflictCodes.map(c => c.percentage)) : 0
             return (
-              <InfoCard title={isPO ? 'PO & Service Entry' : 'GL Coding & Cost Assignment'} status={isGLMissing ? 'pending' : 'complete'}>
+              <InfoCard title={isPO ? 'PO & Service Entry' : 'GL Coding & Cost Assignment'} status={(isGLMissing && !glResolved) ? 'pending' : 'complete'}>
                 {isPO ? (
                   <>
                     <FieldRow label="PO Number" value={f.poNumber ?? '—'} mono />
@@ -1293,6 +1325,16 @@ function CompletionCards({ invoice, completed }: { invoice: Invoice; completed: 
                     <FieldRow label="SES / GR Number" value={f.sesNumber ?? f.grNumber ?? '—'} mono />
                     <FieldRow label="SES Status" value="Booked in SAP" status="ok" />
                     <FieldRow label="Tolerance Rule" value="± 0.5% of PO value" />
+                  </>
+                ) : glResolved ? (
+                  <>
+                    <FieldRow label="GL Account" value={appliedGLCode ?? f.glAccount ?? '—'} mono status="ok" />
+                    <FieldRow label="Cost Center" value={f.costCenter ?? 'CC-ARV-IT-001'} />
+                    {f.businessUnit && <FieldRow label="Business Unit" value={f.businessUnit} />}
+                    <FieldRow label="Tax Code" value={f.taxCode ?? 'DE-VAT-STD'} mono />
+                    <FieldRow label="GL Approval" value={invoice.id === 'inv-6' ? 'Confirmed by Caroline Hoffmann (Marketing Director, BMS)' : 'Approved by Markus Weber & Anja Krüger'} status="ok" />
+                    <FieldRow label="Service Receipt" value={invoice.id === 'inv-6' ? 'Delivery confirmed by Cost Centre Owner' : 'Confirmed'} status="ok" />
+                    <FieldRow label="Coding Confidence" value="Manual assignment — AP analyst verified" status="ok" />
                   </>
                 ) : isGLMissing ? (
                   <>
@@ -1314,8 +1356,8 @@ function CompletionCards({ invoice, completed }: { invoice: Invoice; completed: 
                     <FieldRow label="GL Account" value={f.glAccount ?? '—'} />
                     <FieldRow label="Cost Center" value={f.costCenter ?? '—'} />
                     {f.accountNumber && <FieldRow label="Account Number" value={f.accountNumber} mono />}
-                    {f.appropriationNumber && <FieldRow label="Appropriation Number" value={f.appropriationNumber} mono />}
-                    {f.parNumber && <FieldRow label="PAR Number" value={f.parNumber} mono />}
+                    {f.appropriationNumber && <FieldRow label="Episode Range" value={f.appropriationNumber} mono />}
+                    {f.parNumber && <FieldRow label="Production No." value={f.parNumber} mono />}
                     <FieldRow label="Business Unit" value={f.businessUnit ?? '—'} />
                     <FieldRow label="Tax Code" value={f.taxCode ?? '—'} mono />
                     {!f.appropriationNumber && <FieldRow label="Coding Confidence" value={`${f.codingConfidence ?? 0}% — AI model above threshold`} status="ok" />}
@@ -1643,9 +1685,13 @@ function GLMissingCard({ invoice, appliedCode, manualGLCode, onManualChange, onS
           <div>
             <div style={{ fontSize: '13px', fontWeight: 700, color: '#6b767b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px', fontFamily: 'Cabin, sans-serif' }}>AI-Recommended GL Codes</div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
-              {(invoice.id === 'inv-10'
-                ? [{ code: '6180-002', label: 'IT Services', conf: '74%' }, { code: '6300-007', label: 'Professional Services', conf: '68%' }, { code: '6250-004', label: 'Training & Development', conf: '61%' }]
-                : [{ code: '6200-001', label: 'Office Equipment', conf: '74%' }, { code: '6210-005', label: 'Stationery & Supplies', conf: '68%' }, { code: '6150-008', label: 'Facilities & Services', conf: '61%' }]
+              {(invoice.id === 'inv-6'
+                ? [{ code: '6610-002', label: 'Marketing & Advertising', conf: '38%' }, { code: '6620-001', label: 'Creative Agency Fees', conf: '34%' }, { code: '6630-005', label: 'Brand & Campaign Services', conf: '28%' }]
+                : invoice.id === 'inv-7'
+                  ? [{ code: '6300-020', label: 'Print & Production', conf: '78%' }, { code: '6320-010', label: 'Book Manufacturing', conf: '69%' }, { code: '6310-005', label: 'Editorial & Production', conf: '62%' }]
+                  : invoice.id === 'inv-10'
+                    ? [{ code: '6180-002', label: 'IT Services', conf: '74%' }, { code: '6300-007', label: 'Professional Services', conf: '68%' }, { code: '6250-004', label: 'Training & Development', conf: '61%' }]
+                    : [{ code: '6200-001', label: 'Office Equipment', conf: '74%' }, { code: '6210-005', label: 'Stationery & Supplies', conf: '68%' }, { code: '6150-008', label: 'Facilities & Services', conf: '61%' }]
               ).map(item => (
                 <button key={item.code} onClick={() => onManualChange(item.code)} style={{ background: manualGLCode === item.code ? '#e7ecf5' : '#f6f7f7', border: `1.5px solid ${manualGLCode === item.code ? '#1a3a6b' : '#e4e6e7'}`, borderRadius: '6px', padding: '8px 12px', cursor: 'pointer', textAlign: 'left' }}>
                   <div style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 700, color: manualGLCode === item.code ? '#1a3a6b' : '#b91f1f' }}>{item.code}</div>
@@ -1681,6 +1727,8 @@ function GLMissingCard({ invoice, appliedCode, manualGLCode, onManualChange, onS
 
 function MetroGLMissingCard({ invoice, metroGLApprovalSent, metroApproved, metroInvoiceApproved }: { invoice: Invoice; metroGLApprovalSent?: boolean; metroApproved?: boolean; metroInvoiceApproved?: boolean }) {
   const conflictingCodes = invoice.extractedFields.conflictingGLCodes ?? []
+  const sortedCodes = [...conflictingCodes].sort((a, b) => b.percentage - a.percentage)
+  const topCode = sortedCodes[0] ?? null
 
   // Terminal: invoice approved
   if (metroInvoiceApproved) {
@@ -1737,15 +1785,21 @@ function MetroGLMissingCard({ invoice, metroGLApprovalSent, metroApproved, metro
               <div style={{ fontSize: '13px', color: '#7a4a00', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Approval request sent to m.weber@bertelsmann.de · CC: a.krueger@bertelsmann.de. Check your Outlook inbox for a reply.</div>
             </div>
           </div>
-          {conflictingCodes.length > 0 && (
+          {sortedCodes.length > 0 && (
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {conflictingCodes.map(item => (
-                <div key={item.code} style={{ background: '#f6f7f7', border: '1px solid #e4e6e7', borderRadius: '6px', padding: '8px 12px', minWidth: '140px' }}>
-                  <div style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 700, color: '#b91f1f' }}>{item.code}</div>
-                  <div style={{ fontSize: '12px', color: '#6b767b', fontFamily: 'Lato, sans-serif' }}>{item.label}</div>
-                  <div style={{ fontSize: '11px', color: '#b06b00', fontWeight: 600, marginTop: '2px' }}>AI: {item.percentage}%</div>
-                </div>
-              ))}
+              {sortedCodes.map(item => {
+                const isTop = topCode && item.code === topCode.code
+                return (
+                  <div key={item.code} style={{ background: isTop ? '#eff6ff' : '#f6f7f7', border: `1px solid ${isTop ? '#2563eb' : '#e4e6e7'}`, borderRadius: '6px', padding: '8px 12px', minWidth: '140px', position: 'relative', paddingTop: isTop ? '20px' : '8px' }}>
+                    {isTop && (
+                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: '#2563eb', color: '#fff', fontSize: '9px', fontWeight: 700, padding: '2px 8px', borderRadius: '5px 5px 0 0', fontFamily: 'Cabin, sans-serif', letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: 'center' }}>AI Recommended</div>
+                    )}
+                    <div style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 700, color: isTop ? '#1d4ed8' : '#b91f1f' }}>{item.code}</div>
+                    <div style={{ fontSize: '12px', color: '#6b767b', fontFamily: 'Lato, sans-serif' }}>{item.label}</div>
+                    <div style={{ fontSize: '11px', color: isTop ? '#1d4ed8' : '#b06b00', fontWeight: 600, marginTop: '2px' }}>AI: {item.percentage}%</div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
@@ -1766,18 +1820,29 @@ function MetroGLMissingCard({ invoice, metroGLApprovalSent, metroApproved, metro
         <p style={{ fontSize: '15px', color: '#5a2020', lineHeight: '1.6', fontFamily: 'Lato, sans-serif', marginBottom: '16px', background: '#fdecea', padding: '12px 16px', borderRadius: '6px', borderLeft: '3px solid #b91f1f' }}>
           The GL Coding Agent identified 3 conflicting GL accounts. This invoice requires GL code confirmation from the Cost Centre Owner and AP Lead before payment can proceed.
         </p>
-        {conflictingCodes.length > 0 && (
+        {sortedCodes.length > 0 && (
           <div>
             <div style={{ fontSize: '13px', fontWeight: 700, color: '#6b767b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px', fontFamily: 'Cabin, sans-serif' }}>Conflicting GL Accounts</div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
-              {conflictingCodes.map(item => (
-                <div key={item.code} style={{ background: '#f6f7f7', border: '1px solid #e4e6e7', borderRadius: '6px', padding: '8px 12px', minWidth: '140px' }}>
-                  <div style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 700, color: '#b91f1f' }}>{item.code}</div>
-                  <div style={{ fontSize: '12px', color: '#6b767b', fontFamily: 'Lato, sans-serif' }}>{item.label}</div>
-                  <div style={{ fontSize: '11px', color: '#b06b00', fontWeight: 600, marginTop: '2px' }}>AI: {item.percentage}%</div>
-                </div>
-              ))}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+              {sortedCodes.map(item => {
+                const isTop = topCode && item.code === topCode.code
+                return (
+                  <div key={item.code} style={{ background: isTop ? '#eff6ff' : '#f6f7f7', border: `1px solid ${isTop ? '#2563eb' : '#e4e6e7'}`, borderRadius: '6px', padding: '8px 12px', minWidth: '140px', position: 'relative', paddingTop: isTop ? '20px' : '8px' }}>
+                    {isTop && (
+                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: '#2563eb', color: '#fff', fontSize: '9px', fontWeight: 700, padding: '2px 8px', borderRadius: '5px 5px 0 0', fontFamily: 'Cabin, sans-serif', letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: 'center' }}>AI Recommended</div>
+                    )}
+                    <div style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 700, color: isTop ? '#1d4ed8' : '#b91f1f' }}>{item.code}</div>
+                    <div style={{ fontSize: '12px', color: '#6b767b', fontFamily: 'Lato, sans-serif' }}>{item.label}</div>
+                    <div style={{ fontSize: '11px', color: isTop ? '#1d4ed8' : '#b06b00', fontWeight: 600, marginTop: '2px' }}>AI: {item.percentage}%</div>
+                  </div>
+                )
+              })}
             </div>
+            {topCode && (
+              <div style={{ fontSize: '12px', color: '#1e40af', fontFamily: 'Lato, sans-serif', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '5px', padding: '8px 12px', marginBottom: '14px' }}>
+                <span style={{ fontWeight: 700 }}>AI top pick: {topCode.code} — {topCode.label}</span> ({topCode.percentage}% confidence). Below the 60% auto-assign threshold — Cost Centre Owner confirmation required before applying.
+              </div>
+            )}
           </div>
         )}
         <div style={{ border: '1px solid #e4e6e7', borderRadius: '6px', padding: '12px 16px', marginBottom: '12px', background: '#f9fafb' }}>
@@ -1814,22 +1879,20 @@ function PRTCodingCard({ invoice, prtApproved, glApproved, onApprove, invoiceApp
   const [step, setStep] = useState(0)
 
   const f = invoice.extractedFields
-  const costCenter = f.costCenter ?? 'CC-ASYS-IT-0042'
-  const accountNo = f.accountNumber ?? '6180-002'
-  const wbsEl = f.wbsElement ?? 'D-2029.IT.805089'
-  const parNo = f.parNumber ?? 'P42529'
-  const approNo = f.appropriationNumber ?? '2029240740'
-  const contractNo = '82580'
-  const amount = '12090'
-  const itemNo = 'Item#'
-  const codingString = `${wbsEl}.${parNo}.${approNo}.CON${contractNo}.EUR${amount}.${itemNo}`
+  const costCenter = f.costCenter ?? 'CC-FRM-PROD-2026'
+  const accountNo = f.accountNumber ?? '6320-001'
+  const wbsEl = f.wbsElement ?? 'FRM.PROD.2026.RT-S01.VFX'
+  const prodNo = f.parNumber ?? 'P-RT01-26'
+  const epRange = f.appropriationNumber ?? 'E07-10'
+  const contractRef = 'C-PXM2026'
+  const codingString = `${wbsEl}.${prodNo}.${epRange}.${contractRef}`
 
   const prtSteps = [
-    { label: 'Navigating to SAP Project System (PS)', detail: 'Agent authenticated into SAP PS via SSO — session initiated', status: 'done' },
-    { label: 'Looking up Cost Centre & Account No. in SAP', detail: `Fetched Cost Centre as ${costCenter} & Account No. as ${accountNo} from SAP. Cost Centre and Account No. matched — Appropriation No. ${approNo} · PAR No. ${parNo}`, status: 'done' },
-    { label: 'Retrieving WBS element / cost object', detail: `WBS element: ${wbsEl}`, status: 'done' },
-    { label: 'Retrieving Item# from the coding workbook based on Account No.', detail: `Account No. ${accountNo} → ${itemNo} (to be confirmed by reviewer)`, status: 'done' },
-    { label: 'Generating WBS coding string based on cost-object rules', detail: codingString, status: 'warn' },
+    { label: 'Navigating to SAP Project System (PS)', detail: 'Agent authenticated into SAP PS via SSO — production project structure loaded', status: 'done' },
+    { label: 'Looking up Cost Centre & Account No. in SAP', detail: `Cost Centre ${costCenter} and Account No. ${accountNo} (Content Production — VFX) matched to production contract. Production No. ${prodNo} · Episode Range ${epRange}`, status: 'done' },
+    { label: 'Retrieving WBS element / cost object', detail: `Primary WBS element: ${wbsEl} — co-production flag detected on Episodes 9–10`, status: 'done' },
+    { label: 'Identifying co-production episode split', detail: `EP7–8 → FRM.PROD (100% Fremantle) · EP9–10 → FRM.COPRO (50% Canal+ cross-charge). Per-episode cost allocation cannot be auto-confirmed without Production Cost Allocation Schedule.`, status: 'done' },
+    { label: 'Generating production WBS coding string — co-production split flagged', detail: codingString, status: 'warn' },
   ]
 
   useEffect(() => {
@@ -1856,8 +1919,8 @@ function PRTCodingCard({ invoice, prtApproved, glApproved, onApprove, invoiceApp
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
             {[
-              { name: 'Daniel Roth', role: 'Requestor' },
-              { name: 'Thomas Lindqvist', role: 'Head of Department' },
+              { name: 'Claudia Bauer', role: 'Production Finance Manager' },
+              { name: 'Marc Olivier-Leblanc', role: 'VP Finance, Content — RTL Group' },
             ].map(a => (
               <div key={a.name} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f0faf5', border: '1px solid #c8e6c9', borderRadius: '6px', padding: '8px 12px' }}>
                 <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#1b823f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><CheckIcon size={12} /></div>
@@ -1891,8 +1954,8 @@ function PRTCodingCard({ invoice, prtApproved, glApproved, onApprove, invoiceApp
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '20px' }}>
             {[
-              { name: 'Daniel Roth', role: 'Requestor', time: 'Approved' },
-              { name: 'Thomas Lindqvist', role: 'Head of Department', time: 'Approved' },
+              { name: 'Claudia Bauer', role: 'Production Finance Manager', time: 'Confirmed' },
+              { name: 'Marc Olivier-Leblanc', role: 'VP Finance, Content — RTL Group', time: 'Confirmed' },
             ].map(a => (
               <div key={a.name} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f0faf5', border: '1px solid #c8e6c9', borderRadius: '6px', padding: '8px 12px' }}>
                 <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#1b823f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><CheckIcon size={12} /></div>
@@ -1907,7 +1970,7 @@ function PRTCodingCard({ invoice, prtApproved, glApproved, onApprove, invoiceApp
             style={{ width: '100%', padding: '12px 0', background: '#1b823f', color: '#fff', border: 'none', borderRadius: '7px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
             <CheckIcon size={16} />
-            Approve Invoice
+            Post to SAP
           </button>
         </div>
       </div>
@@ -1998,11 +2061,10 @@ function PRTCodingCard({ invoice, prtApproved, glApproved, onApprove, invoiceApp
               {[
                 { label: 'WBS Element', value: wbsEl },
                 { label: 'Account No.', value: accountNo },
-                { label: 'PAR No.', value: parNo },
-                { label: 'Appropriation No.', value: approNo },
-                { label: 'Contract No.', value: contractNo },
-                { label: 'Amount', value: `€${amount}` },
-                { label: 'Item# (from coding workbook)', value: itemNo },
+                { label: 'Production No.', value: prodNo },
+                { label: 'Episode Range', value: epRange },
+                { label: 'Contract Ref.', value: contractRef },
+                { label: 'Amount', value: `€${(invoice.extractedFields.totalAmount ?? 175000).toLocaleString('de-DE', { minimumFractionDigits: 2 })}` },
                 { label: 'Cost Centre', value: costCenter },
               ].map(({ label, value }) => (
                 <div key={label} style={{ background: '#f6f7f7', borderRadius: '4px', padding: '6px 10px' }}>
@@ -2403,9 +2465,43 @@ function AutoApprovePanel({ invoice, variant = 'auto', onViewPosting }: { invoic
   )
 }
 
-function ManualApprovalCard({ invoice }: { invoice: Invoice }) {
+function ManualApprovalCard({ invoice, rescanReplyReceived }: { invoice: Invoice; rescanReplyReceived?: boolean }) {
   const confs = invoice.extractedFields.fieldConfidences
-  const avg = Math.round(Object.values(confs).reduce((a, b) => a + b, 0) / Object.values(confs).length)
+  const rescanConfs: Record<string, number> = Object.fromEntries(Object.keys(confs).map((k, i) => [k, 97 + (i % 3)]))
+  const displayConfs = rescanReplyReceived ? rescanConfs : confs
+  const avg = Math.round(Object.values(displayConfs).reduce((a, b) => a + b, 0) / Object.values(displayConfs).length)
+  const failStepName = invoice.agentSteps[invoice.failAtStep ?? (invoice.agentSteps.length - 1)]?.name ?? '3-Way Match'
+
+  if (rescanReplyReceived) {
+    return (
+      <div style={{ background: '#fff', border: '1px solid #a0d4b4', borderLeft: '4px solid #1b823f', borderRadius: '6px', marginBottom: '16px', overflow: 'hidden' }}>
+        <div style={{ background: '#eef8f3', borderBottom: '1px solid #c0e8d0', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#1b823f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <CheckIcon size={16} />
+          </div>
+          <div>
+            <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '14px', fontWeight: 700, color: '#1b823f' }}>Native PDF Received — Reprocessed at {avg}% Confidence</div>
+            <div style={{ fontSize: '12px', color: '#1a5c30', fontFamily: 'Lato, sans-serif', marginTop: '1px' }}>SAP DOX re-extracted all fields from the native PDF — all fields above 90% threshold, auto-approval authorised</div>
+          </div>
+        </div>
+        <div style={{ padding: '12px 16px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '8px', fontFamily: 'Lato, sans-serif' }}>Confidence by field — reprocessed</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px' }}>
+            {Object.entries(displayConfs).map(([key, val]) => {
+              const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())
+              return (
+                <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f0fbf5', border: '1px solid #c0e8d0', borderRadius: '4px', padding: '4px 8px' }}>
+                  <span style={{ fontSize: '11px', color: '#555', fontFamily: 'Lato, sans-serif' }}>{label}</span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#1b823f', fontFamily: 'Cabin, sans-serif' }}>{val}%</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ background: '#fff', border: '1px solid #f0c060', borderLeft: '4px solid #b06b00', borderRadius: '6px', marginBottom: '16px', overflow: 'hidden' }}>
       <div style={{ background: '#fffbf0', borderBottom: '1px solid #f0e0a0', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -2414,13 +2510,13 @@ function ManualApprovalCard({ invoice }: { invoice: Invoice }) {
         </div>
         <div>
           <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '14px', fontWeight: 700, color: '#b06b00' }}>Manual Approval Required — Moderate Confidence</div>
-          <div style={{ fontSize: '12px', color: '#8a5500', fontFamily: 'Lato, sans-serif', marginTop: '1px' }}>Agent paused at 3-Way Match — average field confidence {avg}% (below 90% threshold for auto-approval)</div>
+          <div style={{ fontSize: '12px', color: '#8a5500', fontFamily: 'Lato, sans-serif', marginTop: '1px' }}>Agent paused at {failStepName} — average field confidence {avg}% (below 90% threshold for auto-approval)</div>
         </div>
       </div>
       <div style={{ padding: '12px 16px' }}>
         <div style={{ fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '8px', fontFamily: 'Lato, sans-serif' }}>Confidence by field</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px' }}>
-          {Object.entries(confs).map(([key, val]) => {
+          {Object.entries(displayConfs).map(([key, val]) => {
             const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())
             const color = val >= 90 ? '#1b823f' : val >= 70 ? '#b06b00' : '#b91f1f'
             return (
@@ -2439,7 +2535,24 @@ function ManualApprovalCard({ invoice }: { invoice: Invoice }) {
   )
 }
 
-function StickyManualApprovalPanel({ onApprove, approved, onViewPosting }: { onApprove: () => void; approved: boolean; onViewPosting?: () => void }) {
+function StickyManualApprovalPanel({ onApprove, approved, onViewPosting, rescanEmailSent, rescanReplyReceived, onRescanSend, failStepName }: { onApprove: () => void; approved: boolean; onViewPosting?: () => void; rescanEmailSent?: boolean; rescanReplyReceived?: boolean; onRescanSend?: () => void; failStepName?: string }) {
+  if (rescanReplyReceived) {
+    return (
+      <div style={{ flexShrink: 0, borderTop: '2px solid #1b823f', background: '#e8f5ee', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
+        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1b823f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><CheckIcon size={22} /></div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1b823f' }}>Auto-Approved · Native PDF Reprocessed at 97% Confidence</div>
+          <div style={{ fontSize: '14px', color: '#1a5c30', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Kobalt resent as native PDF — SAP DOX reprocessed all fields above threshold, invoice routed for payment</div>
+        </div>
+        {onViewPosting && (
+          <button onClick={onViewPosting} style={{ flexShrink: 0, padding: '9px 20px', background: '#003d6b', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="9" height="11" rx="1" stroke="white" strokeWidth="1.4"/><path d="M4 2V1a1 1 0 011-1h4a1 1 0 011 1v1" stroke="white" strokeWidth="1.4"/><path d="M3.5 6h5M3.5 8.5h5M3.5 11h3" stroke="white" strokeWidth="1.2" strokeLinecap="round"/><circle cx="11.5" cy="10.5" r="2" fill="#00a759"/><path d="M10.5 10.5l.8.8 1.2-1.2" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            View SAP Posting
+          </button>
+        )}
+      </div>
+    )
+  }
   if (approved) {
     return (
       <div style={{ flexShrink: 0, borderTop: '2px solid #1b823f', background: '#e8f5ee', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
@@ -2457,21 +2570,36 @@ function StickyManualApprovalPanel({ onApprove, approved, onViewPosting }: { onA
       </div>
     )
   }
+  if (rescanEmailSent) {
+    return (
+      <div style={{ flexShrink: 0, borderTop: '2px solid #1a3a6b', background: '#f0f4fa', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
+        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1a3a6b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="#fff" style={{ display: 'block' }}><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200ZM160-640v-80 480-400Z"/></svg>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1a3a6b' }}>Re-scan Requested — Awaiting Native PDF from Kobalt Music Group</div>
+          <div style={{ fontSize: '13px', color: '#3a4a6b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>
+            Request sent to <strong>royalties@kobaltmusic.com</strong> — invoice will be auto-reprocessed when native PDF is received
+          </div>
+        </div>
+      </div>
+    )
+  }
   return (
     <div style={{ flexShrink: 0, borderTop: '2px solid #b06b00', background: '#fff', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
       <div style={{ flexShrink: 0 }}>
         <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>Moderate Confidence — Manual Approval Required</div>
-        <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Agent stopped at 3-Way Match · Review extracted fields and approve to proceed</div>
+        <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Agent stopped at {failStepName ?? '3-Way Match'} · Review extracted fields and approve or request a better-quality document</div>
       </div>
       <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', flexShrink: 0 }}>
         <button onClick={onApprove} style={{ padding: '9px 22px', background: '#1b823f', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Approve Invoice</button>
-        <button style={{ padding: '9px 16px', background: '#fff', color: '#6b767b', border: '1.5px solid #c8cccf', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 600, cursor: 'pointer' }}>Request Re-scan</button>
+        <button onClick={onRescanSend} style={{ padding: '9px 16px', background: '#fff', color: '#1a3a6b', border: '1.5px solid #1a3a6b', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 600, cursor: 'pointer' }}>Request Re-scan</button>
       </div>
     </div>
   )
 }
 
-function StickyGLPanel({ onDraftEmail, appliedCode, manualGLCode, onApply, glApprovalEmailSent, glApprovalEmailReceived, invoiceApproved, onInvoiceApprove, onViewPosting }: { onDraftEmail: () => void; appliedCode: string | null; manualGLCode: string; onApply: (code: string) => void; glApprovalEmailSent: boolean; glApprovalEmailReceived: boolean; invoiceApproved: boolean; onInvoiceApprove: () => void; onViewPosting?: () => void }) {
+function StickyGLPanel({ onDraftEmail, appliedCode, manualGLCode, onApply, glApprovalEmailSent, glApprovalEmailReceived, invoiceApproved, onInvoiceApprove, onViewPosting, disputeVariant }: { onDraftEmail: () => void; appliedCode: string | null; manualGLCode: string; onApply: (code: string) => void; glApprovalEmailSent: boolean; glApprovalEmailReceived: boolean; invoiceApproved: boolean; onInvoiceApprove: () => void; onViewPosting?: () => void; disputeVariant?: boolean }) {
   // State 5: Invoice fully approved — terminal
   if (invoiceApproved) {
     return (
@@ -2496,13 +2624,13 @@ function StickyGLPanel({ onDraftEmail, appliedCode, manualGLCode, onApply, glApp
     return (
       <div style={{ flexShrink: 0, borderTop: '2px solid #1b823f', background: '#fff', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ flexShrink: 0 }}>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1b823f' }}>GL Code Approved — Ready for Invoice Approval</div>
-          <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Code <strong>{appliedCode}</strong> approved. Approve the invoice to route for payment.</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1b823f' }}>{disputeVariant ? 'Step 3 of 3: Procurement Approved — Post to SAP' : 'Step 3 of 3: GL Approved — Post to SAP'}</div>
+          <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>{disputeVariant ? <>Procurement confirmed Clause 8.2 surcharge is authorised. Code <strong style={{ fontFamily: 'monospace' }}>{appliedCode}</strong> applied — post FI document to route for payment.</> : <>Code <strong style={{ fontFamily: 'monospace' }}>{appliedCode}</strong> approved. Post the FI document to route for payment.</>}</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', flexShrink: 0 }}>
           <button onClick={onInvoiceApprove} style={{ padding: '10px 28px', background: '#1b823f', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CheckIcon size={16} />
-            Approve Invoice
+            Post to SAP
           </button>
           <button style={{ padding: '9px 18px', background: '#fff', color: '#b91f1f', border: '1.5px solid #b91f1f', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
         </div>
@@ -2516,8 +2644,8 @@ function StickyGLPanel({ onDraftEmail, appliedCode, manualGLCode, onApply, glApp
       <div style={{ flexShrink: 0, borderTop: '2px solid #b06b00', background: '#fff3d6', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: '2.5px solid #b06b00', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
         <div>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>GL Approval Email Sent — Awaiting Response</div>
-          <div style={{ fontSize: '13px', color: '#7a4a00', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Waiting for GL approval reply. Check Outlook for an incoming response.</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>{disputeVariant ? 'Procurement Query Sent — Awaiting Response' : 'GL Approval Email Sent — Awaiting Response'}</div>
+          <div style={{ fontSize: '13px', color: '#7a4a00', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>{disputeVariant ? 'Query sent to PRH Procurement (j.hartmann@penguinrandomhouse.com). Check Outlook for their response.' : 'Waiting for GL approval reply. Check Outlook for an incoming response.'}</div>
         </div>
       </div>
     )
@@ -2528,13 +2656,13 @@ function StickyGLPanel({ onDraftEmail, appliedCode, manualGLCode, onApply, glApp
     return (
       <div style={{ flexShrink: 0, borderTop: '2px solid #b06b00', background: '#fff', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ flexShrink: 0 }}>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>GL Code Applied — Send Approval Email to Proceed</div>
-          <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Code <strong>{appliedCode}</strong> applied. A GL approval email is required before the invoice can be approved.</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>{disputeVariant ? 'Step 2 of 3: Request Procurement Confirmation' : 'Step 2 of 3: Send GL Approval Email'}</div>
+          <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>{disputeVariant ? <>Code <strong style={{ fontFamily: 'monospace' }}>{appliedCode}</strong> applied. Send the internal query to PRH Procurement to confirm whether the Clause 8.2 surcharge was pre-approved.</> : <>Code <strong style={{ fontFamily: 'monospace' }}>{appliedCode}</strong> applied. Send the GL approval email to authorise before posting.</>}</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', flexShrink: 0 }}>
           <button onClick={onDraftEmail} style={{ padding: '9px 20px', background: '#1a3a6b', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px' }}>
             <svg width="14" height="12" viewBox="0 0 14 12" fill="none"><rect x="0" y="0" width="14" height="12" rx="2" fill="none" stroke="white" strokeWidth="1.3"/><polyline points="0,0 7,7 14,0" fill="none" stroke="white" strokeWidth="1.3"/></svg>
-            Send GL Approval Email
+            {disputeVariant ? 'Send Procurement Query' : 'Send GL Approval Email'}
           </button>
           <button style={{ padding: '9px 18px', background: '#fff', color: '#b91f1f', border: '1.5px solid #b91f1f', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
         </div>
@@ -2546,13 +2674,20 @@ function StickyGLPanel({ onDraftEmail, appliedCode, manualGLCode, onApply, glApp
   return (
     <div style={{ flexShrink: 0, borderTop: '2px solid #b91f1f', background: '#fff', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
       <div style={{ flexShrink: 0 }}>
-        <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b91f1f' }}>GL Code Not Found — Select and Apply a GL Code</div>
-        <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Choose or enter a GL code above, then apply it to continue the approval workflow.</div>
+        <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b91f1f' }}>GL Code Not Found — Step 1 of 3: Select a GL Code</div>
+        <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>
+          {manualGLCode
+            ? <>Code <strong style={{ fontFamily: 'monospace', color: '#1a3a6b' }}>{manualGLCode}</strong> selected — click Apply to proceed to email approval.</>
+            : 'Select an AI-recommended code or enter one manually in the GL Code exception card below.'}
+        </div>
       </div>
       <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', flexShrink: 0 }}>
-        {manualGLCode && (
-          <button onClick={() => onApply(manualGLCode)} style={{ padding: '9px 20px', background: '#1a3a6b', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Apply GL Code</button>
-        )}
+        <button
+          onClick={manualGLCode ? () => onApply(manualGLCode) : undefined}
+          style={{ padding: '9px 20px', background: manualGLCode ? '#1a3a6b' : '#c8cccf', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: manualGLCode ? 'pointer' : 'not-allowed', opacity: manualGLCode ? 1 : 0.6 }}
+        >
+          Apply GL Code
+        </button>
         <button style={{ padding: '9px 18px', background: '#fff', color: '#b91f1f', border: '1.5px solid #b91f1f', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
       </div>
     </div>
@@ -2779,13 +2914,17 @@ Bertelsmann Accounts Payable Operations — AP Automation`
 function MetroGLApprovalModal({ invoice, onSend, onClose }: { invoice: Invoice; onSend: () => void; onClose: () => void }) {
   const cur = invoice.currency === 'EUR' ? '€' : '$'
   const conflicts = invoice.extractedFields.conflictingGLCodes ?? []
+  const sortedConflicts = [...conflicts].sort((a, b) => b.percentage - a.percentage)
+  const topConflict = sortedConflicts[0]
   const subject = `GL Code Approval Required — ${invoice.invoiceNumber} — ${invoice.supplier}`
   const body = `Dear Markus,
 
 Invoice ${invoice.invoiceNumber} from ${invoice.supplier} (${cur}${invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}) has been placed on hold as the Matching & GL Advisor (Ma) identified 3 conflicting GL accounts with no single account exceeding the 60% confidence threshold required for auto-assignment.
 
-Conflicting GL Accounts Identified:
-${conflicts.map(c => `  ${c.code} – ${c.label}  (${c.percentage}%)`).join('\n')}
+GL Accounts Identified (ranked by AI confidence):
+${sortedConflicts.map((c, i) => `  ${i === 0 ? '★ ' : '  '}${c.code} – ${c.label}  (${c.percentage}%)${i === 0 ? ' ← AI top recommendation' : ''}`).join('\n')}
+
+The AI agent's top recommendation is ${topConflict.code} (${topConflict.label}) at ${topConflict.percentage}% confidence, but this falls below the 60% threshold for automatic assignment. As Cost Centre Owner, could you please confirm which GL account is correct?
 
 Invoice Details:
   Invoice Number:   ${invoice.invoiceNumber}
@@ -2794,7 +2933,7 @@ Invoice Details:
   Invoice Date:     ${invoice.extractedFields.invoiceDate}
   Service:          ${invoice.extractedFields.expenseDescription ?? 'Advisory services'}
 
-Please confirm the correct GL account so that invoice processing can continue. Once you reply with the approved GL code, Anja Krüger (AP Lead) will provide final authorisation.
+Once you confirm the GL code, Anja Krüger (AP Lead) will provide final authorisation and we will release the invoice for payment immediately.
 
 Regards,
 Lena Fischer
@@ -2858,60 +2997,125 @@ accounts.payable@bertelsmann.de`
   )
 }
 
+function ICMismatchModal({ invoice, onSend, onClose }: { invoice: Invoice; onSend: () => void; onClose: () => void }) {
+  const info = invoice.icMismatchInfo!
+  const fmt = (n: number) => `€${n.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+  const subject = `ICE Reconciliation Required — ${info.docA} / ${info.docB} — ${fmt(info.variance)} Variance`
+  const body = `Dear ${info.contactName},
+
+We have identified an intercompany posting mismatch on the following cross-charge and are requesting ICE reconciliation to clear the variance before payment can proceed.
+
+Intercompany Posting Details:
+  IC Invoice (${info.entityA}):   ${info.docA}   ${fmt(info.amountA)}
+  IC Clearing (${info.entityB}):   ${info.docB}   ${fmt(info.amountB)}
+  Variance:                        ${fmt(info.variance)}
+
+ICE Reference:   ${info.iceRef}
+Entities:        ${info.entityA} ↔ ${info.entityB}
+
+The Predictive IC & Royalty Agent has flagged this mismatch. The variance may relate to an unposted production cost recharge or a format rights adjustment not yet reflected on the ${info.entityB} side.
+
+Please review and reconcile both sides of this posting in the ICE system (${info.iceRef}). Once both entities are balanced, please reply to this email confirming clearance so we can release the invoice for payment posting.
+
+Kind regards,
+Lena Fischer
+Accounts Payable — Bertelsmann Finance Operations
+accounts.payable@bertelsmann.de`
+
+  return (
+    <CommunicationPreviewModal
+      to={`${info.contactName} <${info.contactEmail}>`}
+      cc="a.krueger@bertelsmann.de"
+      subject={subject}
+      body={body}
+      subtitle={`Auto-generated by Predictive IC & Royalty Agent — mismatch flagged on ${info.docA}`}
+      onSend={onSend}
+      onClose={onClose}
+    />
+  )
+}
+
 function GLModal({ invoice, appliedCode, onSend, onClose }: { invoice: Invoice; appliedCode?: string; onSend: () => void; onClose: () => void }) {
   const isPRT = invoice.glMissingVariant === 'prt-coding'
-  const prtCodingString = 'D-2029.IT.805089.P42529.2029240740.CON82580.EUR12090.Item#'
+  const isVendorDispute = invoice.id === 'inv-7'
+  const prtCodingString = 'FRM.PROD.2026.RT-S01.VFX.P-RT01-26.E07-10.C-PXM2026'
   const snUrl = 'https://bertelsmann.service-now.com/nav_to.do?uri=ap_invoice.do'
   const amt = `${invoice.currency === 'EUR' ? '€' : '$'}${invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
 
   const subject = isPRT
     ? `SAP WBS Coding String — DOA Approval Required — ${invoice.invoiceNumber} — ${invoice.supplier}`
-    : `GL Code Applied — Approval Required Before Processing — ${invoice.invoiceNumber} — ${invoice.supplier}`
+    : isVendorDispute
+      ? `Surcharge Pre-Approval Check Required — ${invoice.invoiceNumber} — ${invoice.supplier}`
+      : `GL Code Confirmation Required — ${invoice.invoiceNumber} — Campaign Creative Services (${invoice.supplier})`
 
   const prtBodyHtml = `
-<p style="margin:0 0 14px">Dear Daniel &amp; Thomas,</p>
-<p style="margin:0 0 14px">The <strong>WBS Coding Agent</strong> has generated a SAP cost-object coding string for the invoice below, as per the <strong>Decision of Authority (DOA) matrix</strong>. Your approval is required before this invoice can proceed to payment processing.</p>
+<p style="margin:0 0 14px">Dear Claudia &amp; Marc,</p>
+<p style="margin:0 0 14px">The <strong>Matching &amp; GL Advisor</strong> has generated a production WBS coding string for the invoice below. A <strong>co-production episode split</strong> has been detected (Episodes 9–10 are subject to the Canal+ International co-production agreement). Your dual approval is required before this invoice can proceed to payment.</p>
 <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:13px">
   <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;width:40%;border:1px solid #e4e6e7">Invoice Number</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">${invoice.invoiceNumber}</td></tr>
   <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Supplier</td><td style="padding:6px 10px;border:1px solid #e4e6e7">${invoice.supplier}</td></tr>
   <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Invoice Amount</td><td style="padding:6px 10px;border:1px solid #e4e6e7">${amt}</td></tr>
-  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Category</td><td style="padding:6px 10px;border:1px solid #e4e6e7">${invoice.category}</td></tr>
-  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Cost Centre</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">CC-ASYS-IT-0042</td></tr>
-  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Account No.</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">6180-002</td></tr>
-  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Appropriation No.</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">2029240740</td></tr>
-  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">PAR No.</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">P42529</td></tr>
-  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Contract No.</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">82580</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Production</td><td style="padding:6px 10px;border:1px solid #e4e6e7">"Rising Tides" — RTL+ Original Drama, S01, EP7–10</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Cost Centre</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">CC-FRM-PROD-2026</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Account No.</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">6320-001  Content Production — VFX &amp; Digital Post-Production</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Episode Range</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">E07-10  (EP7–8: Fremantle-funded · EP9–10: Co-production)</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Production No.</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">P-RT01-26</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Contract Ref.</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">C-PXM2026  (Co-Prod: CPRO-2026-RT-003)</td></tr>
 </table>
 <div style="background:#fff3d6;border:1px solid #f59e0b;border-radius:6px;padding:12px 14px;margin-bottom:14px">
-  <div style="font-size:11px;font-weight:700;color:#92600a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Generated Coding String</div>
+  <div style="font-size:11px;font-weight:700;color:#92600a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Generated Production WBS Coding String</div>
   <div style="font-family:monospace;font-size:13px;font-weight:700;color:#b06b00;word-break:break-all">${prtCodingString}</div>
 </div>
-<p style="margin:0 0 10px"><strong>Action Required:</strong><br>Both the <strong>Requestor (Daniel Roth)</strong> and <strong>Head of Department (Thomas Lindqvist)</strong> must confirm approval before the invoice is released for payment. Please review the coding string above and reply with your approval.</p>
-<p style="margin:0 0 14px">→ <a href="${snUrl}" style="color:#1a3a6b;text-decoration:none;font-weight:600">Open Invoice in ServiceNow ↗</a> &nbsp;|&nbsp; <a href="mailto:ap-operations@bertelsmann.de" style="color:#1a3a6b;text-decoration:none;font-weight:600">Contact AP Operations</a></p>
+<p style="margin:0 0 10px"><strong>Action Required:</strong><br>Both <strong>Claudia Bauer (Production Finance Manager)</strong> and <strong>Marc Olivier-Leblanc (VP Finance, Content — RTL Group)</strong> must confirm the episode cost split and approve before the invoice is released for payment. Please reply with the confirmed per-episode allocation (€ amounts for EP7–8 and EP9–10) and your approval.</p>
+<p style="margin:0 0 14px">→ <a href="${snUrl}" style="color:#1a3a6b;text-decoration:none;font-weight:600">Open Invoice in SAP VIM ↗</a> &nbsp;|&nbsp; <a href="mailto:ap-operations@bertelsmann.de" style="color:#1a3a6b;text-decoration:none;font-weight:600">Contact AP Operations</a></p>
 <p style="margin:0;color:#6b767b;font-size:12px">Regards,<br><strong style="color:#1d2f36">Bertelsmann Accounts Payable Operations</strong> — AP Automation<br>ap-automation@bertelsmann.de</p>`
 
   const stdBodyHtml = `
-<p style="margin:0 0 14px">Dear Finance Team,</p>
-<p style="margin:0 0 14px">The <strong>Matching &amp; GL Advisor (Ma)</strong> has reviewed invoice <strong>${invoice.invoiceNumber}</strong> from <strong>${invoice.supplier}</strong> and has applied a GL code assignment. As automated confidence was below the straight-through processing threshold, your approval is required before payment can continue.</p>
+<p style="margin:0 0 14px">Dear Caroline,</p>
+<p style="margin:0 0 14px">AP has received invoice <strong>${invoice.invoiceNumber}</strong> from <strong>${invoice.supplier}</strong> (${amt}) for campaign creative and production services delivered to the Territory marketing team in June 2026. As Cost Centre Owner for <strong>CC-BMS-MKT-2026</strong>, your confirmation is required on two points before we can release the invoice for payment.</p>
 <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:13px">
   <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;width:40%;border:1px solid #e4e6e7">Invoice Number</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">${invoice.invoiceNumber}</td></tr>
-  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Supplier</td><td style="padding:6px 10px;border:1px solid #e4e6e7">${invoice.supplier}</td></tr>
-  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Invoice Amount</td><td style="padding:6px 10px;border:1px solid #e4e6e7">${amt}</td></tr>
-  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Category</td><td style="padding:6px 10px;border:1px solid #e4e6e7">${invoice.category}</td></tr>
-  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Applied GL Code</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace;font-weight:700;color:#1b823f">${appliedCode ?? 'Please review in ServiceNow'}</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Supplier</td><td style="padding:6px 10px;border:1px solid #e4e6e7">${invoice.supplier} (JVM-5591)</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Invoice Amount</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-weight:700">${amt}</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Cost Centre</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">CC-BMS-MKT-2026</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Payment Terms</td><td style="padding:6px 10px;border:1px solid #e4e6e7">Net 15 — due 1 Jul 2026</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">AP Recommended GL</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace;font-weight:700;color:#1b823f">${appliedCode ?? '6610-002 — Marketing & Advertising'}</td></tr>
 </table>
-<p style="margin:0 0 10px"><strong>Action Required:</strong><br>Please log in to ServiceNow and approve the GL code applied to this invoice. Once approved by all required parties, the invoice will be released for payment processing.</p>
-<p style="margin:0 0 14px">→ <a href="${snUrl}" style="color:#1a3a6b;text-decoration:none;font-weight:600">Open Invoice in ServiceNow ↗</a> &nbsp;|&nbsp; <a href="mailto:ap-operations@bertelsmann.de" style="color:#1a3a6b;text-decoration:none;font-weight:600">Contact AP Operations</a></p>
-<p style="margin:0 0 10px;font-size:12px;color:#6b767b">If the GL code is incorrect, please reassign the appropriate account code directly in ServiceNow, or reply to this email with an alternative code and supporting justification.</p>
-<p style="margin:0;color:#6b767b;font-size:12px">Regards,<br><strong style="color:#1d2f36">Bertelsmann Accounts Payable Operations</strong> — AP Automation<br>ap-automation@bertelsmann.de</p>`
+<div style="background:#fff3d6;border:1px solid #f59e0b;border-radius:6px;padding:12px 14px;margin-bottom:14px">
+  <div style="font-size:11px;font-weight:700;color:#92600a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">GL Ambiguity — Confirmation Required</div>
+  <div style="font-size:13px;color:#6b767b;margin-bottom:6px">Our GL Coding Agent identified 3 competing accounts. None exceeded the 60% auto-assign threshold:</div>
+  <table style="width:100%;font-size:12px;border-collapse:collapse">
+    <tr><td style="padding:3px 8px;font-family:monospace;font-weight:700;color:#b91f1f">6610-002</td><td style="padding:3px 8px">Marketing &amp; Advertising</td><td style="padding:3px 8px;font-weight:700;color:#b06b00">38%</td></tr>
+    <tr><td style="padding:3px 8px;font-family:monospace;color:#555">6620-001</td><td style="padding:3px 8px;color:#555">Creative Agency Fees</td><td style="padding:3px 8px;color:#555">34%</td></tr>
+    <tr><td style="padding:3px 8px;font-family:monospace;color:#555">6630-005</td><td style="padding:3px 8px;color:#555">Brand &amp; Campaign Services</td><td style="padding:3px 8px;color:#555">28%</td></tr>
+  </table>
+</div>
+<p style="margin:0 0 10px"><strong>Action Required:</strong><br>Could you please reply confirming: <strong>(1)</strong> the correct GL account to use, and <strong>(2)</strong> that all three deliverables below were received and accepted?</p>
+<p style="margin:0 0 6px;font-size:12px;color:#555">Services to confirm:<br>— Creative Concept Development &amp; Strategy: €6,200.00<br>— Key Visual Design (3 formats, 2 revisions): €7,400.00<br>— Asset Production &amp; Format Adaptation: €4,800.00</p>
+<p style="margin:14px 0 0;color:#6b767b;font-size:12px">Regards,<br><strong style="color:#1d2f36">Lena Fischer — Accounts Payable, Bertelsmann GBS</strong><br>ap-operations@bertelsmann.de</p>`
+
+  const rrdBodyHtml = `
+<p style="margin:0 0 14px">Dear Julia,</p>
+<p style="margin:0 0 14px">AP has received invoice <strong>${invoice.invoiceNumber}</strong> from RR Donnelley totalling <strong>$31,600.00 USD</strong>. The invoice includes a <strong>Paper Cost Surcharge of $2,400.00 (8.2% — PPPC Q2 2026)</strong> applied under Clause 8.2 of Framework Agreement PRH-RRD-PRINT-2024. We need to confirm whether this surcharge was pre-approved by Procurement before we can code and release the invoice for payment.</p>
+<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:13px">
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;width:40%;border:1px solid #e4e6e7">Invoice Number</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">${invoice.invoiceNumber}</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Supplier</td><td style="padding:6px 10px;border:1px solid #e4e6e7">RR Donnelley (RRD-8812)</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Job Reference</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">PRH-DK-PRINT-2026-412</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Framework Agreement</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">PRH-RRD-PRINT-2024</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Agreed Framework Price</td><td style="padding:6px 10px;border:1px solid #e4e6e7">$29,200.00 USD</td></tr>
+  <tr style="background:#fff3d6"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7;color:#92600a">Paper Cost Surcharge</td><td style="padding:6px 10px;border:1px solid #e4e6e7;color:#92600a;font-weight:700">$2,400.00 USD (8.2% — PPPC Q2 2026, Clause 8.2)</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Invoice Total</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-weight:700">$31,600.00 USD</td></tr>
+</table>
+<p style="margin:0 0 10px"><strong>Action Required:</strong><br>Could you please confirm whether PRH Procurement issued the advance written notice to RR Donnelley authorising the Clause 8.2 PPPC-linked surcharge for Q2 2026? If confirmed, we will code and release the invoice at $31,600.00. If not pre-approved, we will contact RR Donnelley to request a revised invoice at the agreed rate of $29,200.00.</p>
+<p style="margin:0;color:#6b767b;font-size:12px">Regards,<br><strong style="color:#1d2f36">Lena Fischer — Accounts Payable, Penguin Random House</strong><br>ap@penguinrandomhouse.com &nbsp;|&nbsp; Bertelsmann GBS AP Operations</p>`
 
   return (
     <CommunicationPreviewModal
-      to={isPRT ? 'd.roth@arvato-systems.de' : invoice.emailSenderEmail}
-      cc={isPRT ? 't.lindqvist@arvato-systems.de' : 'ap-operations@bertelsmann.de'}
+      to={isPRT ? 'c.bauer@fremantle.com' : isVendorDispute ? 'j.hartmann@penguinrandomhouse.com' : 'c.hoffmann@bertelsmannmediagroup.de'}
+      cc={isPRT ? 'm.olivier-leblanc@rtlgroup.de' : 'ap-operations@bertelsmann.de'}
       subject={subject}
-      bodyHtml={isPRT ? prtBodyHtml : stdBodyHtml}
-      subtitle={isPRT ? 'Auto-generated by WBS Coding Agent — DOA Approval Required' : 'Auto-generated by Matching & GL Advisor (Ma)'}
+      bodyHtml={isPRT ? prtBodyHtml : isVendorDispute ? rrdBodyHtml : stdBodyHtml}
+      subtitle={isPRT ? 'Auto-generated by WBS Coding Agent — DOA Approval Required' : isVendorDispute ? 'Internal query — Procurement pre-approval confirmation required' : 'Routed to Cost Centre Owner — GL code confirmation + service receipt'}
       onSend={onSend}
       onClose={onClose}
     />
@@ -3028,13 +3232,13 @@ function StickyPRTPanel({ prtCodingConfirmed, onConfirm, onSendEmail, glApproval
     return (
       <div style={{ flexShrink: 0, borderTop: '2px solid #1b823f', background: '#fff', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ flexShrink: 0 }}>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1b823f' }}>GL Code Approved — Ready for Invoice Approval</div>
-          <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Coding string approved. Approve the invoice to route for payment processing.</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1b823f' }}>GL Coding Confirmed — Post FI Document to SAP</div>
+          <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Business approval received from Claudia Bauer & Marc Olivier-Leblanc. Post the FI document to commit the transaction.</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', flexShrink: 0 }}>
           <button onClick={onApprove} style={{ padding: '10px 28px', background: '#1b823f', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CheckIcon size={16} />
-            Approve Invoice
+            Post to SAP
           </button>
           <button style={{ padding: '9px 18px', background: '#fff', color: '#b91f1f', border: '1.5px solid #b91f1f', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
         </div>
@@ -3097,9 +3301,9 @@ function SupplierDetailsCard({ invoice }: { invoice: Invoice }) {
   const f = invoice.extractedFields
   const [showHistory, setShowHistory] = useState(false)
 
-  const supplierStatus = f.bankAccountStatus === 'Verified' ? 'Verified' : 'Pending'
-  const statusColor = supplierStatus === 'Verified' ? '#1b823f' : '#b06b00'
-  const statusBg = supplierStatus === 'Verified' ? '#e8f5ee' : '#fff3d6'
+  const supplierStatus = f.bankAccountStatus === 'Verified' ? 'Verified' : f.bankAccountStatus === 'Intercompany' ? 'Intercompany' : 'Pending'
+  const statusColor = supplierStatus === 'Verified' ? '#1b823f' : supplierStatus === 'Intercompany' ? '#1a3a6b' : '#b06b00'
+  const statusBg = supplierStatus === 'Verified' ? '#e8f5ee' : supplierStatus === 'Intercompany' ? '#e8eef8' : '#fff3d6'
 
   const isNonPO = invoice.category === 'Non-PO'
   const isFacilities = invoice.id === 'inv-4'
@@ -3144,7 +3348,7 @@ function SupplierDetailsCard({ invoice }: { invoice: Invoice }) {
             {showHistory ? 'Hide Supplier Information' : 'View Supplier Information'}
           </button>
           <span style={{ background: statusBg, color: statusColor, fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', fontFamily: 'Lato, sans-serif' }}>
-            {supplierStatus === 'Verified' ? '✓ ' : ''}{supplierStatus}
+            {supplierStatus !== 'Pending' ? '✓ ' : ''}{supplierStatus}
           </span>
         </span>
       </div>
@@ -3238,23 +3442,28 @@ function DocumentPanel({ children, scrollRef, onScroll, hasContent }: {
 
 // ─── Main ProcessingView ───────────────────────────────────────────────────────
 
-export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatchAutoResolved = false, onMissingGRSent, missingGRAutoResolved = false, onGLApprovalSent, glApprovalReceived = false, onProcessingComplete, metroGLApprovalSent = false, onMetroGLApprovalSend, metroApproved = false, onMetroApprove, metroInvoiceApprovedIds, glEmailsViewed = false, onRoyaltySent, royaltyMismatchAutoResolved = false }: Props) {
+export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatchAutoResolved = false, onMissingGRSent, missingGRAutoResolved = false, onGLApprovalSent, glApprovalReceived = false, onProcessingComplete, metroGLApprovalSent = false, onMetroGLApprovalSend, metroApproved = false, onMetroApprove, metroInvoiceApprovedIds, glEmailsViewed = false, onRoyaltySent, royaltyMismatchAutoResolved = false, onICMismatchSend, icMismatchAutoResolved = false, onRescanSent, rescanReplyReceived = false }: Props) {
   // Compute before any state — GL approval already granted means we skip animation
   const cachedGL = invoice.failType === 'gl-missing' ? (glCodeCache.get(invoice.id) ?? null) : null
   const skipGLAnimation = invoice.failType === 'gl-missing' && !!(cachedGL?.glApprovalEmailSent || cachedGL?.glApprovalEmailReceived)
   const skipRoyaltyAnimation = invoice.failType === 'royalty-mismatch' && royaltyMismatchAutoResolved
+  const skipTaxAnimation = invoice.failType === 'tax-mismatch' && !!taxMismatchAutoResolved
+  const skipMissingGRAnimation = invoice.failType === 'missing-gr' && !!missingGRAutoResolved
+  const skipICAnimation = invoice.failType === 'ic-mismatch' && !!icMismatchAutoResolved
   void (invoice.failType === 'tax-mismatch' ? taxMismatchCache.get(invoice.id) : null)
   const _stepsForInit = invoice.agentSteps
   const _failStepForInit = invoice.failAtStep ?? Math.max(0, _stepsForInit.length - 1)
 
-  const [currentStep, setCurrentStep] = useState((skipGLAnimation || skipRoyaltyAnimation) ? _failStepForInit : 0)
-  const [progress, setProgress] = useState((skipGLAnimation || skipRoyaltyAnimation) ? 100 : 0)
-  const [agentIdx, setAgentIdx] = useState(skipGLAnimation ? Math.max(0, (_stepsForInit[_failStepForInit]?.agents.length ?? 1) - 1) : 0)
+  const skipAny = skipGLAnimation || skipRoyaltyAnimation || skipTaxAnimation || skipMissingGRAnimation || skipICAnimation
+  const skipNonRoyalty = skipGLAnimation || skipTaxAnimation || skipMissingGRAnimation || skipICAnimation
+  const [currentStep, setCurrentStep] = useState(skipAny ? _failStepForInit : 0)
+  const [progress, setProgress] = useState(skipAny ? 100 : 0)
+  const [agentIdx, setAgentIdx] = useState(skipNonRoyalty ? Math.max(0, (_stepsForInit[_failStepForInit]?.agents.length ?? 1) - 1) : 0)
   const [completed, setCompleted] = useState<Set<number>>(() =>
-    skipGLAnimation ? new Set(Array.from({ length: _failStepForInit }, (_, i) => i)) : new Set()
+    skipNonRoyalty ? new Set(Array.from({ length: _failStepForInit }, (_, i) => i)) : new Set()
   )
   const [isDone, setIsDone] = useState(false)
-  const [isFailed, setIsFailed] = useState(skipGLAnimation)
+  const [isFailed, setIsFailed] = useState(skipNonRoyalty)
   const [showAudit, setShowAudit] = useState(false)
   const [showOutlookModal, setShowOutlookModal] = useState(false)
   const [showInvoice, setShowInvoice] = useState(true)
@@ -3267,6 +3476,8 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
   const [glApprovalEmailReceived, setGlApprovalEmailReceived] = useState(false)
   const [glInvoiceApproved, setGlInvoiceApproved] = useState(cachedGL?.invoiceApproved ?? false)
   const [manuallyApproved, setManuallyApproved] = useState(false)
+  const [rescanEmailSent, setRescanEmailSent] = useState(false)
+  const [showRescanModal, setShowRescanModal] = useState(false)
   // Restore prt states from cache only if email was already sent (mid-flow navigation, e.g. to Outlook)
   const [prtCodingConfirmed, setPrtCodingConfirmed] = useState((cachedGL?.glApprovalEmailSent && cachedGL?.prtCodingConfirmed) ?? false)
   const [prtInvoiceApproved, setPrtInvoiceApproved] = useState(cachedGL?.prtInvoiceApproved ?? false)
@@ -3280,8 +3491,9 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
   const [showMetroGLCommsModal, setShowMetroGLCommsModal] = useState(false)
   const [showRoyaltyCommsModal, setShowRoyaltyCommsModal] = useState(false)
   const [metroInvoiceApproved, setMetroInvoiceApproved] = useState(metroInvoiceApprovedIds?.has(invoice.id) ?? false)
-  const [agentActivityCollapsed, setAgentActivityCollapsed] = useState(skipGLAnimation)
-  const [icResolved, setIcResolved] = useState(false)
+  const [agentActivityCollapsed, setAgentActivityCollapsed] = useState(skipGLAnimation || skipRoyaltyAnimation || skipTaxAnimation || skipMissingGRAnimation || skipICAnimation)
+  const [showICCommsModal, setShowICCommsModal] = useState(false)
+  const [icEmailSent, setIcEmailSent] = useState(false)
   const [royaltySent, setRoyaltySent] = useState(false)
   const [showSAPPosting, setShowSAPPosting] = useState(false)
   const [showSAPPayment, setShowSAPPayment] = useState(false)
@@ -3309,6 +3521,14 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
     setCompleted(prev => new Set([...prev, invoice.failAtStep ?? 4]))
     setIsDone(true)
   }
+
+  useEffect(() => {
+    if (rescanReplyReceived && invoice.failType === 'manual-approval' && !manuallyApproved) {
+      setIsFailed(false)
+      setCompleted(prev => new Set([...prev, invoice.failAtStep ?? (invoice.agentSteps.length - 1)]))
+      setIsDone(true)
+    }
+  }, [rescanReplyReceived]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSendTaxNotification = () => {
     setTaxNotificationSent(true)
@@ -3437,7 +3657,10 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
 
   const isGLResolved = ((glApprovalEmailReceived || glInvoiceApproved) && invoice.failType === 'gl-missing' && invoice.glMissingVariant !== 'internal-approval' && invoice.glMissingVariant !== 'prt-coding') || (metroInvoiceApproved && invoice.failType === 'gl-missing' && invoice.glMissingVariant === 'internal-approval') || (prtInvoiceApproved && invoice.failType === 'gl-missing' && invoice.glMissingVariant === 'prt-coding')
   const isRoyaltyResolved = invoice.failType === 'royalty-mismatch' && !!royaltyMismatchAutoResolved
-  const effectiveFailed = isFailed && !isGLResolved && !isRoyaltyResolved
+  const isTaxResolved = invoice.failType === 'tax-mismatch' && !!taxMismatchAutoResolved
+  const isMissingGRResolved = invoice.failType === 'missing-gr' && !!missingGRAutoResolved
+  const isICResolved = invoice.failType === 'ic-mismatch' && !!icMismatchAutoResolved
+  const effectiveFailed = isFailed && !isGLResolved && !isRoyaltyResolved && !isTaxResolved && !isMissingGRResolved && !isICResolved
 
   const scrollContent = steps.length === 0 ? (
     <div style={{ textAlign: 'center', padding: '60px', color: '#6b767b', fontSize: '16px', fontStyle: 'italic' }}>This invoice is queued for processing. Check back shortly.</div>
@@ -3446,7 +3669,7 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
       {isFailed && invoice.failType === 'tax-mismatch' && !taxMismatchAutoResolved && (
         <TaxMismatchCard invoice={invoice} notificationSent={taxNotificationSent} />
       )}
-      {isDone && invoice.failType === 'tax-mismatch' && taxMismatchAutoResolved && (
+      {isTaxResolved && (
         <div style={{ background: '#fff', border: '2px solid #1b823f', borderRadius: '8px', overflow: 'hidden', animation: 'fadeInUp 0.4s ease-out', marginBottom: '16px' }}>
           <div style={{ background: '#e8f5ee', padding: '14px 20px', borderBottom: '1px solid #c8e6c9', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#1b823f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><CheckIcon size={16} /></div>
@@ -3484,26 +3707,26 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
         <GLMissingCard invoice={invoice} appliedCode={appliedGLCode} manualGLCode={manualGLCode} onManualChange={setManualGLCode} onShowRepo={() => setShowGLRepo(true)} glApprovalEmailSent={glApprovalEmailSent} glApprovalEmailReceived={glApprovalEmailReceived} />
       )}
       {isFailed && invoice.failType === 'missing-gr' && !missingGRAutoResolved && <MissingGRCard invoice={invoice} />}
-      {isDone && invoice.failType === 'missing-gr' && missingGRAutoResolved && (
+      {isMissingGRResolved && (
         <MissingGRCard invoice={invoice} missingGRAutoResolved={true} />
       )}
       {isFailed && invoice.failType === 'duplicate' && <DuplicateCard invoice={invoice} />}
-      {isFailed && invoice.failType === 'ic-mismatch' && <ICMismatchCard invoice={invoice} resolved={icResolved} />}
+      {isFailed && invoice.failType === 'ic-mismatch' && <ICMismatchCard invoice={invoice} resolved={icMismatchAutoResolved} />}
       {isFailed && invoice.failType === 'royalty-mismatch' && <RoyaltyMismatchCard invoice={invoice} resolved={royaltyMismatchAutoResolved} />}
-      {isFailed && invoice.failType === 'manual-approval' && !manuallyApproved && (
-        <ManualApprovalCard invoice={invoice} />
+      {invoice.failType === 'manual-approval' && !manuallyApproved && (isFailed || rescanReplyReceived) && (
+        <ManualApprovalCard invoice={invoice} rescanReplyReceived={rescanReplyReceived} />
       )}
-      <CompletionCards invoice={invoice} completed={completed} />
-      {(isDone || (isGLResolved && glEmailsViewed) || isRoyaltyResolved) && <FinalSummary invoice={invoice} onShowAudit={() => setShowAudit(true)} />}
+      <CompletionCards invoice={invoice} completed={completed} appliedGLCode={appliedGLCode} isGLResolved={isGLResolved} />
+      {(isDone || (isGLResolved && glEmailsViewed) || isRoyaltyResolved || isTaxResolved || isMissingGRResolved || isICResolved) && <FinalSummary invoice={invoice} onShowAudit={() => setShowAudit(true)} />}
     </>
   )
 
   const stickyPanels = (
     <>
-      {isDone && !isGLResolved && !taxMismatchAutoResolved && !missingGRAutoResolved && <AutoApprovePanel invoice={invoice} onViewPosting={() => setShowSAPPosting(true)} />}
+      {isDone && !isGLResolved && !taxMismatchAutoResolved && !missingGRAutoResolved && invoice.failType !== 'manual-approval' && <AutoApprovePanel invoice={invoice} onViewPosting={() => setShowSAPPosting(true)} />}
       {isGLResolved && glEmailsViewed && !taxMismatchAutoResolved && !missingGRAutoResolved && <AutoApprovePanel invoice={invoice} variant="gl-resolved" onViewPosting={() => setShowSAPPosting(true)} />}
-      {isDone && taxMismatchAutoResolved && <AutoApprovePanel invoice={invoice} onViewPosting={() => setShowSAPPosting(true)} />}
-      {isDone && missingGRAutoResolved && <AutoApprovePanel invoice={invoice} onViewPosting={() => setShowSAPPosting(true)} />}
+      {isTaxResolved && <AutoApprovePanel invoice={invoice} onViewPosting={() => setShowSAPPosting(true)} />}
+      {isMissingGRResolved && <AutoApprovePanel invoice={invoice} onViewPosting={() => setShowSAPPosting(true)} />}
       {isFailed && !isGLResolved && invoice.failType === 'gl-missing' && invoice.glMissingVariant === 'internal-approval' && (
         <StickyMetroGLPanel metroGLApprovalSent={metroGLApprovalSent} onSendApproval={() => setShowMetroGLCommsModal(true)} metroApproved={metroApproved} onInvoiceApprove={() => { setMetroInvoiceApproved(true); onMetroApprove?.() }} metroInvoiceApproved={metroInvoiceApproved} onViewPosting={metroInvoiceApproved ? () => setShowSAPPosting(true) : undefined} />
       )}
@@ -3511,16 +3734,29 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
         <StickyPRTPanel prtCodingConfirmed={prtCodingConfirmed} onConfirm={() => setPrtCodingConfirmed(true)} onSendEmail={() => setShowGLCommsModal(true)} glApprovalEmailSent={glApprovalEmailSent} glApprovalEmailReceived={glApprovalEmailReceived} onApprove={() => setPrtInvoiceApproved(true)} prtInvoiceApproved={prtInvoiceApproved} />
       )}
       {isFailed && !isGLResolved && invoice.failType === 'gl-missing' && invoice.glMissingVariant !== 'internal-approval' && invoice.glMissingVariant !== 'prt-coding' && (
-        <StickyGLPanel onDraftEmail={() => setShowGLCommsModal(true)} appliedCode={appliedGLCode} manualGLCode={manualGLCode} onApply={setAppliedGLCode} glApprovalEmailSent={glApprovalEmailSent} glApprovalEmailReceived={glApprovalEmailReceived} invoiceApproved={glInvoiceApproved} onInvoiceApprove={() => setGlInvoiceApproved(true)} onViewPosting={glInvoiceApproved ? () => setShowSAPPosting(true) : undefined} />
+        <StickyGLPanel onDraftEmail={() => setShowGLCommsModal(true)} appliedCode={appliedGLCode} manualGLCode={manualGLCode} onApply={setAppliedGLCode} glApprovalEmailSent={glApprovalEmailSent} glApprovalEmailReceived={glApprovalEmailReceived} invoiceApproved={glInvoiceApproved} onInvoiceApprove={() => setGlInvoiceApproved(true)} onViewPosting={glInvoiceApproved ? () => setShowSAPPosting(true) : undefined} disputeVariant={invoice.id === 'inv-7'} />
       )}
       {isFailed && invoice.failType === 'missing-gr' && !missingGRAutoResolved && (
         <StickyMissingGRPanel notificationSent={missingGRNotificationSent} onOpenComms={() => setShowMissingGRCommsModal(true)} />
       )}
       {isFailed && invoice.failType === 'duplicate' && <StickyDuplicatePanel notificationSent={duplicateNotificationSent} onDraftEmail={() => setShowDuplicateCommsModal(true)} />}
-      {isFailed && invoice.failType === 'ic-mismatch' && !icResolved && (
-        <StickyResolvePanel title="Intercompany Mismatch — ICE Reconciliation Required" subtitle="Trigger ICE reconciliation across the affiliated entities to clear the variance" buttonLabel="Trigger ICE Reconciliation" onResolve={() => setIcResolved(true)} />
+      {isFailed && invoice.failType === 'ic-mismatch' && !icEmailSent && !icMismatchAutoResolved && (
+        <StickyResolvePanel title="Intercompany Mismatch — ICE Reconciliation Required" subtitle="Generate ICE reconciliation email to Pieter Janssen (IC Accounting) to clear the €15,500 variance" buttonLabel="Trigger ICE Reconciliation" onResolve={() => setShowICCommsModal(true)} />
       )}
-      {isFailed && invoice.failType === 'ic-mismatch' && icResolved && <AutoApprovePanel invoice={invoice} onViewPosting={() => setShowSAPPosting(true)} />}
+      {isFailed && invoice.failType === 'ic-mismatch' && icEmailSent && !icMismatchAutoResolved && (
+        <div style={{ flexShrink: 0, borderTop: '2px solid #1a3a6b', background: '#f0f4fa', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1a3a6b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="#fff" style={{ display: 'block' }}><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200ZM160-640v-80 480-400Z"/></svg>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1a3a6b' }}>ICE Reconciliation Triggered — Awaiting Confirmation from Pieter Janssen</div>
+            <div style={{ fontSize: '13px', color: '#3a4a6b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>
+              Notification sent to <strong>Pieter Janssen</strong> (p.janssen@bertelsmann.de) — awaiting confirmation that ICE-REC-2026-0619 is cleared and both entities are balanced
+            </div>
+          </div>
+        </div>
+      )}
+      {isFailed && invoice.failType === 'ic-mismatch' && icMismatchAutoResolved && <AutoApprovePanel invoice={invoice} onViewPosting={() => setShowSAPPosting(true)} />}
       {isFailed && invoice.failType === 'royalty-mismatch' && !royaltySent && !royaltyMismatchAutoResolved && (
         <StickyResolvePanel title="Royalty vs Contract Deviation — Review Required" subtitle="Route to Royalties Management to confirm the contract rate and resolve" buttonLabel="Send to Royalties Management" onResolve={() => setShowRoyaltyCommsModal(true)} />
       )}
@@ -3541,20 +3777,20 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
       {isFailed && invoice.failType === 'tax-mismatch' && !taxMismatchAutoResolved && (
         <StickyTaxMismatchPanel notificationSent={taxNotificationSent} onOpenComms={() => setShowCommsModal(true)} supplierName={invoice.supplier} />
       )}
-      {isFailed && invoice.failType === 'manual-approval' && (
-        <StickyManualApprovalPanel onApprove={handleManualApprove} approved={manuallyApproved} onViewPosting={manuallyApproved ? () => setShowSAPPosting(true) : undefined} />
+      {invoice.failType === 'manual-approval' && (isFailed || manuallyApproved || rescanReplyReceived) && (
+        <StickyManualApprovalPanel onApprove={handleManualApprove} approved={manuallyApproved} onViewPosting={(manuallyApproved || rescanReplyReceived) ? () => setShowSAPPosting(true) : undefined} rescanEmailSent={rescanEmailSent} rescanReplyReceived={rescanReplyReceived} onRescanSend={() => setShowRescanModal(true)} failStepName={invoice.agentSteps[invoice.failAtStep ?? (invoice.agentSteps.length - 1)]?.name} />
       )}
     </>
   )
 
   const processingPanel = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      {steps.length > 0 && <Stepper steps={steps} currentStep={currentStep} completed={(isGLResolved || isRoyaltyResolved) ? new Set(steps.map((_, i) => i)) : completed} failed={effectiveFailed} />}
-      {steps.length > 0 && !isDone && !isGLResolved && !isRoyaltyResolved && (
+      {steps.length > 0 && <Stepper steps={steps} currentStep={currentStep} completed={(isGLResolved || isRoyaltyResolved || isTaxResolved || isMissingGRResolved || isICResolved) ? new Set(steps.map((_, i) => i)) : completed} failed={effectiveFailed} />}
+      {steps.length > 0 && !isDone && !isGLResolved && !isRoyaltyResolved && !isTaxResolved && !isMissingGRResolved && !isICResolved && (
         <AgentStatusBar step={steps[currentStep]} progress={progress} agentIdx={agentIdx} stepNum={currentStep} total={steps.length} failed={effectiveFailed} isPaused={isPaused} onTogglePause={togglePause} />
       )}
       <div style={{ height: agentActivityCollapsed ? '40px' : contentScrolled ? '128px' : '290px', flexShrink: 0, overflow: 'hidden', transition: 'height 0.25s ease' }}>
-        <AgentHuddle steps={steps} currentStep={currentStep} progress={progress} completed={(isGLResolved || isRoyaltyResolved) ? new Set(steps.map((_, i) => i)) : completed} isFailed={effectiveFailed} isDone={isDone || isGLResolved || isRoyaltyResolved} isCollapsed={agentActivityCollapsed} onToggle={() => { setAgentActivityCollapsed(v => !v); setContentScrolled(false) }} invoice={invoice} />
+        <AgentHuddle steps={steps} currentStep={currentStep} progress={progress} completed={(isGLResolved || isRoyaltyResolved || isTaxResolved || isMissingGRResolved || isICResolved) ? new Set(steps.map((_, i) => i)) : completed} isFailed={effectiveFailed} isDone={isDone || isGLResolved || isRoyaltyResolved || isTaxResolved || isMissingGRResolved || isICResolved} isCollapsed={agentActivityCollapsed} onToggle={() => { setAgentActivityCollapsed(v => !v); setContentScrolled(false) }} invoice={invoice} />
       </div>
       <DocumentPanel scrollRef={contentScrollRef} onScroll={() => setContentScrolled((contentScrollRef.current?.scrollTop ?? 0) > 40)} hasContent={completed.size > 0 || isFailed}>
         {scrollContent}
@@ -3642,6 +3878,43 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
           invoice={invoice}
           onSend={() => { setRoyaltySent(true); onRoyaltySent?.() }}
           onClose={() => setShowRoyaltyCommsModal(false)}
+        />
+      )}
+      {showICCommsModal && (
+        <ICMismatchModal
+          invoice={invoice}
+          onSend={() => { setIcEmailSent(true); setShowICCommsModal(false); onICMismatchSend?.() }}
+          onClose={() => setShowICCommsModal(false)}
+        />
+      )}
+      {showRescanModal && (
+        <CommunicationPreviewModal
+          to="royalties@kobaltmusic.com"
+          cc="ap-operations@bertelsmann.de"
+          subject={`Re: Royalty Statement ${invoice.invoiceNumber} — Document Quality Issue — High-Resolution PDF Required`}
+          subtitle="AP request to vendor for native PDF resend — triggered by low OCR confidence"
+          body={`Dear Kobalt Royalties Team,
+
+We have received your royalty statement ${invoice.invoiceNumber} (€${invoice.amount.toLocaleString()} EUR, Q1 2026, Admin Agreement 10008). Thank you for the submission.
+
+Our automated digitisation system (SAP DOX) processed the attached document; however, the file appears to be a scanned photocopy rather than a native PDF export. As a result, several fields were extracted at moderate OCR confidence (average 84%), which falls below our 90% auto-approval threshold and has placed the invoice on manual review hold.
+
+To enable straight-through processing and avoid payment delays, could you please resend statement ${invoice.invoiceNumber} as a native PDF exported directly from your royalty administration platform?
+
+Statement details:
+  Statement No:  ${invoice.invoiceNumber}
+  Amount:        €${invoice.amount.toLocaleString()} EUR
+  Period:        Q1 2026
+  Contract Ref:  Admin Agreement 10008, Exhibit B
+  Due Date:      ${invoice.extractedFields.dueDate ?? 'Dec 28, 2026'}
+
+We will reprocess the document immediately on receipt.
+
+Regards,
+Lena Fischer
+BMG / Bertelsmann — AP Operations`}
+          onSend={() => { setRescanEmailSent(true); onRescanSent?.() }}
+          onClose={() => setShowRescanModal(false)}
         />
       )}
       {showSAPPosting && (

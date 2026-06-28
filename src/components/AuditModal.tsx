@@ -25,7 +25,7 @@ function buildHumanApprovalEntry(invoice: Invoice): AuditEntry {
     actorName: 'Bertelsmann AP Analyst',
     action: 'Invoice approved',
     result: `Invoice ${invoice.invoiceNumber} approved for payment. Amount: ${invoice.amount.toLocaleString()} ${invoice.currency}`,
-    evidence: 'Approved via ServiceNow workspace',
+    evidence: 'Approved via SAP S/4HANA VIM',
   }
 }
 
@@ -37,7 +37,7 @@ function buildHumanRejectionEntry(invoice: Invoice): AuditEntry {
     actorName: 'Bertelsmann AP Analyst',
     action: 'Invoice rejected',
     result: `Invoice ${invoice.invoiceNumber} rejected. Amount: ${invoice.amount.toLocaleString()} ${invoice.currency}`,
-    evidence: 'Rejected via ServiceNow workspace',
+    evidence: 'Rejected via SAP S/4HANA VIM',
   }
 }
 
@@ -49,7 +49,7 @@ function buildHumanInfoEntry(invoice: Invoice): AuditEntry {
     actorName: 'Bertelsmann AP Analyst',
     action: 'More information requested',
     result: `Additional information requested for invoice ${invoice.invoiceNumber}`,
-    evidence: 'Request sent via ServiceNow workspace',
+    evidence: 'Request sent via SAP S/4HANA VIM',
   }
 }
 

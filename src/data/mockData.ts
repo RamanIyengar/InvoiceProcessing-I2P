@@ -149,6 +149,7 @@ accounts@sunsetpost.co.uk`,
       poNumber: '4500288120', contractRef: 'Ep.6 Picture Lock',
       invoiceDate: 'June 14, 2026', dueDate: 'July 29, 2026', paymentTerms: 'Net 45', currency: 'EUR',
       subtotal: 312000, tax: 0, totalAmount: 312000,
+      taxCode: 'DE-VAT-RC',
       bankAccountStatus: 'Verified', duplicateCheck: 'Pending',
       fieldConfidences: { invoiceNumber: 100, supplierName: 100, poNumber: 100, invoiceDate: 98, totalAmount: 100 },
     },
@@ -365,7 +366,7 @@ rechnung@lehmanns.de`,
     invoiceNumber: 'JVM-2026-0623',
     supplier: 'Jung von Matt AG',
     supplierId: 'JVM-5591',
-    amount: 18400,
+    amount: 21896,
     currency: 'EUR',
     category: 'Non-PO',
     failAtStep: 4,
@@ -389,7 +390,7 @@ Invoice Details:
   Invoice Number:  JVM-2026-0623
   Invoice Date:    June 16, 2026
   Due Date:        July 1, 2026
-  Total Amount:    €18,400.00 EUR
+  Total Amount:    €21,896.00 EUR
   Payment Terms:   Net 15
 
 Best regards,
@@ -399,9 +400,17 @@ billing@jvm.de`,
       invoiceNumber: 'JVM-2026-0623', supplierName: 'Jung von Matt AG', supplierId: 'JVM-5591',
       billNo: 'JVM-2026-06-A',
       invoiceDate: 'June 16, 2026', dueDate: 'July 1, 2026', paymentTerms: 'Net 15', currency: 'EUR',
-      subtotal: 18400, tax: 0, totalAmount: 18400,
+      subtotal: 18400, tax: 3496, totalAmount: 21896,
       bankAccountStatus: 'Verified', duplicateCheck: 'No Duplicate Found',
       expenseDescription: 'Campaign creative and production services for the Territory marketing team — concept development, key visual design, and asset production for a seasonal campaign.',
+      costCenter: 'CC-BMS-MKT-2026',
+      businessUnit: 'Bertelsmann Marketing Services — Territory',
+      taxCode: 'DE-VAT-STD',
+      conflictingGLCodes: [
+        { code: '6610-002', label: 'Marketing & Advertising', percentage: 38 },
+        { code: '6620-001', label: 'Creative Agency Fees', percentage: 34 },
+        { code: '6630-005', label: 'Brand & Campaign Services', percentage: 28 },
+      ],
       fieldConfidences: { invoiceNumber: 100, supplierName: 100, invoiceDate: 98, totalAmount: 100 },
     },
     agentSteps: NON_PO_STEPS,
@@ -447,6 +456,7 @@ billing@jvm.de`,
       poNumber: 'PO-BMG-10008-Q1',
       grNumber: 'SO-8426',
       contractRef: 'Admin Agreement 10008',
+      taxCode: 'DE-VAT-RC',
       bankAccountStatus: 'Verified',
       duplicateCheck: 'No Duplicate Found',
       matchStatus: 'Pending Manual Review',
@@ -455,7 +465,7 @@ billing@jvm.de`,
         poNumber: 75, grNumber: 78, subtotal: 90, tax: 88, totalAmount: 90, bankAccountStatus: 80,
       },
     },
-    agentSteps: PO_STEPS,
+    agentSteps: ROYALTY_STEPS,
     auditTrail: [
       { id: 'i1', timestamp: '08:45:03', actorType: 'Agent', actorName: 'VIM Mailbox Adapter', action: 'Email detected', result: 'Detected email from royalties@kobaltmusic.com', evidence: 'Attachment: KOB_RY_2026_0831.pdf' },
       { id: 'i2', timestamp: '08:45:07', actorType: 'Agent', actorName: 'Invoice Classification (Ic)', action: 'Classified as royalty statement', result: 'Contract reference detected: Admin Agreement 10008. Category: Royalty Invoice.', evidence: 'Confidence: 89.2%' },
@@ -471,7 +481,7 @@ billing@jvm.de`,
     invoiceNumber: 'TSI-2026-IT-4471',
     supplier: 'T-Systems International GmbH',
     supplierId: 'TSI-3674',
-    amount: 63400,
+    amount: 75446,
     currency: 'EUR',
     category: 'Non-PO',
     failAtStep: 4,
@@ -493,7 +503,9 @@ Invoice Details:
 • Invoice Date: August 30, 2026
 • Due Date: December 28, 2026
 • Payment Terms: Net 120 Days
-• Amount Due: EUR 63,400.00
+• Net Amount: EUR 63,400.00
+• VAT (19% DE): EUR 12,046.00
+• Amount Due: EUR 75,446.00
 
 This invoice covers the managed-services hours pool as defined in the Statement of Work #1.
 
@@ -508,8 +520,9 @@ T-Systems International GmbH Billing Team`,
       paymentTerms: 'Net 120',
       currency: 'EUR',
       subtotal: 63400,
-      tax: 0,
-      totalAmount: 63400,
+      tax: 12046,
+      totalAmount: 75446,
+      taxCode: 'DE-VAT-STD',
       bankAccountStatus: 'Verified',
       duplicateCheck: 'No Duplicate Found',
       expenseDescription: 'Managed IT services — MSA #1 hours pool, per Contract 10008 Exhibit B.',
@@ -530,69 +543,74 @@ T-Systems International GmbH Billing Team`,
     ],
   },
 
-  // ── Non-PO Invoice — Arvato Systems IT (GL Missing — SAP WBS coding string) ────
+  // ── Non-PO Invoice — Pixomondo GmbH VFX (GL Missing — Production WBS cost split) ──
   {
     id: 'inv-11',
-    invoiceNumber: 'TSI-2026-IT-7714',
-    supplier: 'T-Systems International GmbH',
-    supplierId: 'TSI-3674',
-    amount: 50000,
+    invoiceNumber: 'PXM-2026-FRM-1142',
+    supplier: 'Pixomondo GmbH',
+    supplierId: 'PXM-0571',
+    amount: 175000,
     currency: 'EUR',
     category: 'Non-PO',
     failAtStep: 4,
     failType: 'gl-missing',
     glMissingVariant: 'prt-coding',
-    emailSubject: 'Invoice TSI-2026-IT-7714 – Managed IT Services MSA #2 – Non-PO',
-    emailPreview: 'Please find attached our invoice for managed IT services rendered in September 2026 under MSA #2...',
-    emailSender: 'T-Systems International GmbH',
-    emailSenderEmail: 'billing@t-systems.com',
+    emailSubject: 'Invoice PXM-2026-FRM-1142 – VFX Services "Rising Tides" S01 EP7–10 – Non-PO',
+    emailPreview: 'Invoice for VFX compositing and digital post-production services for Fremantle drama "Rising Tides", S01 Episodes 7–10...',
+    emailSender: 'Pixomondo GmbH',
+    emailSenderEmail: 'billing@pixomondo.com',
     emailTime: '10:30',
-    receivedAt: 'Sep 16, 2026',
-    attachmentName: 'TSI_2026_IT_7714.pdf',
+    receivedAt: 'Sep 9, 2026',
+    attachmentName: 'PXM_2026_FRM_1142.pdf',
     status: 'info-requested',
-    emailBody: `Dear Arvato Systems Accounts Payable Team,
+    emailBody: `Dear Fremantle Germany Accounts Payable Team,
 
-Please find attached our invoice TSI-2026-IT-7714 for managed IT services rendered in September 2026 under Master Services Agreement #2 (Contract 10008, Exhibit C).
+Please find attached our invoice PXM-2026-FRM-1142 for VFX compositing and digital post-production services delivered in September 2026 for the RTL+ Original drama series "Rising Tides", Season 1.
 
 Invoice Details:
-• Invoice Number: TSI-2026-IT-7714
-• Invoice Date: September 15, 2026
-• Due Date: January 13, 2027
-• Payment Terms: Net 120 Days
-• Amount Due: EUR 50,000.00
+• Invoice Number: PXM-2026-FRM-1142
+• Invoice Date: September 8, 2026
+• Due Date: October 8, 2026
+• Payment Terms: Net 30 Days
+• Amount Due: EUR 175,000.00 (VAT: Reverse Charge — §13b UStG)
 
-This invoice covers the managed-services hours pool as defined in the Statement of Work #2.
+Service Description:
+  Visual effects compositing and digital post-production for "Rising Tides", S01, Episodes 7–10.
+  Per Production Contract C-FRM-PXM-2026, Milestone 3 (Post-Production Delivery).
+
+Note: Episodes 9–10 are subject to the Fremantle / Canal+ International co-production agreement (Co-Prod Ref: CPRO-2026-RT-003). Cost allocation per episode range should be confirmed by your Production Finance team before processing.
 
 Best regards,
-T-Systems International GmbH Billing Team`,
+Pixomondo GmbH — Accounts Receivable
+billing@pixomondo.com | www.pixomondo.com`,
     extractedFields: {
-      invoiceNumber: 'TSI-2026-IT-7714',
-      supplierName: 'T-Systems International GmbH',
-      supplierId: 'TSI-3674',
-      invoiceDate: 'Sep 15, 2026',
-      dueDate: 'Jan 13, 2027',
-      paymentTerms: 'Net 120',
+      invoiceNumber: 'PXM-2026-FRM-1142',
+      supplierName: 'Pixomondo GmbH',
+      supplierId: 'PXM-0571',
+      invoiceDate: 'Sep 8, 2026',
+      dueDate: 'Oct 8, 2026',
+      paymentTerms: 'Net 30',
       currency: 'EUR',
-      subtotal: 50000,
+      subtotal: 175000,
       tax: 0,
-      totalAmount: 50000,
+      totalAmount: 175000,
       bankAccountStatus: 'Verified',
       duplicateCheck: 'No Duplicate Found',
-      costCenter: 'CC-ASYS-IT-0042',
-      accountNumber: '6180-002',
-      wbsElement: 'D-2029.IT.805089',
-      appropriationNumber: '2029240740',
-      parNumber: 'P42529',
-      expenseDescription: 'Managed IT services — MSA #2 hours pool, per Contract 10008 Exhibit C.',
-      fieldConfidences: { invoiceNumber: 94, supplierName: 98, invoiceDate: 91, totalAmount: 96 },
+      costCenter: 'CC-FRM-PROD-2026',
+      accountNumber: '6320-001',
+      wbsElement: 'FRM.PROD.2026.RT-S01.VFX',
+      appropriationNumber: 'E07-10',
+      parNumber: 'P-RT01-26',
+      expenseDescription: 'VFX compositing and digital post-production for "Rising Tides" S01, EP7–10, per Contract C-FRM-PXM-2026 Milestone 3.',
+      fieldConfidences: { invoiceNumber: 97, supplierName: 99, invoiceDate: 95, totalAmount: 98 },
     },
-    failMessage: 'The system could not determine an exact GL / cost-object mapping for this invoice. A SAP WBS coding string must be built and confirmed against the project structure before this invoice can be routed for payment approval.',
+    failMessage: 'GL coding halted — production cost allocation split required. Invoice PXM-2026-FRM-1142 covers VFX for Episodes 7–10 of "Rising Tides" (S01), spanning two WBS elements: FRM.PROD.2026.RT-S01.VFX (EP7–8, 100% Fremantle-funded) and FRM.COPRO.2026.RT-S01.VFX (EP9–10, 50% co-produced with Canal+ International). The Matching & GL Advisor cannot auto-split €175,000 across these elements without the signed Production Cost Allocation Schedule. Dual approval required from Production Finance and RTL Group Content Finance before payment release.',
     agentSteps: NON_PO_STEPS,
     auditTrail: [
-      { id: 'k1', timestamp: '10:30:02', actorType: 'Agent', actorName: 'VIM Mailbox Adapter', action: 'Email detected', result: 'Detected email from billing@t-systems.com', evidence: 'Attachment: TSI_2026_IT_7714.pdf' },
-      { id: 'k2', timestamp: '10:30:05', actorType: 'Agent', actorName: 'Invoice Classification (Ic)', action: 'Classified as Non-PO invoice', result: 'No PO reference. Contract reference detected. Routed to GL coding path.', evidence: 'Confidence: 93.2%' },
-      { id: 'k3', timestamp: '10:30:12', actorType: 'Agent', actorName: 'Invoice Extractor (Id)', action: 'Fields extracted', result: '10 fields extracted, mean confidence 94.8%' },
-      { id: 'k4', timestamp: '10:30:21', actorType: 'Agent', actorName: 'Matching & GL Advisor (Ma)', action: 'GL coding halted — WBS coding string required', result: 'ERROR: IT services invoice requires a SAP WBS / cost-object coding string. Cost Centre: CC-ASYS-IT-0042, Account: 6180-002, WBS: D-2029.IT.805089. Human must confirm the generated coding string before processing.', evidence: 'WBS coding pattern: WBS.PSP+Appro#.CON+Contract No.Currency+Amount.Item#' },
+      { id: 'k1', timestamp: '10:30:02', actorType: 'Agent', actorName: 'VIM Mailbox Adapter', action: 'Email detected', result: 'Detected email from billing@pixomondo.com', evidence: 'Attachment: PXM_2026_FRM_1142.pdf' },
+      { id: 'k2', timestamp: '10:30:05', actorType: 'Agent', actorName: 'Invoice Classification (Ic)', action: 'Classified as Non-PO invoice', result: 'No PO reference. Production contract reference detected (C-FRM-PXM-2026). Routed to GL coding path.', evidence: 'Confidence: 95.1%' },
+      { id: 'k3', timestamp: '10:30:12', actorType: 'Agent', actorName: 'Invoice Extractor (Id)', action: 'Fields extracted', result: '10 fields extracted, mean confidence 97.3%. Co-production flag detected on invoice.' },
+      { id: 'k4', timestamp: '10:30:21', actorType: 'Agent', actorName: 'Matching & GL Advisor (Ma)', action: 'GL coding halted — co-production WBS split required', result: 'ERROR: Invoice spans co-produced episodes with different WBS elements. Cannot auto-split €175,000 across FRM.PROD.2026.RT-S01.VFX (EP7–8, 100% Fremantle) and FRM.COPRO.2026.RT-S01.VFX (EP9–10, co-production). Production Cost Allocation Schedule required from Production Finance.', evidence: 'WBS coding pattern: FRM.PROD/COPRO.YYYY.SHOW-SXX.CATEGORY.PROD-NO.EP-RANGE.CONTRACT-REF' },
     ],
   },
 
@@ -782,7 +800,7 @@ accounts@stellifymedia.com`,
     ],
   },
 
-  // ── ECC Legacy Invoice 1 (PRH US, queued) ─────────────────────────────────────
+  // ── Non-PO Invoice — PRH / DK academic print run (Paper Cost Surcharge Dispute) ─
   {
     id: 'inv-7',
     invoiceNumber: 'RRD-2026-660219',
@@ -790,26 +808,59 @@ accounts@stellifymedia.com`,
     supplierId: 'RRD-8812',
     amount: 31600,
     currency: 'USD',
-    category: 'ECC Legacy',
-    emailSubject: 'Print & Bindery Invoice RRD-2026-660219 – June 2026',
-    emailPreview: 'Please find our invoice for print and bindery services rendered in June 2026...',
+    category: 'Non-PO',
+    failAtStep: 4,
+    failType: 'gl-missing',
+    failMessage: 'Invoice amount $31,600.00 USD cannot be coded — Framework Agreement PRH-RRD-PRINT-2024 authorises print services at $29,200.00 for this print specification. An unsanctioned Paper Cost Surcharge of $2,400.00 (8.2% — attributed to PPPC Q2 2026 index) has been applied by the vendor. Clause 8.2 (Material Cost Escalation) requires prior written approval from PRH Procurement before surcharges may be applied. AP must obtain vendor confirmation before GL coding can proceed.',
+    emailSubject: 'Print & Bindery Invoice RRD-2026-660219 — DK Science Encyclopedia 5th Ed.',
+    emailPreview: 'Invoice for print and binding — DK Complete Science Encyclopedia, 5th Edition. 3,200 copies. Framework Ref: PRH-RRD-PRINT-2024...',
     emailSender: 'RR Donnelley',
     emailSenderEmail: 'invoicing@rrd.com',
     emailTime: '08:20',
     receivedAt: 'Jun 18, 2026',
     attachmentName: 'RRD_660219.pdf',
-    status: 'processing',
-    emailBody: `Dear Penguin Random House Finance Team, Please find attached invoice RRD-2026-660219 for print and bindery services in June 2026. Total: $31,600.00 USD.`,
+    status: 'info-requested',
+    emailBody: `Dear Penguin Random House Finance Team,
+
+Please find attached invoice RRD-2026-660219 for the print and binding of DK Complete Science Encyclopedia, 5th Edition, under Framework Agreement PRH-RRD-PRINT-2024.
+
+Invoice Details:
+  Invoice Number:    RRD-2026-660219
+  Invoice Date:      June 8, 2026
+  Due Date:          July 8, 2026
+  Framework Ref:     PRH-RRD-PRINT-2024
+  Job Reference:     PRH-DK-PRINT-2026-412
+  Print Run:         3,200 copies
+  Total Amount:      $31,600.00 USD
+
+Note: A paper cost surcharge of $2,400.00 has been applied in line with the Q2 2026 PPPC Paper Price Index increase of 8.2% (Clause 8.2 — Material Cost Escalation).
+
+Please process at your earliest convenience.
+
+Best regards,
+RR Donnelley — Billing Operations
+invoicing@rrd.com`,
     extractedFields: {
       invoiceNumber: 'RRD-2026-660219', supplierName: 'RR Donnelley', supplierId: 'RRD-8812',
+      billNo: 'RRD-2026-660219',
       invoiceDate: 'June 8, 2026', dueDate: 'July 8, 2026', paymentTerms: 'Net 30', currency: 'USD',
       subtotal: 29200, tax: 2400, totalAmount: 31600,
-      bankAccountStatus: 'Verified', duplicateCheck: 'Pending', fieldConfidences: {},
+      bankAccountStatus: 'Verified', duplicateCheck: 'No Duplicate Found',
+      expenseDescription: 'Print and binding services — DK Complete Science Encyclopedia, 5th Edition, 3,200 copies. Framework Agreement PRH-RRD-PRINT-2024, Job Ref: PRH-DK-PRINT-2026-412.',
+      fieldConfidences: { invoiceNumber: 100, supplierName: 100, invoiceDate: 98, totalAmount: 100 },
     },
-    agentSteps: [], auditTrail: [],
+    agentSteps: NON_PO_STEPS,
+    auditTrail: [
+      { id: 'g1', timestamp: '08:20:04', actorType: 'Agent', actorName: 'VIM Mailbox Adapter', action: 'Email detected from AP mailbox', result: 'Detected email from invoicing@rrd.com', evidence: 'Attachment: RRD_660219.pdf' },
+      { id: 'g2', timestamp: '08:20:07', actorType: 'Agent', actorName: 'Invoice Classification (Ic)', action: 'Classified as Non-PO invoice', result: 'No PO reference. Framework Agreement PRH-RRD-PRINT-2024 detected. Routed to GL coding path.', evidence: 'Confidence: 96.3%' },
+      { id: 'g3', timestamp: '08:20:14', actorType: 'Agent', actorName: 'SAP DOX Digitization Agent', action: 'Invoice fields extracted', result: '14 fields extracted with mean confidence 97.2%' },
+      { id: 'g4', timestamp: '08:20:19', actorType: 'Agent', actorName: 'Field Validation Agent', action: 'Mandatory fields validated', result: 'All 14 mandatory fields present', evidence: 'Validation: PASS' },
+      { id: 'g5', timestamp: '08:20:23', actorType: 'Agent', actorName: 'Matching & GL Advisor (Ma)', action: 'Supplier master matched', result: 'Vendor RRD-8812 verified in SAP Business Partner master', evidence: 'Sanctions screening: CLEAR' },
+      { id: 'g6', timestamp: '08:20:28', actorType: 'Agent', actorName: 'Matching & GL Advisor (Ma)', action: 'GL coding halted — invoice amount dispute', result: 'ERROR: Invoice total $31,600.00 exceeds framework ceiling $29,200.00. Unsanctioned paper cost surcharge of $2,400.00 detected. Clause 8.2 approval required.', evidence: 'Human intervention required.' },
+    ],
   },
 
-  // ── ECC Legacy Invoice 2 (PRH US, queued) ─────────────────────────────────────
+  // ── PO Invoice — Ingram Content Group book distribution (Straight-through) ────
   {
     id: 'inv-8',
     invoiceNumber: 'ING-2026-541097',
@@ -817,23 +868,55 @@ accounts@stellifymedia.com`,
     supplierId: 'ING-6634',
     amount: 15200,
     currency: 'USD',
-    category: 'ECC Legacy',
-    emailSubject: 'Distribution Invoice – ING-2026-541097',
-    emailPreview: 'Invoice for book distribution and fulfilment services for June 2026...',
+    category: 'PO',
+    straightforward: true,
+    emailSubject: 'Distribution Services Invoice – ING-2026-541097',
+    emailPreview: 'Invoice for book distribution and fulfilment services (May 16 – Jun 15, 2026). PO: PO-PRH-2026-05891...',
     emailSender: 'Ingram Content Group',
     emailSenderEmail: 'accounts@ingramcontent.com',
     emailTime: '14:15',
     receivedAt: 'Jun 18, 2026',
     attachmentName: 'ING_541097.pdf',
-    status: 'detected',
-    emailBody: `Dear Penguin Random House Accounts Payable, Please find attached invoice ING-2026-541097 for distribution and fulfilment services in June 2026. Total: $15,200.00 USD.`,
+    status: 'awaiting-approval',
+    recommendation: 'Straight-Through Processing Eligible — All validations passed and the PO 3-way match against the Goods Receipt is complete. Invoice is eligible for straight-through processing. Routing to approval step.',
+    emailBody: `Dear Penguin Random House Accounts Payable Team,
+
+Please find attached invoice ING-2026-541097 for distribution and fulfilment services provided under Blanket Purchase Order PO-PRH-BLKT-2026-00891 (Distribution Agreement PRH-ING-DA-2024-001) for the period May 16 – June 15, 2026.
+
+The Service Entry Sheet SES-PRH-2026-03122 confirming services rendered has been booked in your system.
+
+Invoice Details:
+  Invoice Number:   ING-2026-541097
+  Invoice Date:     June 14, 2026
+  Due Date:         July 14, 2026
+  Blanket PO Ref:   PO-PRH-BLKT-2026-00891
+  SES Reference:    SES-PRH-2026-03122
+  Total Amount:     $15,200.00 USD
+
+Please remit payment via ACH to our Wells Fargo account on file.
+
+Best regards,
+Ingram Content Group — Accounts Receivable
+accounts@ingramcontent.com`,
     extractedFields: {
       invoiceNumber: 'ING-2026-541097', supplierName: 'Ingram Content Group', supplierId: 'ING-6634',
+      poNumber: 'PO-PRH-BLKT-2026-00891', sesNumber: 'SES-PRH-2026-03122',
       invoiceDate: 'June 14, 2026', dueDate: 'July 14, 2026', paymentTerms: 'Net 30', currency: 'USD',
       subtotal: 14000, tax: 1200, totalAmount: 15200,
-      bankAccountStatus: 'Pending', duplicateCheck: 'Pending', fieldConfidences: {},
+      bankAccountStatus: 'Verified', duplicateCheck: 'No Duplicate Found', matchStatus: '3-Way Match Passed',
+      fieldConfidences: { invoiceNumber: 100, supplierName: 99, poNumber: 100, sesNumber: 97, invoiceDate: 100, dueDate: 100, totalAmount: 100 },
     },
-    agentSteps: [], auditTrail: [],
+    agentSteps: PO_STEPS,
+    auditTrail: [
+      { id: 'h1', timestamp: '14:15:08', actorType: 'Agent', actorName: 'VIM Mailbox Adapter', action: 'Email detected from AP mailbox', result: 'Detected email from accounts@ingramcontent.com', evidence: 'Attachment: ING_541097.pdf' },
+      { id: 'h2', timestamp: '14:15:11', actorType: 'Agent', actorName: 'Invoice Classification (Ic)', action: 'Attachment classified as invoice', result: 'Document type confirmed as PO Purchase Invoice (Blanket PO drawdown)', evidence: 'Confidence: 98.6%' },
+      { id: 'h3', timestamp: '14:15:18', actorType: 'Agent', actorName: 'SAP DOX Digitization Agent', action: 'Invoice fields extracted', result: '16 fields extracted with mean confidence 98.1%' },
+      { id: 'h4', timestamp: '14:15:22', actorType: 'Agent', actorName: 'Field Validation Agent', action: 'Mandatory fields validated', result: 'All 16 mandatory fields present', evidence: 'Validation: PASS' },
+      { id: 'h5', timestamp: '14:15:26', actorType: 'Agent', actorName: 'Matching & GL Advisor (Ma)', action: 'Supplier master matched', result: 'Vendor ING-6634 verified in SAP Business Partner master', evidence: 'Sanctions screening: CLEAR' },
+      { id: 'h6', timestamp: '14:15:30', actorType: 'Agent', actorName: 'Matching & GL Advisor (Ma)', action: 'Blanket PO and Service Entry Sheet matched', result: 'Blanket PO PO-PRH-BLKT-2026-00891 located. SES-PRH-2026-03122 confirmed (monthly drawdown — $15,200.00 of $185,000.00 annual commitment)', evidence: 'PO status: Open — remaining balance $112,400.00' },
+      { id: 'h7', timestamp: '14:15:34', actorType: 'Agent', actorName: '3-Way Match Agent', action: '3-way match completed', result: 'Invoice $15,200.00 matches SES-PRH-2026-03122 service confirmation. Within tolerance of contracted rate card (Distribution Agreement PRH-ING-DA-2024-001)', evidence: 'Match: PASS' },
+      { id: 'h8', timestamp: '14:15:37', actorType: 'Agent', actorName: 'Payment Validator (Pv)', action: 'Duplicate check passed', result: 'No duplicate found across 12-month invoice history' },
+    ],
   },
 ]
 
@@ -999,32 +1082,131 @@ Accounts Payable — Bertelsmann Finance Operations
 accounts.payable@bertelsmann.de`,
 }
 
+// RRD paper cost surcharge — AP queries PRH Procurement on whether surcharge was pre-approved
+export const rrdDisputeSentEmail: SentEmail = {
+  id: 'sent-rrd-dispute',
+  toName: 'Julia Hartmann — PRH Procurement',
+  toEmail: 'j.hartmann@penguinrandomhouse.com',
+  subject: 'Surcharge Pre-Approval Check — RRD-2026-660219 — Paper Cost Surcharge',
+  time: 'just now',
+  relatedInvoiceId: 'inv-7',
+  body: `Dear Julia,
+
+AP has received invoice RRD-2026-660219 from RR Donnelley for the DK Complete Science Encyclopedia print run (Job Ref: PRH-DK-PRINT-2026-412), totalling $31,600.00 USD.
+
+The invoice includes a Paper Cost Surcharge of $2,400.00 (8.2%), applied by RRD under Clause 8.2 (Material Cost Escalation) of Framework Agreement PRH-RRD-PRINT-2024. Clause 8.2 requires prior written notice from the supplier to the Client.
+
+Our AI agent has flagged this surcharge as it exceeds the agreed framework price of $29,200.00 and we have no internal record of pre-approval for a Q2 2026 PPPC-linked increase.
+
+Could you please confirm:
+  (a) Whether PRH Procurement received and acknowledged RRD's Q2 2026 surcharge bulletin; and
+  (b) Whether we should process the invoice at the full $31,600.00, or request a revised invoice at the framework rate of $29,200.00.
+
+We are holding the invoice pending your guidance. Your prompt response will allow us to avoid any delay to the payment run.
+
+Best regards,
+Lena Fischer
+Accounts Payable — Penguin Random House
+ap@penguinrandomhouse.com`,
+}
+
+export const rrdDisputeReplyEmail: ReplyEmail = {
+  id: 'reply-rrd-dispute',
+  senderName: 'Julia Hartmann',
+  senderEmail: 'j.hartmann@penguinrandomhouse.com',
+  subject: 'Re: Surcharge Pre-Approval Check — RRD-2026-660219',
+  time: 'just now',
+  relatedInvoiceId: 'inv-7',
+  isUnread: true,
+  body: `Dear Lena,
+
+Thank you for flagging this — good catch on the process check.
+
+I can confirm that PRH Procurement did receive RRD's Q2 2026 Framework Bulletin (Ref: RRD-BULK-2026-Q2-PRH, dated March 15, 2026). The bulletin provided the 30-day advance written notice required under Clause 8.2 (Material Cost Escalation) of Framework Agreement PRH-RRD-PRINT-2024, and the PPPC index increase of 8.2% for Q2 2026 was acknowledged by our team.
+
+The surcharge of $2,400.00 on invoice RRD-2026-660219 is therefore contractually authorised. Please process the invoice at the full amount of $31,600.00.
+
+For your records:
+  — RRD Q2 2026 Framework Bulletin: RRD-BULK-2026-Q2-PRH (received March 15, 2026)
+  — PPPC Paper Price Index Q2 2026: +8.2% (PPPC Weekly, April 2, 2026)
+  — Clause 8.2 confirmation: Advance notice received and acknowledged by Procurement on March 17, 2026
+
+Happy to provide the acknowledgement email if needed for audit purposes. Please go ahead and post.
+
+Kind regards,
+Julia Hartmann
+Procurement Manager — Print & Production, Penguin Random House
+j.hartmann@penguinrandomhouse.com`,
+}
+
 // Standard GL approval — AP requests GL code confirmation for JVM invoice
 export const glApprovalSentEmail: SentEmail = {
   id: 'sent-gl-approval-jvm',
-  toName: 'BMS Finance Operations',
-  toEmail: 'finance.ops@bertelsmann.de',
-  subject: 'GL Code Approval Request — JVM-2026-0623 — Jung von Matt AG',
+  toName: 'Caroline Hoffmann — Marketing Director, BMS',
+  toEmail: 'c.hoffmann@bertelsmannmediagroup.de',
+  subject: 'GL Code Confirmation Required — JVM-2026-0623 — Campaign Creative Services (Jung von Matt AG)',
   time: 'just now',
   relatedInvoiceId: 'inv-6',
-  body: `Dear Finance Team,
+  body: `Dear Caroline,
 
-We are requesting GL code approval for the following Non-PO invoice from Jung von Matt AG. Our AI agent identified three competing GL accounts and could not auto-assign with sufficient confidence.
+AP has received invoice JVM-2026-0623 from Jung von Matt AG (€21,896.00 EUR incl. 19% VAT) for campaign creative and production services delivered to the Territory marketing team in June 2026. We need your confirmation as Cost Centre Owner before we can release the invoice for payment.
 
-Invoice Details:
-  Invoice Number:  JVM-2026-0623
-  Supplier:        Jung von Matt AG (JVM-5591)
-  Invoice Date:    June 16, 2026
-  Amount:          €18,400.00 EUR
-  Description:     Campaign creative and production services — Territory marketing team, June 2026
-  Services:        Concept development, key visual design, asset production
+As this is a Non-PO invoice, our GL Coding Agent was unable to auto-assign an account with sufficient confidence. Three competing accounts were identified:
 
-GL Ambiguity (AI confidence scores):
-  6610-002 — Creative Services          38%
-  6620-001 — Marketing & Advertising    34%
-  6630-005 — Agency Fees                28%
+  6610-002 — Marketing & Advertising    38%
+  6620-001 — Creative Agency Fees       34%
+  6630-005 — Brand & Campaign Services  28%
 
-No single account exceeded the 60% auto-assign threshold. Please confirm the appropriate GL account so we can proceed with payment.
+None exceeded the 60% auto-assign threshold. Could you please confirm:
+
+  1. Which GL account should be used for this invoice (6610-002 is the agent's top recommendation)?
+  2. That the services described below were received in full?
+
+Services delivered (per invoice):
+  — Creative Concept Development & Strategy     €6,200.00
+  — Key Visual Design (3 formats, 2 revisions)  €7,400.00
+  — Asset Production & Format Adaptation        €4,800.00
+  Net Total:                                    €18,400.00 EUR
+  VAT (19% DE):                                 €3,496.00 EUR
+  Invoice Total:                                €21,896.00 EUR
+
+Cost Centre:      CC-BMS-MKT-2026
+Campaign / Ref:   Territory Seasonal Campaign, June 2026
+Payment Terms:    Net 15 (due July 1, 2026)
+
+Once you confirm, we will apply the GL code and route for payment immediately.
+
+Kind regards,
+Lena Fischer
+Accounts Payable — Bertelsmann GBS
+ap-operations@bertelsmann.de`,
+}
+
+// IC Mismatch — AP notifies Pieter Janssen (IC Accounting) to trigger ICE reconciliation
+export const icMismatchSentEmail: SentEmail = {
+  id: 'sent-ic-mismatch',
+  toName: 'Pieter Janssen',
+  toEmail: 'p.janssen@bertelsmann.de',
+  subject: 'ICE Reconciliation Required — IC-INV-FRM-88421 / IC-CLR-RTL-77120 — €15,500 Variance',
+  time: 'just now',
+  relatedInvoiceId: 'inv-12',
+  body: `CC: Anja Krüger <a.krueger@bertelsmann.de>
+
+Dear Pieter,
+
+We have identified an intercompany posting mismatch on the following cross-charge and are requesting ICE reconciliation to clear the variance before payment can proceed.
+
+Intercompany Posting Details:
+  IC Invoice (Fremantle Ltd UK):   IC-INV-FRM-88421   €214,000.00
+  IC Clearing (RTL Deutschland):   IC-CLR-RTL-77120   €198,500.00
+  Variance:                        €15,500.00
+
+ICE Reference:   ICE-REC-2026-0619
+Entities:        Fremantle Ltd (UK) ↔ RTL Deutschland GmbH
+
+The Predictive IC & Royalty Agent has flagged this mismatch. The variance may relate to an unposted production cost recharge or a format rights adjustment not yet reflected on the RTL Deutschland side.
+
+Please review and reconcile both sides of this posting in the ICE system (ICE-REC-2026-0619). Once both entities are balanced, please reply to this email confirming clearance so we can release the invoice for payment posting.
 
 Kind regards,
 Lena Fischer
@@ -1032,41 +1214,79 @@ Accounts Payable — Bertelsmann Finance Operations
 accounts.payable@bertelsmann.de`,
 }
 
-// PRT WBS coding — AP requests dual approval from Requestor and Head of Department
+export const icMismatchReplyEmail: ReplyEmail = {
+  id: 'reply-ic-mismatch',
+  senderName: 'Pieter Janssen',
+  senderEmail: 'p.janssen@bertelsmann.de',
+  subject: 'Re: ICE Reconciliation Required — IC-INV-FRM-88421 / IC-CLR-RTL-77120 — €15,500 Variance',
+  time: 'just now',
+  relatedInvoiceId: 'inv-12',
+  isUnread: true,
+  body: `Hi Lena,
+
+I've reviewed the posting and reconciled both sides in ICE (ICE-REC-2026-0619).
+
+The €15,500 variance was caused by a production cost recharge (Q3 format rights adjustment for "The Brilliant Friend" UK format) that had not yet been posted on the RTL Deutschland side. I've booked the corresponding IC clearing entry in RTL Deutschland's books and the ICE system now shows both entities as balanced.
+
+Reconciliation Summary:
+  IC Invoice (Fremantle UK):          IC-INV-FRM-88421   €214,000.00   ✓ Confirmed
+  IC Clearing (RTL Deutschland):      IC-CLR-RTL-77120   €198,500.00   ✓ Updated
+  Format rights recharge posted:      IC-ADJ-RTL-2026-09 €15,500.00    ✓ New entry
+  Net position:                        €214,000.00   BALANCED ✓
+
+ICE Reference ICE-REC-2026-0619 is now closed — status: Cleared.
+
+You may proceed with payment posting for IC-INV-FRM-88421.
+
+Best regards,
+Pieter Janssen
+Intercompany Accounting — Bertelsmann Finance
+p.janssen@bertelsmann.de`,
+}
+
+// PRT WBS coding — AP requests dual approval from Production Finance and RTL Group Content Finance
 export const prtGLSentEmail: SentEmail = {
   id: 'sent-prt-gl-approval',
-  toName: 'Daniel Roth',
-  toEmail: 'd.roth@arvato-systems.de',
-  subject: 'WBS Coding String — Approval Required — TSI-2026-IT-7714 — T-Systems',
+  toName: 'Claudia Bauer',
+  toEmail: 'c.bauer@fremantle.com',
+  subject: 'Production WBS Coding — Dual Approval Required — PXM-2026-FRM-1142 — Pixomondo GmbH',
   time: 'just now',
   relatedInvoiceId: 'inv-11',
-  body: `CC: Thomas Lindqvist <t.lindqvist@arvato-systems.de>
+  body: `CC: Marc Olivier-Leblanc <m.olivier-leblanc@rtlgroup.de>
 
-Dear Daniel (and Thomas),
+Dear Claudia (and Marc),
 
-We are requesting dual approval of the SAP WBS coding string generated for the following Non-PO invoice from T-Systems International GmbH.
+We are requesting dual approval of the SAP production WBS coding string generated for the following Non-PO invoice from Pixomondo GmbH (VFX & Post-Production).
 
 Invoice Details:
-  Invoice Number:  TSI-2026-IT-7714
-  Supplier:        T-Systems International GmbH (TSI-3674)
-  Invoice Date:    September 12, 2026
-  Amount:          €50,000.00 EUR
-  MSA Reference:   MSA #2
+  Invoice Number:  PXM-2026-FRM-1142
+  Supplier:        Pixomondo GmbH (PXM-0571)
+  Invoice Date:    September 8, 2026
+  Due Date:        October 8, 2026
+  Amount:          €175,000.00 EUR
+  Production:      "Rising Tides" — RTL+ Original Drama, S01, Episodes 7–10
+  Contract Ref:    C-FRM-PXM-2026 (Milestone 3 — Post-Production Delivery)
 
-Proposed WBS Coding String:
-  D-2029.IT.805089.P42529.2029240740.CON82580.EUR12090.Item#
+Issue — Co-Production WBS Split Required:
+  The Matching & GL Advisor has identified that Episodes 7–8 are 100% Fremantle-funded
+  and Episodes 9–10 fall under the Canal+ International co-production agreement
+  (Co-Prod Ref: CPRO-2026-RT-003). Both WBS elements have been generated but
+  the cost split (%) cannot be confirmed without the signed Production Cost Allocation Schedule.
 
-  WBS Element:     D-2029.IT.805089
-  Cost Centre:     CC-ASYS-IT-0042
-  PAR Number:      P42529
-  Internal Order:  2029240740
-  Contract No.:    CON82580
+Proposed WBS Coding:
+  WBS Element:     FRM.PROD.2026.RT-S01.VFX   (EP7–8, Fremantle — est. 50%)
+  WBS Element:     FRM.COPRO.2026.RT-S01.VFX  (EP9–10, Co-production — est. 50%)
+  Account No.:     6320-001  Content Production — VFX & Digital Post-Production
+  Cost Centre:     CC-FRM-PROD-2026
+  Production No.:  P-RT01-26
+  Episode Range:   E07-10
+  Coding String:   FRM.PROD.2026.RT-S01.VFX.P-RT01-26.E07-10.C-PXM2026
 
-Per PRT coding policy, this string requires:
-  1. Requestor approval (Daniel Roth)
-  2. Head of Department approval (Thomas Lindqvist)
+Per DOA policy for co-produced content, this requires:
+  1. Production Finance Manager approval (Claudia Bauer) — confirms episode cost split
+  2. VP Finance Content, RTL Group approval (Marc Olivier-Leblanc) — authorises co-production allocation
 
-Please reply confirming your approval. Both approvals are required before the invoice can be released for payment.
+Please reply confirming the per-episode cost split and your approval. Both approvals are required before the invoice can be released for payment.
 
 Kind regards,
 Lena Fischer
@@ -1227,25 +1447,35 @@ export const correctedTaxInvoice: Invoice = {
 
 export const glApprovalReplyEmail: ReplyEmail = {
   id: 'reply-gl-approval',
-  senderName: 'AP Automation',
-  senderEmail: 'ap-automation@bertelsmann.de',
-  subject: 'GL Code Approval Granted for JVM-2026-0623',
+  senderName: 'Caroline Hoffmann',
+  senderEmail: 'c.hoffmann@bertelsmannmediagroup.de',
+  subject: 'Re: GL Code Confirmation Required — JVM-2026-0623 — Campaign Creative Services (Jung von Matt AG)',
   time: 'just now',
   relatedInvoiceId: 'inv-6',
   isUnread: true,
-  body: `Approval has been granted for the GL code for invoice JVM-2026-0623. Please return to the invoice, apply the approved GL code, and proceed with invoice approval.
+  body: `Hi Lena,
 
-Invoice Details:
-  Invoice Number:  JVM-2026-0623
-  Supplier:        Jung von Matt AG
-  Amount:          €18,400.00 EUR
-  Status:          GL Code Approval Granted
+Thanks for checking — happy to confirm both points.
 
-Please navigate to the invoice and apply the appropriate GL code to proceed with payment.
+GL Account: please use 6610-002 — Marketing & Advertising. This is the correct account for external creative agency fees charged to the Territory campaign budget under CC-BMS-MKT-2026.
 
-Regards,
-Bertelsmann AP Automation System
-ap-automation@bertelsmann.de`,
+Delivery confirmation: all three deliverables were received and accepted:
+  — Creative Concept Development & Strategy: signed off June 12, 2026
+  — Key Visual Design (3 formats, 2 revisions): final assets received June 14, 2026
+  — Asset Production & Format Adaptation: approved and live as of June 16, 2026
+
+The net invoice amount of €18,400.00 EUR (plus €3,496.00 VAT at 19%, total €21,896.00) is correct and the work has been delivered to spec. Please proceed with payment.
+
+For the cost assignment:
+  GL Account:     6610-002  Marketing & Advertising
+  Cost Centre:    CC-BMS-MKT-2026
+  Business Unit:  Bertelsmann Marketing Services — Territory
+  Tax Code:       DE-VAT-STD  (standard rate 19% — domestic German B2B service)
+
+Best,
+Caroline Hoffmann
+Marketing Director — Bertelsmann Marketing Services
+c.hoffmann@bertelsmannmediagroup.de`,
 }
 
 export const metroGLReplyEmails: ReplyEmail[] = [
@@ -1290,45 +1520,113 @@ AP Lead`,
 export const prtGLReplyEmails: ReplyEmail[] = [
   {
     id: 'reply-prt-gl-1',
-    senderName: 'Daniel Roth',
-    senderEmail: 'd.roth@arvato-systems.de',
-    subject: 'Re: WBS Coding String — Approval Required — TSI-2026-IT-7714 — T-Systems',
+    senderName: 'Claudia Bauer',
+    senderEmail: 'c.bauer@fremantle.com',
+    subject: 'Re: Production WBS Coding — Dual Approval Required — PXM-2026-FRM-1142 — Pixomondo GmbH',
     time: 'just now',
     relatedInvoiceId: 'inv-11',
     isUnread: true,
     body: `Hi Lena,
 
-I have reviewed the SAP WBS coding string generated for invoice TSI-2026-IT-7714 from T-Systems International (€50,000.00).
+I have reviewed the production WBS coding for invoice PXM-2026-FRM-1142 from Pixomondo GmbH (€175,000.00 — "Rising Tides" S01 VFX, EP7–10).
 
-Coding String: D-2029.IT.805089.P42529.2029240740.CON82580.EUR12090.Item#
+I can confirm the per-episode cost allocation as per the Production Cost Allocation Schedule signed on 28 Aug 2026:
 
-The Cost Centre (CC-ASYS-IT-0042) and WBS element (D-2029.IT.805089) are correct for this engagement. I approve the coding string as Requestor.
+  Episodes 7–8 (Fremantle-funded):      €87,500  →  FRM.PROD.2026.RT-S01.VFX
+  Episodes 9–10 (Canal+ co-production):  €87,500  →  FRM.COPRO.2026.RT-S01.VFX
+                                                      (50% to be cross-charged to Canal+ International under CPRO-2026-RT-003)
 
-Please proceed once Head of Department confirmation is also received.
+Full coding string confirmed:
+  FRM.PROD.2026.RT-S01.VFX.P-RT01-26.E07-10.C-PXM2026
 
-Daniel Roth
-Requestor — IT Procurement, Arvato Systems`,
+The VFX deliverables for all four episodes have been signed off by the production team. Pixomondo met all contractual specifications per Milestone 3.
+
+I approve as Production Finance Manager. Please proceed once Marc's approval is also received.
+
+Claudia Bauer
+Production Finance Manager — Fremantle Germany
+c.bauer@fremantle.com`,
   },
   {
     id: 'reply-prt-gl-2',
-    senderName: 'Thomas Lindqvist',
-    senderEmail: 't.lindqvist@arvato-systems.de',
-    subject: 'Re: WBS Coding String — Approval Required — TSI-2026-IT-7714 — T-Systems',
+    senderName: 'Marc Olivier-Leblanc',
+    senderEmail: 'm.olivier-leblanc@rtlgroup.de',
+    subject: 'Re: Production WBS Coding — Dual Approval Required — PXM-2026-FRM-1142 — Pixomondo GmbH',
     time: 'just now',
     relatedInvoiceId: 'inv-11',
     isUnread: true,
     body: `Lena,
 
-I've reviewed the WBS coding submission for TSI-2026-IT-7714 (T-Systems International, €50,000.00) and am satisfied that the coding string is accurate and appropriately authorised.
+I have reviewed the co-production cost allocation for PXM-2026-FRM-1142 (Pixomondo, €175,000.00).
 
-Coding String: D-2029.IT.805089.P42529.2029240740.CON82580.EUR12090.Item#
+Claudia's split is correct and consistent with the co-production agreement registered under CPRO-2026-RT-003. The Canal+ International cross-charge for Episodes 9–10 (€43,750.00 — 50% of the co-produced episode costs) will be initiated through the IC billing run at month-end.
 
-PAR No. P42529 and Contract No. CON82580 are consistent with the active managed-services agreement in place with T-Systems. The WBS element falls within the approved IT budget for this fiscal period, and the cost-centre allocation is correct.
+Coding string:  FRM.PROD.2026.RT-S01.VFX.P-RT01-26.E07-10.C-PXM2026
 
-This invoice may proceed to payment processing.
+The WBS elements, cost centre (CC-FRM-PROD-2026), and account (6320-001 Content Production — VFX) are all correct. I am satisfied that the allocation is appropriate and within the approved production budget for "Rising Tides" S01.
 
-Thomas Lindqvist
-Head of Department, IT
-Arvato Systems`,
+Approved. This invoice may proceed to payment.
+
+Marc Olivier-Leblanc
+VP Finance, Content — RTL Group
+m.olivier-leblanc@rtlgroup.de`,
   },
 ]
+
+// ── Kobalt re-scan request — AP asks for native PDF (low OCR confidence) ──────
+export const kobaltRescanSentEmail: SentEmail = {
+  id: 'sent-kobalt-rescan',
+  toName: 'Kobalt Music Group — Royalties',
+  toEmail: 'royalties@kobaltmusic.com',
+  subject: 'Re: Royalty Statement KOB-RY-2026-0831 — Document Quality Issue — High-Resolution PDF Required',
+  time: 'just now',
+  relatedInvoiceId: 'inv-9',
+  body: `Dear Kobalt Royalties Team,
+
+We have received your royalty statement KOB-RY-2026-0831 (€48,250.00 EUR, Q1 2026, Admin Agreement 10008). Thank you for the submission.
+
+Our automated digitisation system (SAP DOX) has processed the attached document; however, the attachment appears to be a scanned photocopy rather than a native PDF export. As a result, several fields were extracted at moderate OCR confidence (average 84%), which falls below our 90% auto-approval threshold and has placed the invoice on manual review hold.
+
+To enable straight-through processing and avoid payment delays, could you please resend statement KOB-RY-2026-0831 as a native PDF exported directly from your royalty administration platform? If the original is available only in paper form, a minimum 300 dpi scan with no skew or shadow artefacts would also be acceptable.
+
+Statement details for reference:
+  Statement No:  KOB-RY-2026-0831
+  Amount:        €48,250.00 EUR
+  Period:        Q1 2026
+  Contract Ref:  Admin Agreement 10008, Exhibit B
+  Due Date:      28 Dec 2026
+
+We will reprocess the document immediately on receipt and expect to clear the payment well within terms.
+
+Regards,
+Lena Fischer
+BMG / Bertelsmann — AP Operations
+ap-operations@bertelsmann.de`,
+}
+
+export const kobaltRescanReplyEmail: ReplyEmail = {
+  id: 'reply-kobalt-rescan',
+  senderName: 'Kobalt Music Group',
+  senderEmail: 'royalties@kobaltmusic.com',
+  subject: 'Re: Royalty Statement KOB-RY-2026-0831 — Native PDF Attached',
+  time: 'just now',
+  relatedInvoiceId: 'inv-9',
+  isUnread: true,
+  body: `Dear Lena,
+
+Apologies for the inconvenience — our distribution system inadvertently attached a scanned copy rather than the native PDF export for this statement.
+
+We have re-exported KOB-RY-2026-0831 directly from our royalty administration platform and attached the native PDF to this email. The figures are unchanged:
+
+  Statement No:   KOB-RY-2026-0831
+  Period:         Q1 2026
+  Total Amount:   €48,250.00 EUR
+  Contract Ref:   Admin Agreement 10008, Exhibit B
+  Due Date:       28 Dec 2026
+
+The native PDF should extract cleanly at full confidence. Please let us know if there is anything further required on our end.
+
+Kind regards,
+Kobalt Music Group — Royalty Administration
+royalties@kobaltmusic.com`,
+}

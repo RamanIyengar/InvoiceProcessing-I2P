@@ -68,7 +68,7 @@ function SettingsIcon() {
 }
 
 const navItems: NavItem[] = [
-  { id: 'inbox',     label: 'Tickets',     icon: <TicketsIcon /> },
+  { id: 'inbox',     label: 'VIM Worklist', icon: <TicketsIcon /> },
   { id: 'dashboard', label: 'Dashboard',   icon: <DashboardIcon /> },
   { id: 'audit',     label: 'Audit Trail', icon: <AuditIcon /> },
   { id: 'analytics', label: 'Analytics',   icon: <AnalyticsIcon /> },

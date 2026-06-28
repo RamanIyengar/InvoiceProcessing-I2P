@@ -13,7 +13,7 @@ interface Props {
 }
 
 interface TicketRow {
-  ticketId: string
+  docNumber: string
   invoice: Invoice
   status: string
   priority: 'High' | 'Medium' | 'Low'
@@ -24,20 +24,20 @@ interface TicketRow {
 }
 
 const TICKET_META = [
-  { ticketId: 'AP-TKT-100248', invoiceId: 'inv-1', status: 'Ready for Review', priority: 'Medium' as const, confidence: 'Ready to Proceed' as const, assignedTo: 'Lena Fischer', sla: '38h 12m', lastUpdated: '09:14 today' },
-  { ticketId: 'AP-TKT-100249', invoiceId: 'inv-2', status: 'Needs Attention', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Lena Fischer', sla: '6h 45m', lastUpdated: '08:41 today' },
-  { ticketId: 'AP-TKT-100250', invoiceId: 'inv-3', status: 'Needs Attention', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Michael Torres', sla: '2h 10m', lastUpdated: '07:55 today' },
-  { ticketId: 'AP-TKT-100251', invoiceId: 'inv-4', status: 'Needs Attention', priority: 'Medium' as const, confidence: 'Review Recommended' as const, assignedTo: 'Lena Fischer', sla: '14h 30m', lastUpdated: '10:02 today' },
-  { ticketId: 'AP-TKT-100252', invoiceId: 'inv-5', status: 'Needs Attention', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Lena Fischer', sla: '22h 05m', lastUpdated: '11:30 today' },
-  { ticketId: 'AP-TKT-100253', invoiceId: 'inv-6', status: 'Needs Attention', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Anja Krüger', sla: '8h 20m', lastUpdated: '13:05 today' },
-  { ticketId: 'AP-TKT-100254', invoiceId: 'inv-9', status: 'Ready for Review', priority: 'High' as const, confidence: 'Review Recommended' as const, assignedTo: 'Michael Torres', sla: '4h 00m', lastUpdated: '08:45 today' },
-  { ticketId: 'AP-TKT-100255', invoiceId: 'inv-7', status: 'Ready for Review', priority: 'Low' as const, confidence: 'Ready to Proceed' as const, assignedTo: 'Lena Fischer', sla: '44h 00m', lastUpdated: '08:20 today' },
-  { ticketId: 'AP-TKT-100256', invoiceId: 'inv-8', status: 'Ready for Review', priority: 'Low' as const, confidence: 'Ready to Proceed' as const, assignedTo: 'Markus Weber', sla: '44h 00m', lastUpdated: '14:15 today' },
-  { ticketId: 'AP-TKT-100257', invoiceId: 'inv-10', status: 'Needs Attention', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Lena Fischer', sla: '3h 45m', lastUpdated: '09:15 today' },
-  { ticketId: 'AP-TKT-100258', invoiceId: 'inv-11', status: 'Needs Attention', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Lena Fischer', sla: '2h 30m', lastUpdated: '10:30 today' },
-  { ticketId: 'AP-TKT-100259', invoiceId: 'inv-12', status: 'Needs Attention', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Pieter Janssen', sla: '4h 18m', lastUpdated: '12:10 today' },
-  { ticketId: 'AP-TKT-100260', invoiceId: 'inv-13', status: 'Needs Attention', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Claire Newton', sla: '4h 20m', lastUpdated: '14:20 today' },
-  { ticketId: 'AP-TKT-100261', invoiceId: 'inv-14', status: 'Ready for Review', priority: 'Medium' as const, confidence: 'Ready to Proceed' as const, assignedTo: 'Lena Fischer', sla: '36h 40m', lastUpdated: '09:40 today' },
+  { docNumber: '5100000248', invoiceId: 'inv-1', status: 'In Process', priority: 'Medium' as const, confidence: 'Ready to Proceed' as const, assignedTo: 'Lena Fischer', sla: '38h 12m', lastUpdated: '09:14 today' },
+  { docNumber: '5100000249', invoiceId: 'inv-2', status: 'Exception', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Lena Fischer', sla: '6h 45m', lastUpdated: '08:41 today' },
+  { docNumber: '5100000250', invoiceId: 'inv-3', status: 'Exception', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Michael Torres', sla: '2h 10m', lastUpdated: '07:55 today' },
+  { docNumber: '5100000251', invoiceId: 'inv-4', status: 'Exception', priority: 'Medium' as const, confidence: 'Review Recommended' as const, assignedTo: 'Lena Fischer', sla: '14h 30m', lastUpdated: '10:02 today' },
+  { docNumber: '5100000252', invoiceId: 'inv-5', status: 'Exception', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Lena Fischer', sla: '22h 05m', lastUpdated: '11:30 today' },
+  { docNumber: '5100000253', invoiceId: 'inv-6', status: 'Exception', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Anja Krüger', sla: '8h 20m', lastUpdated: '13:05 today' },
+  { docNumber: '5100000254', invoiceId: 'inv-9', status: 'In Process', priority: 'High' as const, confidence: 'Review Recommended' as const, assignedTo: 'Michael Torres', sla: '4h 00m', lastUpdated: '08:45 today' },
+  { docNumber: '5100000255', invoiceId: 'inv-7', status: 'In Process', priority: 'Low' as const, confidence: 'Ready to Proceed' as const, assignedTo: 'Lena Fischer', sla: '44h 00m', lastUpdated: '08:20 today' },
+  { docNumber: '5100000256', invoiceId: 'inv-8', status: 'In Process', priority: 'Low' as const, confidence: 'Ready to Proceed' as const, assignedTo: 'Markus Weber', sla: '44h 00m', lastUpdated: '14:15 today' },
+  { docNumber: '5100000257', invoiceId: 'inv-10', status: 'Exception', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Lena Fischer', sla: '3h 45m', lastUpdated: '09:15 today' },
+  { docNumber: '5100000258', invoiceId: 'inv-11', status: 'Exception', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Lena Fischer', sla: '2h 30m', lastUpdated: '10:30 today' },
+  { docNumber: '5100000259', invoiceId: 'inv-12', status: 'Exception', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Pieter Janssen', sla: '4h 18m', lastUpdated: '12:10 today' },
+  { docNumber: '5100000260', invoiceId: 'inv-13', status: 'Exception', priority: 'High' as const, confidence: 'Needs Attention' as const, assignedTo: 'Claire Newton', sla: '4h 20m', lastUpdated: '14:20 today' },
+  { docNumber: '5100000261', invoiceId: 'inv-14', status: 'In Process', priority: 'Medium' as const, confidence: 'Ready to Proceed' as const, assignedTo: 'Lena Fischer', sla: '36h 40m', lastUpdated: '09:40 today' },
 ]
 
 const tickets: TicketRow[] = TICKET_META.map(meta => {
@@ -57,9 +57,9 @@ function getCategoryChipStyle(category: string): React.CSSProperties {
 }
 
 function getStatusChipStyle(status: string): React.CSSProperties {
-  if (status === 'Needs Attention') return { background: '#fde8e8', color: '#b91f1f' }
-  if (status === 'Ready for Review') return { background: '#fef3e2', color: '#b06b00' }
-  if (status === 'Ready for Review' || status === 'Ready for Agentic Huddle') return { background: '#e7ecf5', color: '#1a3a6b' }
+  if (status === 'Exception') return { background: '#fde8e8', color: '#b91f1f' }
+  if (status === 'In Process') return { background: '#e7ecf5', color: '#1a3a6b' }
+  if (status === 'Approved' || status === 'Posted') return { background: '#e8f5ee', color: '#1b823f' }
   return { background: '#f0f1f1', color: '#6b767b' }
 }
 
@@ -84,26 +84,33 @@ export function TicketsView({ onSelectInvoice, replyEmails: _replyEmails, onMark
 
   const filtered = tickets.filter(t => {
     const q = searchQuery.toLowerCase()
-    if (q && !t.ticketId.toLowerCase().includes(q) && !t.invoice.invoiceNumber.toLowerCase().includes(q) && !t.invoice.supplier.toLowerCase().includes(q)) return false
+    if (q && !t.docNumber.toLowerCase().includes(q) && !t.invoice.invoiceNumber.toLowerCase().includes(q) && !t.invoice.supplier.toLowerCase().includes(q)) return false
     return true
   })
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#f6f7f7' }}>
       {/* Page header */}
-      <div style={{ background: 'white', padding: '20px 28px', borderBottom: '1px solid #e4e6e7', flexShrink: 0 }}>
+      <div style={{ background: 'white', padding: '16px 28px', borderBottom: '1px solid #e4e6e7', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <span style={{ fontFamily: 'Lato, sans-serif', fontSize: '11px', color: '#89919a' }}>SAP S/4HANA · OpenText VIM /</span>
+          <span style={{ fontFamily: 'Lato, sans-serif', fontSize: '11px', fontWeight: 600, color: '#32363a' }}>VIM Invoice Worklist</span>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h1 style={{ fontFamily: 'Cabin, sans-serif', fontSize: '24px', fontWeight: 700, color: '#1d2f36', margin: 0 }}>
-                AP Invoice Tickets
+              <h1 style={{ fontFamily: 'Cabin, sans-serif', fontSize: '22px', fontWeight: 700, color: '#1d2f36', margin: 0 }}>
+                VIM Invoice Worklist
               </h1>
               <span style={{ background: '#f0f1f1', color: '#6b767b', borderRadius: '20px', padding: '2px 10px', fontSize: '13px', fontFamily: 'Lato, sans-serif', fontWeight: 700 }}>
                 {filtered.length}
               </span>
+              <span style={{ background: '#fde8e8', color: '#b91f1f', borderRadius: '20px', padding: '2px 10px', fontSize: '12px', fontFamily: 'Lato, sans-serif', fontWeight: 700 }}>
+                {filtered.filter(t => t.status === 'Exception').length} exceptions
+              </span>
             </div>
-            <p style={{ fontFamily: 'Lato, sans-serif', fontSize: '13px', color: '#6b767b', margin: '4px 0 0' }}>
-              Bertelsmann Global Source-to-Pay &middot; Invoice Processing Queue
+            <p style={{ fontFamily: 'Lato, sans-serif', fontSize: '12px', color: '#89919a', margin: '4px 0 0' }}>
+              BERT_PRD · Company Code 1000 · AP Automation · Email Capture → VIM → AP Workflow
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -111,8 +118,8 @@ export function TicketsView({ onSelectInvoice, replyEmails: _replyEmails, onMark
               style={{
                 background: 'white',
                 border: '1px solid #c8cccf',
-                borderRadius: '6px',
-                padding: '7px 16px',
+                borderRadius: '4px',
+                padding: '6px 14px',
                 fontSize: '13px',
                 fontFamily: 'Lato, sans-serif',
                 cursor: 'pointer',
@@ -123,18 +130,18 @@ export function TicketsView({ onSelectInvoice, replyEmails: _replyEmails, onMark
             </button>
             <button
               style={{
-                background: 'white',
-                border: '1px solid #1a3a6b',
-                borderRadius: '6px',
-                padding: '7px 16px',
+                background: '#0070B1',
+                border: '1px solid #0070B1',
+                borderRadius: '4px',
+                padding: '6px 14px',
                 fontSize: '13px',
                 fontFamily: 'Cabin, sans-serif',
                 fontWeight: 600,
                 cursor: 'pointer',
-                color: '#1a3a6b',
+                color: 'white',
               }}
             >
-              + New Ticket
+              Create Document
             </button>
           </div>
         </div>
@@ -154,7 +161,7 @@ export function TicketsView({ onSelectInvoice, replyEmails: _replyEmails, onMark
         }}
       >
         <input
-          placeholder="Search ticket ID, invoice number, supplier..."
+          placeholder="Search VIM doc #, invoice number, vendor..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           style={{
@@ -182,7 +189,7 @@ export function TicketsView({ onSelectInvoice, replyEmails: _replyEmails, onMark
         <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white' }}>
           <thead>
             <tr>
-              {['#', 'Ticket ID', 'Invoice #', 'Supplier', 'Category', 'Amount', 'Received', 'Status', 'Priority', 'SLA', 'Action'].map(col => (
+              {['#', 'VIM Doc #', 'Invoice #', 'Vendor', 'Category', 'Amount', 'Received', 'Status', 'Priority', 'SLA', 'Action'].map(col => (
                 <th
                   key={col}
                   style={{
@@ -210,7 +217,7 @@ export function TicketsView({ onSelectInvoice, replyEmails: _replyEmails, onMark
           <tbody>
             {filtered.map((ticket, idx) => (
               <TicketTableRow
-                key={ticket.ticketId}
+                key={ticket.docNumber}
                 ticket={ticket}
                 index={idx + 1}
                 onOpen={() => setHuddleTicket(ticket)}
@@ -263,7 +270,7 @@ function TicketTableRow({ ticket, index, onOpen, isClassified, isRejected, isStr
       onClick={onOpen}
     >
       <td style={{ padding: '10px 12px', fontSize: '12px', color: '#6b767b', fontFamily: 'Lato, sans-serif' }}>{index}</td>
-      <td style={{ padding: '10px 12px', fontSize: '13px', fontFamily: 'monospace', color: '#1a3a6b', fontWeight: 600, whiteSpace: 'nowrap' }}>{ticket.ticketId}</td>
+      <td style={{ padding: '10px 12px', fontSize: '13px', fontFamily: 'monospace', color: '#0070B1', fontWeight: 600, whiteSpace: 'nowrap' }}>{ticket.docNumber}</td>
       <td style={{ padding: '10px 12px', fontSize: '13px', fontFamily: 'monospace', color: '#1d2f36', whiteSpace: 'nowrap' }}>{ticket.invoice.invoiceNumber}</td>
       <td style={{ padding: '10px 12px', fontSize: '13px', color: '#1d2f36', fontFamily: 'Lato, sans-serif', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ticket.invoice.supplier}</td>
       <td style={{ padding: '10px 12px' }}>
@@ -301,7 +308,7 @@ function TicketTableRow({ ticket, index, onOpen, isClassified, isRejected, isStr
             ...(isMetroApproved ? { background: '#e8f5ee', color: '#1b823f' } : isStraightPass ? { background: '#e8f5ee', color: '#1b823f' } : isRejected ? { background: '#fde8e8', color: '#b91f1f' } : getStatusChipStyle(ticket.status)),
           }}
         >
-          {isMetroApproved ? 'Invoice Approved — Sent to SAP S/4HANA' : isStraightPass ? 'Corrected Invoice — Approved for Payment' : isRejected ? 'Invoice Rejected — Awaiting Resubmission' : ticket.status}
+          {isMetroApproved ? 'Posted' : isStraightPass ? 'Posted' : isRejected ? 'Rejected' : ticket.status}
         </span>
       </td>
       <td style={{ padding: '10px 12px' }}>
@@ -344,12 +351,12 @@ function AgenticHuddleModal({ ticket, isAlreadyClassified, onClassified, onProce
   const invoice = ticket.invoice
 
   const stages = [
-    { label: 'Scanning AP mailbox inbox', completion: `Email from ${invoice.emailSenderEmail} detected · 1.8s` },
-    { label: 'Parsing PDF attachment', completion: `Attachment validated — ${invoice.attachmentName}` },
-    { label: 'Creating invoice ticket', completion: `Ticket ${ticket.ticketId} registered in AP queue` },
-    { label: 'Classifying invoice document', completion: `Classified as ${invoice.category} invoice · confidence 97.4%` },
-    { label: 'Initiating field extraction', completion: '12 invoice fields queued for AI extraction' },
-    { label: 'Preparing validation workflow', completion: `5-stage validation pipeline configured · priority set to ${ticket.priority}` },
+    { label: 'Email Capture: scanning AP mailbox (BERT_AP@bertelsmann.de)', completion: `Email from ${invoice.emailSenderEmail} detected · ingested at ${invoice.emailTime}` },
+    { label: 'SAP Document Capture: OCR scan & PDF validation', completion: `Attachment validated — ${invoice.attachmentName}` },
+    { label: 'Registering VIM document in SAP S/4HANA', completion: `VIM Doc ${ticket.docNumber} created · BERT_PRD · Co. Code 1000` },
+    { label: 'Classifying document type (LIV / Non-PO / ECC Legacy)', completion: `Classified as ${invoice.category} invoice · AI confidence 97.4%` },
+    { label: 'Extracting header & line item data from document', completion: '12 invoice fields queued for AI extraction' },
+    { label: 'Initiating AP Workflow validation pipeline', completion: `5-stage validation pipeline configured · priority set to ${ticket.priority}` },
   ]
 
   useEffect(() => {
@@ -368,7 +375,7 @@ function AgenticHuddleModal({ ticket, isAlreadyClassified, onClassified, onProce
       timersRef.current.forEach(t => clearTimeout(t))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticket.ticketId])
+  }, [ticket.docNumber])
 
   const allDone = completedStages >= stages.length
 
@@ -401,7 +408,7 @@ function AgenticHuddleModal({ ticket, isAlreadyClassified, onClassified, onProce
     },
     { label: 'Amount', value: formatAmount(invoice.amount, invoice.currency) },
     { label: 'Received', value: `${invoice.receivedAt} · ${invoice.emailTime}` },
-    { label: 'Source', value: 'Outlook / AP Mailbox' },
+    { label: 'Source', value: 'Email Capture · BERT_AP@bertelsmann.de' },
     { label: 'Attachment', value: invoice.attachmentName },
     {
       label: 'Priority',
@@ -457,8 +464,8 @@ function AgenticHuddleModal({ ticket, isAlreadyClassified, onClassified, onProce
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: '#6b767b', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'Lato, sans-serif' }}>AP Ticket</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '16px', color: '#1a3a6b', fontWeight: 700 }}>{ticket.ticketId}</span>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#6b767b', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'Lato, sans-serif' }}>VIM Document</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '16px', color: '#0070B1', fontWeight: 700 }}>{ticket.docNumber}</span>
           </div>
           <div style={{ fontFamily: 'monospace', fontSize: '22px', color: '#1d2f36', fontWeight: 700, marginTop: '4px' }}>{invoice.invoiceNumber}</div>
           <div style={{ fontFamily: 'Lato, sans-serif', fontSize: '14px', color: '#6b767b', marginBottom: '16px' }}>{invoice.supplier}</div>
@@ -494,7 +501,7 @@ function AgenticHuddleModal({ ticket, isAlreadyClassified, onClassified, onProce
               }}
             />
             <span style={{ fontSize: '12px', color: allDone ? '#1b823f' : '#1a3a6b', fontFamily: 'Lato, sans-serif', fontWeight: 600 }}>
-              {allDone ? 'Complete' : 'Initializing...'}
+              {allDone ? 'VIM document ready' : 'Processing...'}
             </span>
           </div>
 
@@ -582,7 +589,7 @@ function AgenticHuddleModal({ ticket, isAlreadyClassified, onClassified, onProce
                   <path d="M5 9l3 3 5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <span style={{ fontSize: '13px', color: '#1b823f', fontWeight: 600, fontFamily: 'Lato, sans-serif' }}>
-                  Agent processing initiated — invoice ready for detailed review
+                  VIM document registered — AI agents initiated — ready for AP Workflow validation
                 </span>
               </div>
             )}
@@ -630,7 +637,7 @@ function AgenticHuddleModal({ ticket, isAlreadyClassified, onClassified, onProce
                 transition: 'background 0.2s',
               }}
             >
-              Open Processing View →
+              Open in SAP VIM →
             </button>
           </div>
         </div>

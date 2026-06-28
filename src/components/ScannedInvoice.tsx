@@ -320,6 +320,8 @@ function SunsetPostInvoice({ vc }: { vc: number }) {
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
         <table style={{ fontSize: '11px', minWidth: '220px', borderCollapse: 'collapse' }}>
           <tbody>
+            <tr style={{ borderBottom: '1px solid #ddd' }}><td style={{ padding: '4px 16px 4px 0', color: '#666' }}>Net Amount</td><td style={{ padding: '4px 0', textAlign: 'right', color: '#333' }}>312,000.00</td></tr>
+            <tr style={{ borderBottom: '1px solid #ddd' }}><td style={{ padding: '4px 16px 4px 0', color: '#666' }}>VAT (0% — Reverse Charge)</td><td style={{ padding: '4px 0', textAlign: 'right', color: '#666' }}>0.00</td></tr>
             <tr style={{ borderTop: '2px solid #333' }}><td style={{ padding: '8px 16px 4px 0', fontWeight: 700, color: '#1a1a1a', fontSize: '13px' }}>Total (EUR)</td><td style={{ padding: '8px 0 4px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a', fontSize: '13px' }}><HV conf={100} visible={v(8)}>312,000.00</HV></td></tr>
           </tbody>
         </table>
@@ -327,7 +329,7 @@ function SunsetPostInvoice({ vc }: { vc: number }) {
 
       <div style={{ borderTop: '1px solid #ddd', paddingTop: '14px', fontSize: '10px', color: '#666', lineHeight: '1.7' }}>
         <div style={{ marginBottom: '6px', color: '#444' }}>
-          Cross-border supply of services — reverse charge applies (VAT to be accounted for by the recipient).
+          Cross-border supply of services — VAT reverse charge applies under §13b UStG. VAT to be accounted for by the recipient (Fremantle / RTL Group, Germany).
         </div>
         <div style={{ fontWeight: 700, color: '#333', marginBottom: '3px' }}>Payment Instructions</div>
         <div>Beneficiary: Sunset Post Production Ltd &nbsp;|&nbsp; Bank: Barclays London</div>
@@ -461,7 +463,7 @@ function ICInvoice({ vc }: { vc: number }) {
           <div style={{ color: '#333', lineHeight: '1.65' }}>
             <HV conf={100} visible={v(3)}>RTL Deutschland GmbH</HV><br />
             Picassoplatz 1, 50679 Köln<br />
-            IC Clearing Account
+            Germany
           </div>
         </div>
         <div style={{ padding: '10px 12px' }}>
@@ -498,15 +500,15 @@ function ICInvoice({ vc }: { vc: number }) {
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '18px' }}>
         <table style={{ fontSize: '11px', minWidth: '230px' }}>
           <tbody>
-            <tr><td style={{ padding: '4px 16px 4px 0', color: '#666' }}>IC Invoice (Fremantle UK)</td><td style={{ padding: '4px 0', textAlign: 'right', color: '#333' }}><HV conf={100} visible={v(4)}>€214,000.00</HV></td></tr>
-            <tr><td style={{ padding: '4px 16px 4px 0', color: '#b91f1f' }}>IC Clearing (RTL DE)</td><td style={{ padding: '4px 0', textAlign: 'right', color: '#b91f1f' }}>€198,500.00</td></tr>
-            <tr style={{ borderTop: '2px solid #5a2d82' }}><td style={{ padding: '6px 16px 4px 0', fontWeight: 700, color: '#1a1a1a', fontSize: '13px' }}>Posted Amount</td><td style={{ padding: '6px 0 4px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a', fontSize: '13px' }}><HV conf={100} visible={v(5)}>€214,000.00</HV></td></tr>
+            <tr><td style={{ padding: '4px 16px 4px 0', color: '#666' }}>Subtotal</td><td style={{ padding: '4px 0', textAlign: 'right', color: '#333' }}><HV conf={100} visible={v(4)}>€214,000.00</HV></td></tr>
+            <tr><td style={{ padding: '4px 16px 4px 0', color: '#666' }}>VAT (Exempt — Intra-Group)</td><td style={{ padding: '4px 0', textAlign: 'right', color: '#666' }}>€0.00</td></tr>
+            <tr style={{ borderTop: '2px solid #5a2d82' }}><td style={{ padding: '6px 16px 4px 0', fontWeight: 700, color: '#1a1a1a', fontSize: '13px' }}>Total Amount Due</td><td style={{ padding: '6px 0 4px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a', fontSize: '13px' }}><HV conf={100} visible={v(5)}>€214,000.00</HV></td></tr>
           </tbody>
         </table>
       </div>
 
       <div style={{ borderTop: '1px solid #ddd', paddingTop: '12px', fontSize: '10px', color: '#888', lineHeight: '1.7' }}>
-        Both sides post to the standard intercompany clearing account. Reconciled via the ICE system across affiliated entities.
+        Payment Terms: Intercompany Net 30 days. Payable via IC Clearing Account — no external bank transfer required. Contract Ref: FRM-RTL-IC-2026-Q2.
       </div>
     </div>
   )
@@ -588,8 +590,320 @@ function RoyaltyInvoice({ vc }: { vc: number }) {
   )
 }
 
-// Scanned royalty/IT statement (inv-9 BMG royalty, inv-10/11 T-Systems IT) — rendered as a
+// Pixomondo GmbH VFX invoice (inv-11 — PXM-2026-FRM-1142). 8 HV fields:
+// 0 supplier · 1 invoice# · 2 inv date · 3 due date · 4–6 line amounts · 7 total
+function PixomondoInvoice({ vc }: { vc: number }) {
+  const v = (i: number) => vc > i
+  const rows = [
+    { ref: 'VFX-EP07', desc: 'VFX compositing & CGI — "Road to Redemption" S01 EP07 (FRM.PROD)', qty: '1', amt: '€43,750.00' },
+    { ref: 'VFX-EP08', desc: 'VFX compositing & CGI — "Road to Redemption" S01 EP08 (FRM.PROD)', qty: '1', amt: '€43,750.00' },
+    { ref: 'VFX-EP09', desc: 'VFX compositing & CGI — "Road to Redemption" S01 EP09 (FRM.COPRO)', qty: '1', amt: '€43,750.00' },
+    { ref: 'VFX-EP10', desc: 'Final VFX delivery, colour grade & title sequence — EP10 (FRM.COPRO)', qty: '1', amt: '€43,750.00' },
+  ]
+  return (
+    <div style={{ position: 'relative', fontFamily: 'Arial, sans-serif' }}>
+      {/* Header */}
+      <div style={{ background: '#0d1f3c', borderRadius: '3px 3px 0 0', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff', letterSpacing: '0.04em', marginBottom: '2px' }}>
+            <HV conf={100} visible={v(0)}>PIXOMONDO GMBH</HV>
+          </div>
+          <div style={{ fontSize: '9.5px', color: 'rgba(255,255,255,0.6)', lineHeight: '1.5' }}>
+            Franklinstraße 58–60, 60486 Frankfurt am Main, Germany &nbsp;|&nbsp; USt-IdNr: DE285432100
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>VFX Services Invoice</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#fff', letterSpacing: '-0.5px', marginTop: '2px' }}>INVOICE</div>
+        </div>
+      </div>
+
+      {/* Meta grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginBottom: '18px', border: '1px solid #d0d5e0', borderTop: '3px solid #0d1f3c' }}>
+        <div style={{ padding: '12px 14px', borderRight: '1px solid #d0d5e0' }}>
+          <div style={{ fontSize: '9px', fontWeight: 700, color: '#0d1f3c', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Billed To</div>
+          <div style={{ fontSize: '11px', color: '#333', lineHeight: '1.7' }}>
+            Fremantle Ltd (UK)<br />
+            Attn: Accounts Payable<br />
+            1 Stephen Street, London W1T 1AL, UK
+          </div>
+        </div>
+        <div style={{ padding: '12px 14px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+            <tbody>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px', whiteSpace: 'nowrap' }}>Invoice No.</td><td style={{ fontWeight: 600, color: '#1a1a1a' }}><HV conf={100} visible={v(1)}>PXM-2026-FRM-1142</HV></td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Invoice Date</td><td style={{ color: '#1a1a1a' }}><HV conf={100} visible={v(2)}>June 12, 2026</HV></td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Due Date</td><td style={{ color: '#1a1a1a' }}><HV conf={100} visible={v(3)}>July 12, 2026</HV></td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Terms</td><td style={{ color: '#1a1a1a' }}>Net 30 &nbsp;|&nbsp; EUR</td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Contract Ref.</td><td style={{ color: '#1a1a1a', fontFamily: 'monospace', fontSize: '10px' }}>FRM-PXM-2026-Q2</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div style={{ marginBottom: '14px', padding: '9px 13px', background: '#f4f6fb', border: '1px solid #c4cfe8', borderLeft: '3px solid #0d1f3c', borderRadius: '0 3px 3px 0' }}>
+        <div style={{ fontSize: '9px', fontWeight: 700, color: '#0d1f3c', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '3px' }}>Project</div>
+        <div style={{ fontSize: '11px', color: '#333', lineHeight: '1.6' }}>
+          "Road to Redemption" Season 1 — VFX production services, Episodes 7–10. Per co-production agreement FRM-PXM-2026-Q2.
+        </div>
+      </div>
+
+      {/* Line items */}
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '18px', fontSize: '11px' }}>
+        <thead>
+          <tr style={{ background: '#0d1f3c' }}>
+            <th style={{ padding: '7px 10px', textAlign: 'left', color: '#fff', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', width: '80px' }}>Ref</th>
+            <th style={{ padding: '7px 10px', textAlign: 'left', color: '#fff', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</th>
+            <th style={{ padding: '7px 10px', textAlign: 'center', color: '#fff', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', width: '40px' }}>Qty</th>
+            <th style={{ padding: '7px 10px', textAlign: 'right', color: '#fff', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', width: '100px' }}>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i} style={{ borderBottom: '1px solid #eee', background: i % 2 ? '#fafbfd' : '#fff' }}>
+              <td style={{ padding: '7px 10px', color: '#555', fontFamily: 'monospace', fontSize: '10px' }}>{r.ref}</td>
+              <td style={{ padding: '7px 10px', color: '#333' }}>{r.desc}</td>
+              <td style={{ padding: '7px 10px', textAlign: 'center', color: '#333' }}>{r.qty}</td>
+              <td style={{ padding: '7px 10px', textAlign: 'right', color: '#333', fontWeight: 500 }}><HV conf={95} visible={v(4 + Math.min(i, 2))}>{r.amt}</HV></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Totals + remittance */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '24px', alignItems: 'flex-start' }}>
+        <div style={{ fontSize: '10px', color: '#888', lineHeight: '1.7' }}>
+          <div style={{ fontWeight: 600, marginBottom: '2px', color: '#0d1f3c', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Remittance</div>
+          <div>Bank: Deutsche Bank Frankfurt &nbsp;|&nbsp; A/C: Pixomondo GmbH</div>
+          <div>IBAN: DE89 5007 0010 0987 6543 00 &nbsp;|&nbsp; BIC: DEUTDEFFXXX</div>
+          <div style={{ marginTop: '5px', color: '#aaa' }}>Ref: PXM-2026-FRM-1142 on all payments &nbsp;·&nbsp; ap@pixomondo.com</div>
+          <div style={{ marginTop: '8px', fontSize: '9px', color: '#bbb' }}>VAT: Zero-rated — services supplied to business established outside the EU (§3a Abs. 2 UStG).</div>
+        </div>
+        <table style={{ fontSize: '11px', minWidth: '210px' }}>
+          <tbody>
+            <tr><td style={{ padding: '3px 16px 3px 0', color: '#666' }}>Subtotal</td><td style={{ padding: '3px 0', textAlign: 'right', color: '#333' }}>€175,000.00</td></tr>
+            <tr><td style={{ padding: '3px 16px 3px 0', color: '#666' }}>VAT (0% — §3a UStG)</td><td style={{ padding: '3px 0', textAlign: 'right', color: '#666' }}>€0.00</td></tr>
+            <tr style={{ borderTop: '2px solid #0d1f3c' }}><td style={{ padding: '6px 16px 4px 0', fontWeight: 700, color: '#1a1a1a', fontSize: '13px' }}>Total Due</td><td style={{ padding: '6px 0 4px', textAlign: 'right', fontWeight: 700, color: '#0d1f3c', fontSize: '13px' }}><HV conf={100} visible={v(7)}>€175,000.00</HV></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// RR Donnelley academic print job invoice (inv-7 — RRD-2026-660219). 8 HV fields:
+// 0 supplier · 1 invoice# · 2 inv date · 3 due date · 4 framework ref · 5 base amount · 6 surcharge (amber) · 7 total
+function RRDInvoice({ vc }: { vc: number }) {
+  const v = (i: number) => vc > i
+  return (
+    <div style={{ position: 'relative', fontFamily: 'Arial, sans-serif' }}>
+      {/* Header */}
+      <div style={{ background: '#2c2c2c', borderRadius: '3px 3px 0 0', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff', letterSpacing: '0.03em', marginBottom: '2px' }}>
+            <HV conf={100} visible={v(0)}>R.R. DONNELLEY &amp; SONS COMPANY</HV>
+          </div>
+          <div style={{ fontSize: '9.5px', color: 'rgba(255,255,255,0.6)', lineHeight: '1.5' }}>
+            3075 Highland Pkwy, Suite 400, Downers Grove, IL 60515 &nbsp;|&nbsp; EIN: 36-2467987
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Commercial Print Services</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#fff', letterSpacing: '-0.5px', marginTop: '2px' }}>INVOICE</div>
+        </div>
+      </div>
+
+      {/* Meta grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginBottom: '18px', border: '1px solid #d0d5e0', borderTop: '3px solid #2c2c2c' }}>
+        <div style={{ padding: '12px 14px', borderRight: '1px solid #d0d5e0' }}>
+          <div style={{ fontSize: '9px', fontWeight: 700, color: '#2c2c2c', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Billed To</div>
+          <div style={{ fontSize: '11px', color: '#333', lineHeight: '1.7' }}>
+            DK Publishing / Penguin Random House LLC<br />
+            Attn: Accounts Payable<br />
+            1450 Broadway, New York, NY 10018, USA
+          </div>
+        </div>
+        <div style={{ padding: '12px 14px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+            <tbody>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px', whiteSpace: 'nowrap' }}>Invoice No.</td><td style={{ fontWeight: 600, color: '#1a1a1a' }}><HV conf={100} visible={v(1)}>RRD-2026-660219</HV></td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Invoice Date</td><td style={{ color: '#1a1a1a' }}><HV conf={98} visible={v(2)}>June 8, 2026</HV></td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Due Date</td><td style={{ color: '#1a1a1a' }}><HV conf={98} visible={v(3)}>July 8, 2026</HV></td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Framework Ref.</td><td style={{ color: '#1a1a1a', fontFamily: 'monospace', fontSize: '10px' }}><HV conf={100} visible={v(4)}>PRH-RRD-PRINT-2024</HV></td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Job Ref.</td><td style={{ color: '#1a1a1a', fontFamily: 'monospace', fontSize: '10px' }}>PRH-DK-PRINT-2026-412</td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Terms</td><td style={{ color: '#1a1a1a' }}>Net 30 &nbsp;|&nbsp; USD</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div style={{ marginBottom: '14px', padding: '9px 13px', background: '#f7f7f7', border: '1px solid #d8d8d8', borderLeft: '3px solid #2c2c2c', borderRadius: '0 3px 3px 0' }}>
+        <div style={{ fontSize: '9px', fontWeight: 700, color: '#2c2c2c', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '3px' }}>Print Job</div>
+        <div style={{ fontSize: '11px', color: '#333', lineHeight: '1.6' }}>
+          DK Complete Science Encyclopedia, 5th Edition — Print run: 3,200 copies. 512pp, 4-colour, case-bound hardcover, 250gsm gloss cover. Per Framework Agreement PRH-RRD-PRINT-2024.
+        </div>
+      </div>
+
+      {/* Line items */}
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '18px', fontSize: '11px' }}>
+        <thead>
+          <tr style={{ background: '#2c2c2c' }}>
+            <th style={{ padding: '7px 10px', textAlign: 'left', color: '#fff', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</th>
+            <th style={{ padding: '7px 10px', textAlign: 'center', color: '#fff', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', width: '60px' }}>Qty</th>
+            <th style={{ padding: '7px 10px', textAlign: 'right', color: '#fff', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', width: '110px' }}>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style={{ borderBottom: '1px solid #eee', background: '#fff' }}>
+            <td style={{ padding: '7px 10px', color: '#333' }}>Print &amp; Bind — DK Complete Science Encyclopedia 5th Ed. (3,200 copies × $9.125/unit)</td>
+            <td style={{ padding: '7px 10px', textAlign: 'center', color: '#333' }}>1</td>
+            <td style={{ padding: '7px 10px', textAlign: 'right', color: '#333', fontWeight: 500 }}><HV conf={100} visible={v(5)}>$29,200.00</HV></td>
+          </tr>
+          <tr style={{ borderBottom: '1px solid #eee', background: '#fffbe6' }}>
+            <td style={{ padding: '7px 10px', color: '#7a4a00' }}>
+              Paper Cost Surcharge — PPPC Q2 2026 Index +8.2% (per Clause 8.2, Framework Agreement PRH-RRD-PRINT-2024)
+              <span style={{ display: 'inline-block', marginLeft: '8px', fontSize: '9px', background: '#fff3d6', border: '1px solid #f59e0b', borderRadius: '3px', padding: '1px 5px', color: '#92600a', fontWeight: 700 }}>DISPUTED</span>
+            </td>
+            <td style={{ padding: '7px 10px', textAlign: 'center', color: '#7a4a00' }}>1</td>
+            <td style={{ padding: '7px 10px', textAlign: 'right', color: '#7a4a00', fontWeight: 600 }}><HV conf={72} visible={v(6)}>$2,400.00</HV></td>
+          </tr>
+          <tr style={{ borderBottom: '1px solid #eee', background: '#fafafa' }}>
+            <td style={{ padding: '7px 10px', color: '#888' }}>Sales Tax (Educational/Resale Exemption — Form ST-5)</td>
+            <td style={{ padding: '7px 10px', textAlign: 'center', color: '#888' }}>—</td>
+            <td style={{ padding: '7px 10px', textAlign: 'right', color: '#888' }}>$0.00</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Totals + remittance */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '24px', alignItems: 'flex-start' }}>
+        <div style={{ fontSize: '10px', color: '#888', lineHeight: '1.7' }}>
+          <div style={{ fontWeight: 600, marginBottom: '2px', color: '#2c2c2c', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Remittance</div>
+          <div>Bank: JPMorgan Chase Bank, N.A. &nbsp;|&nbsp; A/C Name: R.R. Donnelley &amp; Sons Company</div>
+          <div>ABA Routing: 021000021 &nbsp;|&nbsp; Account No: 389102847 (Wire/ACH)</div>
+          <div style={{ marginTop: '5px', color: '#aaa' }}>Ref: RRD-2026-660219 on all payments &nbsp;·&nbsp; invoicing@rrd.com</div>
+        </div>
+        <table style={{ fontSize: '11px', minWidth: '210px' }}>
+          <tbody>
+            <tr><td style={{ padding: '3px 16px 3px 0', color: '#666' }}>Print Services</td><td style={{ padding: '3px 0', textAlign: 'right', color: '#333' }}>$29,200.00</td></tr>
+            <tr><td style={{ padding: '3px 16px 3px 0', color: '#7a4a00' }}>Paper Surcharge</td><td style={{ padding: '3px 0', textAlign: 'right', color: '#7a4a00' }}>$2,400.00</td></tr>
+            <tr><td style={{ padding: '3px 16px 3px 0', color: '#666' }}>Tax</td><td style={{ padding: '3px 0', textAlign: 'right', color: '#888' }}>$0.00</td></tr>
+            <tr style={{ borderTop: '2px solid #2c2c2c' }}><td style={{ padding: '6px 16px 4px 0', fontWeight: 700, color: '#1a1a1a', fontSize: '13px' }}>Total Due</td><td style={{ padding: '6px 0 4px', textAlign: 'right', fontWeight: 700, color: '#2c2c2c', fontSize: '13px' }}><HV conf={100} visible={v(7)}>$31,600.00</HV></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// Ingram Content Group book distribution invoice (inv-8 — ING-2026-541097). 9 HV fields:
+// 0 supplier · 1 invoice# · 2 inv date · 3 due date · 4 PO# · 5 GR# · 6 subtotal · 7 tax · 8 total
+function IngramInvoice({ vc }: { vc: number }) {
+  const v = (i: number) => vc > i
+  const rows = [
+    { ref: 'DIST-001', desc: 'Distribution & Fulfillment Services — PRH titles (May 16 – Jun 15, 2026)', qty: '1', amt: '$8,500.00' },
+    { ref: 'DIST-002', desc: 'Warehouse Management & Storage — est. 28,400 units on-hand', qty: '1', amt: '$3,800.00' },
+    { ref: 'DIST-003', desc: 'Returns Processing & Inventory Reconciliation', qty: '1', amt: '$1,700.00' },
+  ]
+  return (
+    <div style={{ position: 'relative', fontFamily: 'Arial, sans-serif' }}>
+      {/* Header */}
+      <div style={{ background: '#1b4f8a', borderRadius: '3px 3px 0 0', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff', letterSpacing: '0.03em', marginBottom: '2px' }}>
+            <HV conf={99} visible={v(0)}>INGRAM CONTENT GROUP, INC.</HV>
+          </div>
+          <div style={{ fontSize: '9.5px', color: 'rgba(255,255,255,0.65)', lineHeight: '1.5' }}>
+            One Ingram Blvd, LaVergne, TN 37086, USA &nbsp;|&nbsp; EIN: 38-2791789
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Distribution Services</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#fff', letterSpacing: '-0.5px', marginTop: '2px' }}>INVOICE</div>
+        </div>
+      </div>
+
+      {/* Meta grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginBottom: '18px', border: '1px solid #d0d5e0', borderTop: '3px solid #1b4f8a' }}>
+        <div style={{ padding: '12px 14px', borderRight: '1px solid #d0d5e0' }}>
+          <div style={{ fontSize: '9px', fontWeight: 700, color: '#1b4f8a', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Billed To</div>
+          <div style={{ fontSize: '11px', color: '#333', lineHeight: '1.7' }}>
+            Penguin Random House LLC<br />
+            Attn: Accounts Payable<br />
+            1745 Broadway, New York, NY 10019, USA
+          </div>
+        </div>
+        <div style={{ padding: '12px 14px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+            <tbody>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px', whiteSpace: 'nowrap' }}>Invoice No.</td><td style={{ fontWeight: 600, color: '#1a1a1a' }}><HV conf={100} visible={v(1)}>ING-2026-541097</HV></td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Invoice Date</td><td style={{ color: '#1a1a1a' }}><HV conf={100} visible={v(2)}>June 14, 2026</HV></td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Due Date</td><td style={{ color: '#1a1a1a' }}><HV conf={100} visible={v(3)}>July 14, 2026</HV></td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Blanket PO Ref.</td><td style={{ color: '#1a1a1a', fontFamily: 'monospace', fontSize: '10px' }}><HV conf={100} visible={v(4)}>PO-PRH-BLKT-2026-00891</HV></td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>SES Reference</td><td style={{ color: '#1a1a1a', fontFamily: 'monospace', fontSize: '10px' }}><HV conf={97} visible={v(5)}>SES-PRH-2026-03122</HV></td></tr>
+              <tr><td style={{ color: '#888', paddingBottom: '4px', paddingRight: '10px' }}>Terms</td><td style={{ color: '#1a1a1a' }}>Net 30 &nbsp;|&nbsp; USD</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div style={{ marginBottom: '14px', padding: '9px 13px', background: '#f4f7fb', border: '1px solid #c4d0e8', borderLeft: '3px solid #1b4f8a', borderRadius: '0 3px 3px 0' }}>
+        <div style={{ fontSize: '9px', fontWeight: 700, color: '#1b4f8a', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '3px' }}>Service Period</div>
+        <div style={{ fontSize: '11px', color: '#333', lineHeight: '1.6' }}>
+          Book distribution and fulfilment services — Penguin Random House LLC title catalogue. Period: May 16 – June 15, 2026. Monthly drawdown against Blanket PO PO-PRH-BLKT-2026-00891 per Distribution Agreement PRH-ING-DA-2024-001.
+        </div>
+      </div>
+
+      {/* Line items */}
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '18px', fontSize: '11px' }}>
+        <thead>
+          <tr style={{ background: '#1b4f8a' }}>
+            <th style={{ padding: '7px 10px', textAlign: 'left', color: '#fff', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', width: '80px' }}>Ref</th>
+            <th style={{ padding: '7px 10px', textAlign: 'left', color: '#fff', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</th>
+            <th style={{ padding: '7px 10px', textAlign: 'center', color: '#fff', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', width: '40px' }}>Qty</th>
+            <th style={{ padding: '7px 10px', textAlign: 'right', color: '#fff', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', width: '100px' }}>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i} style={{ borderBottom: '1px solid #eee', background: i % 2 ? '#fafbfd' : '#fff' }}>
+              <td style={{ padding: '7px 10px', color: '#555', fontFamily: 'monospace', fontSize: '10px' }}>{r.ref}</td>
+              <td style={{ padding: '7px 10px', color: '#333' }}>{r.desc}</td>
+              <td style={{ padding: '7px 10px', textAlign: 'center', color: '#333' }}>{r.qty}</td>
+              <td style={{ padding: '7px 10px', textAlign: 'right', color: '#333', fontWeight: 500 }}>{r.amt}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Totals + remittance */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '24px', alignItems: 'flex-start' }}>
+        <div style={{ fontSize: '10px', color: '#888', lineHeight: '1.7' }}>
+          <div style={{ fontWeight: 600, marginBottom: '2px', color: '#1b4f8a', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Remittance</div>
+          <div>Bank: Wells Fargo Bank, N.A. &nbsp;|&nbsp; A/C Name: Ingram Content Group, Inc.</div>
+          <div>ABA Routing: 121000248 &nbsp;|&nbsp; Account No: 4072119876 (ACH)</div>
+          <div style={{ marginTop: '5px', color: '#aaa' }}>Ref: ING-2026-541097 on all payments &nbsp;·&nbsp; accounts@ingramcontent.com</div>
+          <div style={{ marginTop: '8px', fontSize: '9px', color: '#bbb' }}>Tax: New York State sales tax applied at applicable rate on taxable services.</div>
+        </div>
+        <table style={{ fontSize: '11px', minWidth: '210px' }}>
+          <tbody>
+            <tr><td style={{ padding: '3px 16px 3px 0', color: '#666' }}>Subtotal</td><td style={{ padding: '3px 0', textAlign: 'right', color: '#333' }}><HV conf={100} visible={v(6)}>$14,000.00</HV></td></tr>
+            <tr><td style={{ padding: '3px 16px 3px 0', color: '#666' }}>Tax (NY)</td><td style={{ padding: '3px 0', textAlign: 'right', color: '#333' }}><HV conf={95} visible={v(7)}>$1,200.00</HV></td></tr>
+            <tr style={{ borderTop: '2px solid #1b4f8a' }}><td style={{ padding: '6px 16px 4px 0', fontWeight: 700, color: '#1a1a1a', fontSize: '13px' }}>Total Due</td><td style={{ padding: '6px 0 4px', textAlign: 'right', fontWeight: 700, color: '#1b4f8a', fontSize: '13px' }}><HV conf={100} visible={v(8)}>$15,200.00</HV></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// Scanned royalty/IT statement (inv-9 BMG royalty, inv-10 T-Systems IT) — rendered as a
 // photocopied-look HTML doc with AI overlay badges (no external image dependency).
+// inv-9 (Kobalt): heavy degradation simulating a low-resolution photocopy from a fax-fed scanner
+// inv-10 (T-Systems): light scan treatment
 function ScannedCopyInvoice({ vc, invoice }: { vc: number; invoice: Invoice }) {
   const v = (i: number) => vc > i
   const isRoyalty = invoice.id === 'inv-9'
@@ -599,6 +913,123 @@ function ScannedCopyInvoice({ vc, invoice }: { vc: number; invoice: Invoice }) {
   const supplier = isRoyalty ? 'Kobalt Music Group' : 'T-Systems International GmbH'
   const docLabel = isRoyalty ? 'Royalty / Usage Statement' : 'Service Invoice'
   const activity = isRoyalty ? 'Q1 2026 Usage Pool — Administration Agreement' : 'Managed IT Services — MSA Hours Pool'
+
+  // ── Kobalt (inv-9): poor-quality photocopy from fax-fed flatbed scanner ─────
+  // Document was placed skewed; toner low; 150 dpi scan creates blur and banding.
+  // Simulated with CSS filters, rotation, edge shadows, and a fold crease overlay.
+  if (isRoyalty) {
+    return (
+      <div style={{ position: 'relative', fontFamily: '"Courier New", Courier, monospace' }}>
+        {/* Outer degradation layer — full-doc filter + skew */}
+        <div style={{
+          position: 'relative',
+          filter: 'grayscale(0.94) contrast(1.45) blur(0.72px) brightness(0.81)',
+          transform: 'rotate(-2.1deg) skewX(0.9deg)',
+          transformOrigin: 'top left',
+        }}>
+          {/* Paper background with faint horizontal scan-banding */}
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+            background: '#ccc9c0',
+            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.028) 3px, rgba(0,0,0,0.028) 4px)',
+          }} />
+          {/* Dark scanner-edge shadow — left and top */}
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1,
+            background: 'linear-gradient(to right, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.10) 9%, transparent 22%), linear-gradient(to bottom, rgba(0,0,0,0.26) 0%, rgba(0,0,0,0.06) 7%, transparent 18%)',
+          }} />
+          {/* Diagonal page-fold crease */}
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1,
+            background: 'linear-gradient(111deg, transparent 30%, rgba(0,0,0,0.16) 44%, rgba(255,255,255,0.08) 48%, rgba(0,0,0,0.07) 52%, transparent 66%)',
+          }} />
+          {/* Toner smudge patch — bottom-right corner */}
+          <div style={{
+            position: 'absolute', bottom: '8%', right: '4%', width: '60px', height: '22px',
+            background: 'radial-gradient(ellipse, rgba(0,0,0,0.22) 0%, transparent 70%)',
+            pointerEvents: 'none', zIndex: 1,
+          }} />
+
+          {/* Document content */}
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <div style={{ textAlign: 'center', fontSize: '8px', color: '#666', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '14px', opacity: 0.75 }}>
+              — Scanned Copy · Poor Quality · {docLabel} —
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0', border: '1px solid #888', marginBottom: '12px', background: '#d4d1c8' }}>
+              <div style={{ padding: '8px 12px', borderRight: '1px solid #888' }}>
+                <div style={{ fontSize: '8px', color: '#777', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Supplier</div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#2a2a2a', textShadow: '0.4px 0.4px 0.8px rgba(0,0,0,0.45)' }}><HV conf={92} visible={v(0)}>{supplier}</HV></div>
+                <div style={{ fontSize: '9px', color: '#666', marginTop: '4px', opacity: 0.8 }}>royalties@kobaltmusic.com</div>
+              </div>
+              <div style={{ padding: '8px 12px' }}>
+                <div style={{ fontSize: '8px', color: '#777', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Bill-to</div>
+                <div style={{ fontSize: '9px', color: '#555', lineHeight: '1.6', opacity: 0.85 }}>BMG Rights Management<br />Bertelsmann GBS</div>
+              </div>
+            </div>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px', border: '1px solid #888', fontSize: '9px', background: '#d4d1c8' }}>
+              <tbody>
+                <tr style={{ borderBottom: '1px solid #888', background: '#c8c5bc' }}>
+                  <td style={{ padding: '5px 8px', color: '#666', width: '28%' }}>Document Number</td>
+                  <td style={{ padding: '5px 8px', color: '#2a2a2a', fontWeight: 600, width: '22%', textShadow: '0.3px 0.3px 0.6px rgba(0,0,0,0.4)' }}><HV conf={88} visible={v(1)}>{f.invoiceNumber}</HV></td>
+                  <td style={{ padding: '5px 8px', color: '#666', width: '25%', borderLeft: '1px solid #888' }}>Payment Due</td>
+                  <td style={{ padding: '5px 8px', color: '#2a2a2a', fontWeight: 500, textShadow: '0.3px 0.3px 0.6px rgba(0,0,0,0.4)' }}><HV conf={85} visible={v(3)}>{f.dueDate}</HV></td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid #888', background: '#d4d1c8' }}>
+                  <td style={{ padding: '5px 8px', color: '#666', opacity: 0.9 }}>Document Date</td>
+                  <td style={{ padding: '5px 8px', color: '#2a2a2a', opacity: 0.85 }}><HV conf={85} visible={v(2)}>{f.invoiceDate}</HV></td>
+                  <td style={{ padding: '5px 8px', color: '#666', borderLeft: '1px solid #888', opacity: 0.9 }}>Payment Terms</td>
+                  <td style={{ padding: '5px 8px', color: '#2a2a2a', opacity: 0.75 }}><HV conf={80} visible={v(1)}>{f.paymentTerms}</HV></td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid #888', background: '#c8c5bc' }}>
+                  <td style={{ padding: '5px 8px', color: '#666' }}>PO / Contract</td>
+                  <td style={{ padding: '5px 8px', color: '#2a2a2a', opacity: 0.7 }}><HV conf={78} visible={v(4)}>{f.grNumber ?? f.contractRef ?? 'SO-8426'}</HV></td>
+                  <td style={{ padding: '5px 8px', color: '#666', borderLeft: '1px solid #888' }}>Contract Ref</td>
+                  <td style={{ padding: '5px 8px', color: '#2a2a2a', fontWeight: 500, opacity: 0.65 }}><HV conf={75} visible={v(4)}>{f.contractRef ?? f.poNumber ?? 'Contract 10008'}</HV></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style={{ fontSize: '9px', color: '#5a5a5a', marginBottom: '8px', opacity: 0.8 }}>
+              As per {f.contractRef ?? 'Contract 10008, Exhibit B'}, we hereby invoice you for:
+            </div>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '16px', border: '1px solid #888', fontSize: '9px', background: '#d4d1c8' }}>
+              <thead>
+                <tr style={{ background: '#b0aca0', borderBottom: '1px solid #888' }}>
+                  <th style={{ padding: '5px 10px', textAlign: 'left', color: '#333', fontWeight: 700 }}>Activity</th>
+                  <th style={{ padding: '5px 10px', textAlign: 'right', color: '#333', fontWeight: 700, width: '110px' }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '8px 10px', color: '#3a3a3a', opacity: 0.78 }}><HV conf={72} visible={v(5)}>{activity}</HV></td>
+                  <td style={{ padding: '8px 10px', textAlign: 'right', color: '#2a2a2a', fontWeight: 500, textShadow: '0.4px 0.4px 0.7px rgba(0,0,0,0.35)' }}><HV conf={90} visible={v(5)}>{fmtAmt(f.subtotal)}</HV></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+              <table style={{ fontSize: '9px', minWidth: '210px', border: '1px solid #888', background: '#d4d1c8' }}>
+                <tbody>
+                  <tr style={{ borderBottom: '1px solid #888' }}><td style={{ padding: '5px 12px', color: '#666' }}>Subtotal:</td><td style={{ padding: '5px 12px', textAlign: 'right', color: '#3a3a3a' }}><HV conf={90} visible={v(6)}>{fmtAmt(f.subtotal)}</HV></td></tr>
+                  <tr style={{ borderBottom: '1px solid #888' }}><td style={{ padding: '5px 12px', color: '#666' }}>VAT (reverse charge §13b):</td><td style={{ padding: '5px 12px', textAlign: 'right', color: '#3a3a3a', opacity: 0.8 }}><HV conf={88} visible={v(7)}>0.00</HV></td></tr>
+                  <tr style={{ background: '#b8b5ac' }}><td style={{ padding: '5px 12px', fontWeight: 700, color: '#1a1a1a', textShadow: '0.5px 0.5px 1px rgba(0,0,0,0.5)' }}>Total Payable<br />{f.currency}:</td><td style={{ padding: '5px 12px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a', textShadow: '0.5px 0.5px 1px rgba(0,0,0,0.5)' }}><HV conf={90} visible={v(8)}>{fmtAmt(f.totalAmount)}</HV></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ borderTop: '1px solid #999', paddingTop: '10px', fontSize: '8px', color: '#666', lineHeight: '1.6', opacity: 0.75 }}>
+              Payment due upon receipt of counterparty usage confirmation. Queries: royalties@kobaltmusic.com &nbsp;|&nbsp; Ref: Q1-2026-USAGEPOOL
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── T-Systems (inv-10): light scan treatment ──────────────────────────────────
   return (
     <div style={{ position: 'relative', fontFamily: 'Arial, sans-serif', filter: 'grayscale(0.35) contrast(1.05)', transform: 'rotate(-0.4deg)' }}>
       <div style={{ textAlign: 'center', fontSize: '9px', color: '#aaa', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '12px' }}>Scanned Copy — {docLabel}</div>
@@ -607,11 +1038,11 @@ function ScannedCopyInvoice({ vc, invoice }: { vc: number; invoice: Invoice }) {
         <div style={{ padding: '8px 12px', borderRight: '1px solid #bbb' }}>
           <div style={{ fontSize: '9px', color: '#666', fontWeight: 700, marginBottom: '4px' }}>Supplier</div>
           <div style={{ fontSize: '13px', fontWeight: 700, color: '#1a1a1a' }}><HV conf={92} visible={v(0)}>{supplier}</HV></div>
-          <div style={{ fontSize: '10px', color: '#444', marginTop: '4px' }}>{isRoyalty ? 'royalties@kobaltmusic.com' : 'billing@t-systems.com'}</div>
+          <div style={{ fontSize: '10px', color: '#444', marginTop: '4px' }}>billing@t-systems.com</div>
         </div>
         <div style={{ padding: '8px 12px' }}>
           <div style={{ fontSize: '9px', color: '#666', fontWeight: 700, marginBottom: '4px' }}>Bill-to</div>
-          <div style={{ fontSize: '10px', color: '#444', lineHeight: '1.6' }}>{isRoyalty ? 'BMG Rights Management' : 'Arvato Systems'}<br />Bertelsmann GBS</div>
+          <div style={{ fontSize: '10px', color: '#444', lineHeight: '1.6' }}>Arvato Systems<br />Bertelsmann GBS</div>
         </div>
       </div>
 
@@ -630,7 +1061,7 @@ function ScannedCopyInvoice({ vc, invoice }: { vc: number; invoice: Invoice }) {
             <td style={{ padding: '5px 8px', color: '#1a1a1a' }}><HV conf={80} visible={v(1)}>{f.paymentTerms}</HV></td>
           </tr>
           <tr style={{ borderBottom: '1px solid #bbb', background: '#f4f4f4' }}>
-            <td style={{ padding: '5px 8px', color: '#555' }}>{isRoyalty ? 'PO / Contract' : 'Sales Order'}</td>
+            <td style={{ padding: '5px 8px', color: '#555' }}>Sales Order</td>
             <td style={{ padding: '5px 8px', color: '#1a1a1a' }}><HV conf={78} visible={v(4)}>{f.grNumber ?? f.contractRef ?? 'SO-8426'}</HV></td>
             <td style={{ padding: '5px 8px', color: '#555', borderLeft: '1px solid #bbb' }}>Contract Ref</td>
             <td style={{ padding: '5px 8px', color: '#1a1a1a', fontWeight: 500 }}><HV conf={75} visible={v(4)}>{f.contractRef ?? f.poNumber ?? 'Contract 10008'}</HV></td>
@@ -661,7 +1092,7 @@ function ScannedCopyInvoice({ vc, invoice }: { vc: number; invoice: Invoice }) {
         <table style={{ fontSize: '10px', minWidth: '210px', border: '1px solid #bbb' }}>
           <tbody>
             <tr style={{ borderBottom: '1px solid #bbb' }}><td style={{ padding: '5px 12px', color: '#555' }}>Subtotal:</td><td style={{ padding: '5px 12px', textAlign: 'right', color: '#333' }}><HV conf={90} visible={v(6)}>{fmtAmt(f.subtotal)}</HV></td></tr>
-            <tr style={{ borderBottom: '1px solid #bbb' }}><td style={{ padding: '5px 12px', color: '#555' }}>Tax:</td><td style={{ padding: '5px 12px', textAlign: 'right', color: '#333' }}><HV conf={88} visible={v(7)}>0.00</HV></td></tr>
+            <tr style={{ borderBottom: '1px solid #bbb' }}><td style={{ padding: '5px 12px', color: '#555' }}>VAT (19% DE):</td><td style={{ padding: '5px 12px', textAlign: 'right', color: '#333' }}><HV conf={88} visible={v(7)}>{fmtAmt(f.tax ?? 0)}</HV></td></tr>
             <tr style={{ background: '#f4f4f4' }}><td style={{ padding: '5px 12px', fontWeight: 700, color: '#1a1a1a' }}>Total Payable<br />{f.currency}:</td><td style={{ padding: '5px 12px', textAlign: 'right', fontWeight: 700, color: '#1a1a1a' }}><HV conf={90} visible={v(8)}>{fmtAmt(f.totalAmount)}</HV></td></tr>
           </tbody>
         </table>
@@ -669,7 +1100,7 @@ function ScannedCopyInvoice({ vc, invoice }: { vc: number; invoice: Invoice }) {
 
       <div style={{ borderTop: '1px solid #ccc', paddingTop: '12px', fontSize: '10px', color: '#555', lineHeight: '1.6' }}>
         <div style={{ fontWeight: 700, marginBottom: '3px', color: '#222' }}>Remit payment to bank account on file.</div>
-        <div>Moderate-quality scan — some fields extracted below the auto-approval confidence threshold and require manual verification.</div>
+        <div>Payment Terms: Net 120 days — per Contract 10008, Exhibit B. Ref: TSI-2026-IT-4471 on all payments. &nbsp;|&nbsp; billing@t-systems.com</div>
       </div>
     </div>
   )
@@ -865,8 +1296,8 @@ function JungVonMattInvoice({ vc }: { vc: number }) {
         <table style={{ fontSize: '11px', minWidth: '200px' }}>
           <tbody>
             <tr><td style={{ padding: '3px 16px 3px 0', color: '#666' }}>Net Amount</td><td style={{ padding: '3px 0', textAlign: 'right', color: '#333' }}><HV conf={100} visible={v(4)}>€18,400.00</HV></td></tr>
-            <tr><td style={{ padding: '3px 16px 3px 0', color: '#666' }}>VAT (reverse charge)</td><td style={{ padding: '3px 0', textAlign: 'right', color: '#333' }}><HV conf={95} visible={v(5)}>€0.00</HV></td></tr>
-            <tr style={{ borderTop: '2px solid #111' }}><td style={{ padding: '6px 16px 4px 0', fontWeight: 700, color: '#1a1a1a', fontSize: '13px' }}>Total Due</td><td style={{ padding: '6px 0 4px', textAlign: 'right', fontWeight: 700, color: '#111', fontSize: '13px' }}><HV conf={100} visible={v(6)}>€18,400.00</HV></td></tr>
+            <tr><td style={{ padding: '3px 16px 3px 0', color: '#666' }}>VAT (19% DE)</td><td style={{ padding: '3px 0', textAlign: 'right', color: '#333' }}><HV conf={95} visible={v(5)}>€3,496.00</HV></td></tr>
+            <tr style={{ borderTop: '2px solid #111' }}><td style={{ padding: '6px 16px 4px 0', fontWeight: 700, color: '#1a1a1a', fontSize: '13px' }}>Total Due</td><td style={{ padding: '6px 0 4px', textAlign: 'right', fontWeight: 700, color: '#111', fontSize: '13px' }}><HV conf={100} visible={v(6)}>€21,896.00</HV></td></tr>
           </tbody>
         </table>
       </div>
@@ -964,7 +1395,10 @@ function StellifyInvoice({ vc }: { vc: number }) {
 }
 
 export function ScannedInvoice({ invoice, isExtractionActive = false, isExtractionDone = false, extractionAgentIdx = -1, showLegend = true, showConfidenceOverlays = true }: Props) {
-  const isScannedCopy = invoice.id === 'inv-9' || invoice.id === 'inv-10' || invoice.id === 'inv-11'
+  const isPixomondo = invoice.id === 'inv-11'
+  const isIngram = invoice.id === 'inv-8'
+  const isRRD = invoice.id === 'inv-7'
+  const isScannedCopy = invoice.id === 'inv-9' || invoice.id === 'inv-10'
   const isSunset = invoice.id === 'inv-2'
   const isLehmanns = invoice.id === 'inv-5' || invoice.id === 'inv-5-r1'
   const isCorrected = invoice.id === 'inv-5-r1'
@@ -975,6 +1409,9 @@ export function ScannedInvoice({ invoice, isExtractionActive = false, isExtracti
   const isJVM = invoice.id === 'inv-6'
   const isPO = invoice.category === 'PO'
   const totalHVFields = isScannedCopy ? 9
+    : isPixomondo ? 8
+    : isIngram ? 9
+    : isRRD ? 8
     : isMaersk ? 8
     : isJVM ? 7
     : (isPO || isSunset || isLehmanns) ? 9
@@ -1035,23 +1472,29 @@ export function ScannedInvoice({ invoice, isExtractionActive = false, isExtracti
         )}
         {isScannedCopy
           ? <ScannedCopyInvoice vc={vc} invoice={invoice} />
-          : isSunset
-            ? <SunsetPostInvoice vc={vc} />
-            : isLehmanns
-              ? <LehmannsInvoice vc={vc} corrected={isCorrected} />
-              : isIC
-                ? <ICInvoice vc={vc} />
-                : isRoyalty
-                  ? <RoyaltyInvoice vc={vc} />
-                  : isStellify
-                    ? <StellifyInvoice vc={vc} />
-                    : isMaersk
-                      ? <MaerskInvoice vc={vc} />
-                      : isJVM
-                        ? <JungVonMattInvoice vc={vc} />
-                        : isPO
-                          ? <POInvoice vc={vc} />
-                          : <NonPOInvoice vc={vc} />
+          : isPixomondo
+            ? <PixomondoInvoice vc={vc} />
+            : isSunset
+              ? <SunsetPostInvoice vc={vc} />
+              : isLehmanns
+                ? <LehmannsInvoice vc={vc} corrected={isCorrected} />
+                : isIC
+                  ? <ICInvoice vc={vc} />
+                  : isRoyalty
+                    ? <RoyaltyInvoice vc={vc} />
+                    : isStellify
+                      ? <StellifyInvoice vc={vc} />
+                      : isMaersk
+                        ? <MaerskInvoice vc={vc} />
+                        : isJVM
+                          ? <JungVonMattInvoice vc={vc} />
+                          : isIngram
+                            ? <IngramInvoice vc={vc} />
+                            : isRRD
+                              ? <RRDInvoice vc={vc} />
+                              : isPO
+                                ? <POInvoice vc={vc} />
+                                : <NonPOInvoice vc={vc} />
         }
       </div>
     </div>

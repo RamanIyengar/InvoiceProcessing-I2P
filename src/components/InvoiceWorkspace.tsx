@@ -19,9 +19,13 @@ interface Props {
   glEmailsViewed?: boolean
   onRoyaltySent?: () => void
   royaltyMismatchAutoResolved?: boolean
+  onICMismatchSend?: () => void
+  icMismatchAutoResolved?: boolean
+  onRescanSent?: () => void
+  rescanReplyReceived?: boolean
 }
 
-export function InvoiceWorkspace({ invoice, onBack, onTaxMismatchSent, taxMismatchAutoResolved, onMissingGRSent, missingGRAutoResolved, onGLApprovalSent, glApprovalReceived, onProcessingComplete, metroGLApprovalSent, onMetroGLApprovalSend, metroApproved, onMetroApprove, metroInvoiceApprovedIds, glEmailsViewed, onRoyaltySent, royaltyMismatchAutoResolved }: Props) {
+export function InvoiceWorkspace({ invoice, onBack, onTaxMismatchSent, taxMismatchAutoResolved, onMissingGRSent, missingGRAutoResolved, onGLApprovalSent, glApprovalReceived, onProcessingComplete, metroGLApprovalSent, onMetroGLApprovalSend, metroApproved, onMetroApprove, metroInvoiceApprovedIds, glEmailsViewed, onRoyaltySent, royaltyMismatchAutoResolved, onICMismatchSend, icMismatchAutoResolved, onRescanSent, rescanReplyReceived }: Props) {
   return (
     <ProcessingView
       invoice={invoice}
@@ -41,6 +45,10 @@ export function InvoiceWorkspace({ invoice, onBack, onTaxMismatchSent, taxMismat
       glEmailsViewed={glEmailsViewed}
       onRoyaltySent={onRoyaltySent}
       royaltyMismatchAutoResolved={royaltyMismatchAutoResolved}
+      onICMismatchSend={onICMismatchSend}
+      icMismatchAutoResolved={icMismatchAutoResolved}
+      onRescanSent={onRescanSent}
+      rescanReplyReceived={rescanReplyReceived}
     />
   )
 }

@@ -7,10 +7,11 @@ import { Sidebar, SidebarTab } from './components/Sidebar'
 import { DashboardView } from './components/DashboardView'
 import { InvoiceWorkspace } from './components/InvoiceWorkspace'
 import { AuditTrailPage } from './components/AuditTrailPage'
-import { taxMismatchReplyEmails, glApprovalReplyEmail, metroGLReplyEmails, prtGLReplyEmails, missingGRReplyEmail, royaltyMismatchReplyEmail, royaltyDeviationSentEmail, taxMismatchSentEmail, missingGRSentEmail, glApprovalSentEmail, prtGLSentEmail, metroGLSentEmail, mockInvoices } from './data/mockData'
+import { taxMismatchReplyEmails, glApprovalReplyEmail, metroGLReplyEmails, prtGLReplyEmails, missingGRReplyEmail, royaltyMismatchReplyEmail, royaltyDeviationSentEmail, taxMismatchSentEmail, missingGRSentEmail, glApprovalSentEmail, prtGLSentEmail, metroGLSentEmail, icMismatchSentEmail, icMismatchReplyEmail, rrdDisputeSentEmail, rrdDisputeReplyEmail, kobaltRescanSentEmail, kobaltRescanReplyEmail, mockInvoices } from './data/mockData'
 import { LandingScreen } from './components/LandingScreen'
 import { OutlookInbox } from './components/OutlookInbox'
 import { TicketsView } from './components/TicketsView'
+import { SettingsPage } from './components/SettingsPage'
 
 // ─── Analytics charts ────────────────────────────────────────────────────────
 
@@ -211,192 +212,6 @@ function AnalyticsPage() {
   )
 }
 
-function ToggleSwitch({ on }: { on: boolean }) {
-  return (
-    <div style={{ width: '40px', height: '22px', borderRadius: '11px', background: on ? '#1a3a6b' : '#c8cccf', position: 'relative', flexShrink: 0, cursor: 'default' }}>
-      <div style={{ position: 'absolute', top: '3px', left: on ? '21px' : '3px', width: '16px', height: '16px', borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.25)' }} />
-    </div>
-  )
-}
-
-function PercentBadge({ pct }: { pct: number }) {
-  return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#f0edfd', borderRadius: '20px', padding: '4px 10px' }}>
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <circle cx="7" cy="7" r="6" stroke="#7c3aed" strokeWidth="1.4"/>
-        <path d="M7 4v3.5" stroke="#7c3aed" strokeWidth="1.4" strokeLinecap="round"/>
-        <circle cx="7" cy="10" r="0.8" fill="#7c3aed"/>
-      </svg>
-      <span style={{ fontSize: '13px', fontWeight: 700, color: '#7c3aed', fontFamily: 'Lato, sans-serif' }}>{pct}%</span>
-    </div>
-  )
-}
-
-interface RuleCard {
-  title: string
-  priority: number
-  active: boolean
-  expiring?: { label: string; remaining: string; expires: string }
-  description: string[]
-  triggered: number
-  pct: number
-}
-
-const RULE_CARDS: RuleCard[] = [
-  {
-    title: 'SLA Rule',
-    priority: 1,
-    active: true,
-    description: [
-      'Process all invoices within SLA, regardless of volume.',
-      'Standard: 2 days',
-      'Urgent: 4 hours',
-      'Month-end invoices to be processed prior to close day of the month',
-    ],
-    triggered: 3,
-    pct: 80,
-  },
-  {
-    title: 'Discount Capture And Maximisation',
-    priority: 1,
-    active: true,
-    description: [
-      'Ensure all discount-eligible invoices are accurately captured.',
-      'Prioritize processing of discount invoices to ensure timely resolution, posting, and readiness for payment.',
-    ],
-    triggered: 5,
-    pct: 74,
-  },
-  {
-    title: 'Paid On Time / Ready To Pay',
-    priority: 1,
-    active: true,
-    description: [
-      'Ensure all invoices are posted before their due date and ready for payment.',
-      'Use past payment data to identify and address supplier delays.',
-    ],
-    triggered: 1,
-    pct: 100,
-  },
-  {
-    title: 'Hold all Payments above $50k',
-    priority: 1,
-    active: true,
-    expiring: { label: 'Expiring Soon', remaining: '-5524h remaining', expires: 'Expires: 10/31/2025 05:30:00' },
-    description: ['Hold all Payments above $50k for review'],
-    triggered: 0,
-    pct: 62,
-  },
-]
-
-function SettingsPage() {
-  return (
-    <div style={{ height: '100%', overflowY: 'auto', background: '#f6f7f7', padding: '32px' }}>
-      <div style={{ maxWidth: '860px' }}>
-        <h1 style={{ fontFamily: 'Cabin, sans-serif', fontSize: '26px', fontWeight: 700, color: '#1d2f36', marginBottom: '6px' }}>
-          Settings
-        </h1>
-        <p style={{ fontSize: '15px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginBottom: '28px' }}>
-          Manage automation rules, SLA policies, and processing priorities
-        </p>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <span style={{ fontFamily: 'Cabin, sans-serif', fontSize: '17px', fontWeight: 700, color: '#1d2f36' }}>Automation Rules</span>
-          <button style={{ padding: '8px 18px', background: '#1a3a6b', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer' }}>+ Add Rule</button>
-        </div>
-
-        {RULE_CARDS.map(rule => (
-          <div key={rule.title} style={{ background: '#fff', border: '1px solid #e4e6e7', borderRadius: '10px', padding: '20px 24px', marginBottom: '14px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
-              <span style={{ fontFamily: 'Cabin, sans-serif', fontSize: '17px', fontWeight: 700, color: '#1d2f36', flex: 1 }}>{rule.title}</span>
-              <button style={{ padding: '5px 14px', background: '#fff', border: '1px solid #c8cccf', borderRadius: '20px', fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', cursor: 'pointer' }}>Edit</button>
-              <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px', color: '#6b767b' }}>
-                <svg width="16" height="18" viewBox="0 0 16 18" fill="none"><path d="M1 4h14M6 4V2h4v2M2 4l1 12h10l1-12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: rule.expiring ? '10px' : '12px', flexWrap: 'wrap' }}>
-              <span style={{ padding: '3px 10px', borderRadius: '20px', border: '1px solid #c8cccf', fontSize: '12px', fontWeight: 600, color: '#6b767b', fontFamily: 'Lato, sans-serif' }}>Priority {rule.priority}</span>
-              <span style={{ padding: '3px 10px', borderRadius: '20px', border: '1px solid #1b823f', fontSize: '12px', fontWeight: 700, color: '#1b823f', fontFamily: 'Lato, sans-serif' }}>Active</span>
-              {rule.expiring && (
-                <span style={{ padding: '3px 10px', borderRadius: '20px', border: '1px solid #b91f1f', fontSize: '12px', fontWeight: 700, color: '#b91f1f', fontFamily: 'Lato, sans-serif' }}>{rule.expiring.label}</span>
-              )}
-              <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
-                <ToggleSwitch on={false} />
-              </div>
-            </div>
-
-            {rule.expiring && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#6b767b" strokeWidth="1.3"/><path d="M7 4v3.5l2 1.5" stroke="#6b767b" strokeWidth="1.3" strokeLinecap="round"/></svg>
-                <span style={{ fontSize: '13px', color: '#b91f1f', fontFamily: 'Lato, sans-serif', fontWeight: 700 }}>{rule.expiring.remaining}</span>
-                <span style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif' }}>{rule.expiring.expires}</span>
-              </div>
-            )}
-
-            <div style={{ marginBottom: '14px' }}>
-              {rule.description.map((line, i) => (
-                <p key={i} style={{ fontSize: '14px', color: '#4a5568', fontFamily: 'Lato, sans-serif', lineHeight: '1.6', margin: '0 0 2px' }}>{line}</p>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '14px', fontWeight: 700, color: '#1d2f36', fontFamily: 'Lato, sans-serif' }}>Triggered {rule.triggered} times</span>
-              <PercentBadge pct={rule.pct} />
-            </div>
-          </div>
-        ))}
-
-        <div style={{ marginTop: '32px', marginBottom: '16px' }}>
-          <span style={{ fontFamily: 'Cabin, sans-serif', fontSize: '17px', fontWeight: 700, color: '#1d2f36' }}>Configuration</span>
-        </div>
-
-        {[
-          {
-            title: 'Approval Thresholds',
-            icon: (
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="1" y="1" width="18" height="18" rx="3" stroke="#1a3a6b" strokeWidth="1.5"/><path d="M5 10h10M5 6.5h10M5 13.5h6" stroke="#1a3a6b" strokeWidth="1.4" strokeLinecap="round"/></svg>
-            ),
-            description: 'Define monetary thresholds for auto-approval, manager review, and CFO sign-off. Configure per-category and per-supplier overrides.',
-          },
-          {
-            title: 'Agent Configuration',
-            icon: (
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#1a3a6b" strokeWidth="1.5"/><circle cx="10" cy="10" r="3.5" stroke="#1a3a6b" strokeWidth="1.4"/><path d="M10 1v3M10 16v3M1 10h3M16 10h3" stroke="#1a3a6b" strokeWidth="1.4" strokeLinecap="round"/></svg>
-            ),
-            description: 'Configure AI agent behavior, step durations, confidence thresholds, and fallback actions for each processing stage.',
-          },
-          {
-            title: 'Notification Rules',
-            icon: (
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 0 1 6 6v3l1.5 2.5H2.5L4 11V8a6 6 0 0 1 6-6Z" stroke="#1a3a6b" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 16.5a2 2 0 0 0 4 0" stroke="#1a3a6b" strokeWidth="1.4" strokeLinecap="round"/></svg>
-            ),
-            description: 'Set up email, Slack, and in-app notification rules for SLA breaches, exception queues, and approval requests.',
-          },
-          {
-            title: 'Supplier Master',
-            icon: (
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="12" rx="2" stroke="#1a3a6b" strokeWidth="1.5"/><path d="M7 5V4a3 3 0 0 1 6 0v1" stroke="#1a3a6b" strokeWidth="1.4" strokeLinecap="round"/><circle cx="10" cy="11" r="2" stroke="#1a3a6b" strokeWidth="1.3"/></svg>
-            ),
-            description: 'Manage approved suppliers, payment terms, preferred GL codes, and tax classifications for automated matching.',
-          },
-        ].map(cfg => (
-          <div key={cfg.title} style={{ background: '#fff', border: '1px solid #e4e6e7', borderRadius: '10px', padding: '20px 24px', marginBottom: '14px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#e7ecf5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              {cfg.icon}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1d2f36', marginBottom: '4px' }}>{cfg.title}</div>
-              <div style={{ fontSize: '14px', color: '#6b767b', fontFamily: 'Lato, sans-serif', lineHeight: '1.5' }}>{cfg.description}</div>
-            </div>
-            <button style={{ padding: '7px 16px', background: '#fff', border: '1px solid #c8cccf', borderRadius: '6px', fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', cursor: 'pointer', flexShrink: 0 }}>Configure</button>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export default function App() {
   const [activeTab, setActiveTab] = useState<SidebarTab>('inbox')
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
@@ -412,14 +227,17 @@ export default function App() {
   const [metroGLApprovalSent, setMetroGLApprovalSent] = useState(false)
   const [metroApprovedIds, setMetroApprovedIds] = useState<Set<string>>(new Set())
   const [royaltySent, setRoyaltySent] = useState(false)
+  const [icSent, setIcSent] = useState(false)
+  const [icReplyReceived, setIcReplyReceived] = useState(false)
+  const [rescanSent, setRescanSent] = useState(false)
   const [sentEmails, setSentEmails] = useState<SentEmail[]>([])
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | null>(null)
-  const [appView, setAppView] = useState<'home' | 'outlook-login' | 'outlook' | 'servicenow-login' | 'servicenow'>('home')
+  const [appView, setAppView] = useState<'home' | 'outlook-login' | 'outlook' | 'sap-login' | 'sap'>('home')
 
-  if (appView === 'servicenow-login') {
-    return <LoginScreen onLogin={() => setAppView('servicenow')} />
+  if (appView === 'sap-login') {
+    return <LoginScreen onLogin={() => setAppView('sap')} />
   }
 
   if (appView === 'outlook-login') {
@@ -506,12 +324,61 @@ export default function App() {
     }, 3000)
   }
 
+  const handleICMismatchSend = () => {
+    if (icSent) return
+    setIcSent(true)
+    setSentEmails(prev => prev.some(e => e.id === icMismatchSentEmail.id) ? prev : [icMismatchSentEmail, ...prev])
+    setToastMessage('ICE reconciliation notification sent to Pieter Janssen · p.janssen@bertelsmann.de')
+    setToastAction(null)
+    setToastVisible(true)
+    const hideFirst = setTimeout(() => setToastVisible(false), 4000)
+    setTimeout(() => {
+      clearTimeout(hideFirst)
+      setToastVisible(false)
+      setTimeout(() => {
+        setIcReplyReceived(true)
+        setReplyEmails(prev => {
+          if (prev.some(e => e.id === icMismatchReplyEmail.id)) return prev
+          return [icMismatchReplyEmail, ...prev]
+        })
+        setToastMessage('Pieter Janssen confirmed ICE-REC-2026-0619 cleared — entities balanced')
+        setToastAction({ label: 'View in Outlook', onClick: () => setAppView('outlook') })
+        setToastVisible(true)
+        setTimeout(() => { setToastVisible(false); setToastAction(null) }, 6000)
+      }, 80)
+    }, 3000)
+  }
+
+  const handleRescanSent = () => {
+    if (rescanSent) return
+    setRescanSent(true)
+    setSentEmails(prev => prev.some(e => e.id === kobaltRescanSentEmail.id) ? prev : [kobaltRescanSentEmail, ...prev])
+    setToastMessage('Re-scan request sent to Kobalt Music Group · royalties@kobaltmusic.com')
+    setToastAction(null)
+    setToastVisible(true)
+    const hideFirst = setTimeout(() => setToastVisible(false), 4000)
+    setTimeout(() => {
+      clearTimeout(hideFirst)
+      setToastVisible(false)
+      setTimeout(() => {
+        setReplyEmails(prev => {
+          if (prev.some(e => e.id === kobaltRescanReplyEmail.id)) return prev
+          return [kobaltRescanReplyEmail, ...prev]
+        })
+        setToastMessage('Kobalt resent KOB-RY-2026-0831 as native PDF — reprocessing at 97% confidence')
+        setToastAction({ label: 'View in Outlook', onClick: () => setAppView('outlook') })
+        setToastVisible(true)
+        setTimeout(() => { setToastVisible(false); setToastAction(null) }, 6000)
+      }, 80)
+    }, 2500)
+  }
+
   const handleGLApprovalSent = () => {
     const isPRT = selectedInvoice?.glMissingVariant === 'prt-coding'
 
     if (isPRT) {
       setSentEmails(prev => prev.some(e => e.id === prtGLSentEmail.id) ? prev : [prtGLSentEmail, ...prev])
-      setToastMessage('WBS coding approval email sent to Daniel Roth & Thomas Lindqvist')
+      setToastMessage('Production WBS coding approval sent to Claudia Bauer & Marc Olivier-Leblanc')
       setToastAction(null)
       setToastVisible(true)
       const hideFirst = setTimeout(() => setToastVisible(false), 4000)
@@ -525,7 +392,7 @@ export default function App() {
         })
         if (selectedInvoice?.id) setGLApprovedInvoiceIds(prev => new Set([...prev, selectedInvoice.id]))
         setTimeout(() => {
-          setToastMessage('Approval received from Daniel Roth (Requestor) — TSI-2026-IT-7714')
+          setToastMessage('Approval received from Claudia Bauer (Production Finance) — PXM-2026-FRM-1142')
           setToastAction({ label: 'Go to Outlook', onClick: () => setAppView('outlook') })
           setToastVisible(true)
           setTimeout(() => { setToastVisible(false); setToastAction(null) }, 5000)
@@ -539,7 +406,7 @@ export default function App() {
         })
         setPrtGLBothApproved(true)
         setTimeout(() => {
-          setToastMessage('Approval received from Thomas Lindqvist (Head of Department) — TSI-2026-IT-7714')
+          setToastMessage('Approval received from Marc Olivier-Leblanc (VP Finance Content) — PXM-2026-FRM-1142')
           setToastAction({ label: 'Go to Outlook', onClick: () => setAppView('outlook') })
           setToastVisible(true)
           setTimeout(() => { setToastVisible(false); setToastAction(null) }, 5000)
@@ -548,11 +415,15 @@ export default function App() {
       return
     }
 
-    // Standard GL flow
+    // Standard GL flow (or RRD vendor dispute)
     const currentInvoiceId = selectedInvoice?.id ?? ''
     const currentInvoiceNum = selectedInvoice?.invoiceNumber ?? selectedInvoice?.id ?? 'invoice'
-    setSentEmails(prev => prev.some(e => e.id === glApprovalSentEmail.id) ? prev : [glApprovalSentEmail, ...prev])
-    setToastMessage(`GL code approval email sent for ${currentInvoiceNum}`)
+    const isRRDDispute = currentInvoiceId === 'inv-7'
+    const sentEmailObj = isRRDDispute ? rrdDisputeSentEmail : glApprovalSentEmail
+    const replyEmailObj = isRRDDispute ? rrdDisputeReplyEmail : glApprovalReplyEmail
+    const replyEmailId = isRRDDispute ? 'reply-rrd-dispute' : 'reply-gl-approval'
+    setSentEmails(prev => prev.some(e => e.id === sentEmailObj.id) ? prev : [sentEmailObj, ...prev])
+    setToastMessage(isRRDDispute ? `Surcharge pre-approval query sent to PRH Procurement for ${currentInvoiceNum}` : `GL code approval email sent for ${currentInvoiceNum}`)
     setToastAction(null)
     setToastVisible(true)
     const hideFirst = setTimeout(() => setToastVisible(false), 4000)
@@ -560,12 +431,12 @@ export default function App() {
       clearTimeout(hideFirst)
       setToastVisible(false)
       setReplyEmails(prev => {
-        if (prev.some(e => e.id === 'reply-gl-approval')) return prev
-        return [glApprovalReplyEmail, ...prev]
+        if (prev.some(e => e.id === replyEmailId)) return prev
+        return [replyEmailObj, ...prev]
       })
       if (currentInvoiceId) setGLApprovedInvoiceIds(prev => new Set([...prev, currentInvoiceId]))
       setTimeout(() => {
-        setToastMessage(`GL code approval received for ${currentInvoiceNum}`)
+        setToastMessage(isRRDDispute ? `PRH Procurement confirmed surcharge is authorised for ${currentInvoiceNum}` : `GL code approval received for ${currentInvoiceNum}`)
         setToastAction({ label: 'Go to Outlook', onClick: () => setAppView('outlook') })
         setToastVisible(true)
         setTimeout(() => { setToastVisible(false); setToastAction(null) }, 6000)
@@ -609,7 +480,7 @@ export default function App() {
     return (
       <LandingScreen
         onSelectOutlook={() => setAppView('outlook-login')}
-        onSelectServiceNow={() => setAppView('servicenow-login')}
+        onSelectSAP={() => setAppView('sap-login')}
       />
     )
   }
@@ -625,7 +496,7 @@ export default function App() {
           if (prtGLBothApproved && selectedInvoice?.glMissingVariant === 'prt-coding') {
             setPrtOutlookReturned(true)
           }
-          setAppView(selectedInvoice ? 'servicenow' : 'home')
+          setAppView(selectedInvoice ? 'sap' : 'home')
         }}
       />
     )
@@ -649,12 +520,16 @@ export default function App() {
 
   const metroApproved = metroGLApprovalSent && replyEmails.some(e => e.id === 'reply-metro-gl-1')
   const royaltyMismatchAutoResolved = royaltySent && replyEmails.some(e => e.id === 'reply-royalty-mismatch' && !e.isUnread)
+  const icMismatchAutoResolved = icSent && icReplyReceived
+  const rescanReplyReceived = rescanSent && replyEmails.some(e => e.id === 'reply-kobalt-rescan')
 
   const glEmailsViewed = selectedInvoice?.glMissingVariant === 'prt-coding'
     ? prtOutlookReturned ||
       (replyEmails.filter(e => e.id === 'reply-prt-gl-1' || e.id === 'reply-prt-gl-2').length === 2 &&
       replyEmails.filter(e => e.id === 'reply-prt-gl-1' || e.id === 'reply-prt-gl-2').every(e => !e.isUnread))
-    : replyEmails.some(e => e.id === 'reply-gl-approval' && !e.isUnread)
+    : selectedInvoice?.id === 'inv-7'
+      ? replyEmails.some(e => e.id === 'reply-rrd-dispute' && !e.isUnread)
+      : replyEmails.some(e => e.id === 'reply-gl-approval' && !e.isUnread)
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -687,6 +562,10 @@ export default function App() {
               glEmailsViewed={glEmailsViewed}
               onRoyaltySent={handleRoyaltySent}
               royaltyMismatchAutoResolved={royaltyMismatchAutoResolved && selectedInvoice?.failType === 'royalty-mismatch'}
+              onICMismatchSend={handleICMismatchSend}
+              icMismatchAutoResolved={icMismatchAutoResolved && selectedInvoice?.failType === 'ic-mismatch'}
+              onRescanSent={handleRescanSent}
+              rescanReplyReceived={rescanReplyReceived && selectedInvoice?.id === 'inv-9'}
             />
           ) : activeTab === 'inbox' ? (
             <TicketsView
