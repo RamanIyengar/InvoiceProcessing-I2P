@@ -105,7 +105,7 @@ export function Sidebar({ activeTab, onTabChange, inboxBadge }: Props) {
             marginBottom: '4px',
           }}
         >
-          Bertelsmann Source-to-Pay
+          Bertelsmann Invoice Processing
         </div>
         <div
           style={{
