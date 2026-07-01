@@ -1,5 +1,83 @@
 import { useState } from 'react'
 
+const USE_CASES = [
+  { no: 1,  supplier: 'ARRI Rental Deutschland GmbH', invoiceId: 'ARRI-2026-148750',  amount: '€187,420.00', cat: 'PO',       div: 'Fremantle (RTL Group)',        theme: 'PO 3-way match · VAT §12 standard rate' },
+  { no: 2,  supplier: 'Sunset Post Production',        invoiceId: 'SPP-2026-0461',     amount: '€94,300.00',  cat: 'PO',       div: 'Fremantle (RTL Group)',        theme: 'Duplicate invoice detection' },
+  { no: 3,  supplier: 'Maersk Line',                   invoiceId: 'MAEU-2026-58900',   amount: '$12,480.00',  cat: 'PO',       div: 'Penguin Random House',         theme: 'Freight surcharge tolerance breach' },
+  { no: 4,  supplier: 'Deloitte Consulting GmbH',      invoiceId: 'DLT-2026-7741',     amount: '€142,000.00', cat: 'Non-PO',   div: 'Arvato Connect',               theme: 'GL coding recommendation + email request' },
+  { no: 5,  supplier: 'Lehmanns Media GmbH',           invoiceId: 'LM-2026-04781',     amount: '€28,560.00',  cat: 'Non-PO',   div: 'Bertelsmann Education',        theme: 'VAT reduced rate §12 (books) mismatch' },
+  { no: 6,  supplier: 'Jung von Matt AG',               invoiceId: 'JVM-2026-3047',     amount: '€215,750.00', cat: 'Non-PO',   div: 'Bertelsmann Marketing Services', theme: 'Non-PO GL coding · marketing spend' },
+  { no: 7,  supplier: 'RR Donnelley',                  invoiceId: 'RRD-2026-660219',   amount: '$31,600.00',  cat: 'Non-PO',   div: 'DK Publishing (PRH)',          theme: 'Framework surcharge pre-approval check' },
+  { no: 8,  supplier: 'Ingram Content Group',          invoiceId: 'ING-2026-541097',   amount: '$84,210.00',  cat: 'PO',       div: 'Penguin Random House',         theme: 'Straight-through auto-approval' },
+  { no: 9,  supplier: 'Kobalt Music Group',            invoiceId: 'KOB-RY-2026-0831',  amount: '£318,750.00', cat: 'Royalty',  div: 'BMG Rights Management',        theme: 'Royalty withholding tax §50a EStG' },
+  { no: 10, supplier: 'T-Systems International GmbH', invoiceId: 'TSI-2026-884412',   amount: '€410,200.00', cat: 'Non-PO',   div: 'Arvato Systems',               theme: 'Ambiguous GL — 3 competing codes' },
+  { no: 11, supplier: 'Pixomondo GmbH',               invoiceId: 'PXM-2026-1047',     amount: '€560,000.00', cat: 'Non-PO',   div: 'Fremantle (RTL Group)',        theme: 'WBS project cost split · VFX production' },
+  { no: 12, supplier: 'Bertelsmann Intercompany',     invoiceId: 'IC-2026-BTV-0341',  amount: '€3,240,000.00', cat: 'IC',    div: 'Bertelsmann TV Germany',       theme: 'Intercompany reconciliation · transfer pricing' },
+  { no: 13, supplier: 'The Wylie Agency LLC',         invoiceId: 'WYL-RY-2026-0312',  amount: '$84,375.00',  cat: 'Royalty',  div: 'Penguin Random House',         theme: 'Royalty dispute resolution · DRC clearance' },
+  { no: 14, supplier: 'Stellify Media Ltd',           invoiceId: 'STL-2026-0094',     amount: '€196,800.00', cat: 'PO',       div: 'Fremantle (RTL Group)',        theme: 'Cross-border VAT reverse charge §13b UStG' },
+]
+
+function UseCasesModal({ onClose }: { onClose: () => void }) {
+  const catColor = (cat: string) => {
+    if (cat === 'PO')     return { bg: '#e7ecf5', fg: '#1a3a6b' }
+    if (cat === 'Non-PO') return { bg: '#fef3e2', fg: '#b06b00' }
+    if (cat === 'Royalty') return { bg: '#f0ecf8', fg: '#6b35a8' }
+    return { bg: '#e8f5ee', fg: '#1b823f' }
+  }
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+    >
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden', width: '900px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid #e4e6e7', background: '#1d2f36', flexShrink: 0 }}>
+          <div>
+            <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#fff' }}>Bertelsmann Use Cases</div>
+            <div style={{ fontFamily: 'Lato, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>AI-Powered Invoice Processing · 14 Use Cases</div>
+          </div>
+          <button onClick={onClose} style={{ width: '30px', height: '30px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.08)', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>×</button>
+        </div>
+        {/* Table */}
+        <div style={{ overflowY: 'auto', flex: 1 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Lato, sans-serif' }}>
+            <thead>
+              <tr style={{ background: '#f6f7f7', position: 'sticky', top: 0 }}>
+                {['#', 'Supplier', 'Invoice No.', 'Amount', 'Type', 'Division / BU', 'AI Use Case'].map(h => (
+                  <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#6b767b', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '2px solid #e4e6e7', whiteSpace: 'nowrap' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {USE_CASES.map((uc, i) => {
+                const c = catColor(uc.cat)
+                return (
+                  <tr key={uc.no} style={{ background: i % 2 === 0 ? '#fff' : '#fafafa', borderBottom: '1px solid #f0f1f1' }}>
+                    <td style={{ padding: '10px 12px', fontSize: '12px', color: '#6b767b', fontWeight: 700, width: '30px' }}>{uc.no}</td>
+                    <td style={{ padding: '10px 12px', fontSize: '13px', fontWeight: 600, color: '#1d2f36', maxWidth: '180px' }}>{uc.supplier}</td>
+                    <td style={{ padding: '10px 12px', fontSize: '12px', color: '#6b767b', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{uc.invoiceId}</td>
+                    <td style={{ padding: '10px 12px', fontSize: '13px', fontWeight: 700, color: '#1d2f36', textAlign: 'right', whiteSpace: 'nowrap' }}>{uc.amount}</td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 700, background: c.bg, color: c.fg, borderRadius: '10px', padding: '2px 8px', whiteSpace: 'nowrap' }}>{uc.cat}</span>
+                    </td>
+                    <td style={{ padding: '10px 12px', fontSize: '12px', color: '#4a555c', maxWidth: '160px' }}>{uc.div}</td>
+                    <td style={{ padding: '10px 12px', fontSize: '12px', color: '#4a555c' }}>{uc.theme}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        {/* Footer */}
+        <div style={{ padding: '10px 20px', borderTop: '1px solid #e4e6e7', background: '#f6f7f7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <span style={{ fontFamily: 'Lato, sans-serif', fontSize: '11px', color: '#89919a' }}>Bertelsmann Invoice Processing Automation · Demo Scope · Accenture</span>
+          <button onClick={onClose} style={{ padding: '6px 16px', borderRadius: '6px', border: '1px solid #c8cccf', background: '#fff', fontSize: '13px', cursor: 'pointer', fontFamily: 'Lato, sans-serif', color: '#4a555c', fontWeight: 600 }}>Close</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ProcessFlowModal({ onClose }: { onClose: () => void }) {
   const [zoom, setZoom] = useState(1)
   return (
@@ -133,12 +211,14 @@ function InactiveTile({ icon, title, subtitle }: { icon: React.ReactNode; title:
 
 export function LandingScreen({ onSelectOutlook, onSelectSAP }: Props) {
   const [showFlowModal, setShowFlowModal] = useState(false)
+  const [showUseCasesModal, setShowUseCasesModal] = useState(false)
   const [vimHovered, setVimHovered] = useState(false)
   const [outlookHovered, setOutlookHovered] = useState(false)
 
   return (
     <>
       {showFlowModal && <ProcessFlowModal onClose={() => setShowFlowModal(false)} />}
+      {showUseCasesModal && <UseCasesModal onClose={() => setShowUseCasesModal(false)} />}
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#f0f0f0', overflow: 'hidden' }}>
 
         {/* SAP Fiori Shell Bar */}
@@ -166,6 +246,16 @@ export function LandingScreen({ onSelectOutlook, onSelectSAP }: Props) {
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="1" width="10" height="13" rx="1.5" /><path d="M5 5h6M5 8h6M5 11h4" strokeLinecap="round" /><path d="M10 1v3.5H14" strokeLinecap="round" strokeLinejoin="round" /></svg>
               Reimagined with AI
+            </button>
+
+            <button
+              onClick={() => setShowUseCasesModal(true)}
+              style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', padding: '6px 11px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.8)', fontFamily: 'Lato, sans-serif', fontSize: '12px', fontWeight: 600, transition: 'all 0.15s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.18)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.1)' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="2" width="14" height="12" rx="1.5" /><path d="M4 6h8M4 9h6" strokeLinecap="round" /></svg>
+              Bertelsmann Use Cases
             </button>
 
             <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.15)' }} />
