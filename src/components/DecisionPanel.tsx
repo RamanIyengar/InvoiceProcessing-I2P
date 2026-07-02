@@ -63,7 +63,7 @@ export function DecisionPanel({ onDecide, decision, invoice }: Props) {
                 marginBottom: '6px',
               }}
             >
-              Routed to SAP Payment Run for payment scheduling.
+              Invoice posted to SAP — AP open item created. Ready for payment on due date.
             </div>
             <div
               style={{

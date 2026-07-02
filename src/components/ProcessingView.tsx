@@ -508,7 +508,7 @@ function AgentToolScreen({ agentName, invoice }: { agentName: string; invoice: I
 
 // ─── SAP Posting Modal (FB60 / MIRO) ──────────────────────────────────────────
 
-function SAPPostingModal({ invoice, onClose, onViewPayment }: { invoice: Invoice; onClose: () => void; onViewPayment: () => void }) {
+function SAPPostingModal({ invoice, onClose }: { invoice: Invoice; onClose: () => void }) {
   const f = invoice.extractedFields
   const currency = f.currency || 'EUR'
   const fmt = (n: number) => new Intl.NumberFormat('en-DE', { style: 'currency', currency }).format(n)
@@ -620,131 +620,13 @@ function SAPPostingModal({ invoice, onClose, onViewPayment }: { invoice: Invoice
         {/* Footer */}
         <div style={{ padding: '11px 20px', borderTop: '1px solid #e0e0e0', background: '#f3f2f1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <span style={{ fontSize: '11px', color: '#767676', fontFamily: 'Lato, sans-serif' }}>Doc. {sapDoc} · {invoice.invoiceNumber} · Posted by Bertelsmann AP Automation</span>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={onClose} style={{ padding: '7px 14px', background: '#fff', border: '1px solid #c8cccf', borderRadius: '4px', fontSize: '13px', color: '#555', cursor: 'pointer', fontFamily: 'Lato, sans-serif' }}>Close</button>
-            <button onClick={onViewPayment} style={{ padding: '7px 18px', background: '#003d6b', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '13px', cursor: 'pointer', fontFamily: 'Lato, sans-serif', fontWeight: 700 }}>View Payment Run (F110) →</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#e8f5ee', border: '1px solid #1b823f', borderRadius: '4px', padding: '5px 12px' }}>
+              <CheckIcon size={13} color="#1b823f" />
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#1b823f', fontFamily: 'Lato, sans-serif' }}>Ready for Payment · Due: {f.dueDate}</span>
+            </div>
+            <button onClick={onClose} style={{ padding: '7px 18px', background: '#003d6b', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '13px', cursor: 'pointer', fontFamily: 'Lato, sans-serif', fontWeight: 700 }}>Close</button>
           </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── SAP Payment Run Modal (F110) ─────────────────────────────────────────────
-
-function SAPPaymentRunModal({ invoice, onClose }: { invoice: Invoice; onClose: () => void }) {
-  const f = invoice.extractedFields
-  const currency = f.currency || 'EUR'
-  const fmt = (n: number) => new Intl.NumberFormat('en-DE', { style: 'currency', currency }).format(n)
-  const sapDoc = SAP_DOC_NUMBERS[invoice.id] || '5100020000'
-  const iban = VENDOR_IBANS[invoice.id] || 'DE89 3704 0044 0532 0130 00'
-  const today = new Date().toLocaleDateString('de-DE')
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.62)', zIndex: 3001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '660px', boxShadow: '0 24px 64px rgba(0,0,0,0.38)', overflow: 'hidden', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
-
-        <div style={{ background: '#003d6b', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <svg width="36" height="20" viewBox="0 0 36 20"><rect width="36" height="20" rx="3" fill="white" fillOpacity="0.15"/><text x="3" y="14" fill="white" fontSize="12" fontWeight="900" fontFamily="Arial, sans-serif">SAP</text></svg>
-            <span style={{ marginLeft: '12px', color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontFamily: "'Segoe UI', sans-serif" }}>S/4HANA  ·  Automatic Payment Run (F110)</span>
-            <button onClick={onClose} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: '22px', cursor: 'pointer', lineHeight: 1 }}>×</button>
-          </div>
-          <div style={{ background: '#00a759', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <CheckIcon size={14} color="#00a759" />
-            </div>
-            <div>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: '14px', fontFamily: "'Segoe UI', sans-serif" }}>Payment Transfer Order Created — {today}</div>
-              <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: '12px', fontFamily: 'Lato, sans-serif' }}>Run ID: F110-{today.replace(/\./g, '')}-001 · Method T (Bank Transfer)</div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
-          {/* Run parameters */}
-          <div style={{ marginBottom: '14px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#767676', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px', fontFamily: 'Lato, sans-serif' }}>Payment Run Parameters</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '7px' }}>
-              {[
-                { label: 'Run Date', value: today },
-                { label: 'Run ID', value: 'AP2026-001' },
-                { label: 'Company Codes', value: 'BERT' },
-                { label: 'Payment Method', value: 'T — Bank Transfer' },
-                { label: 'Value Date', value: f.dueDate },
-                { label: 'House Bank', value: 'DTBK-BERT' },
-              ].map(({ label, value }) => (
-                <div key={label} style={{ background: '#f3f2f1', borderRadius: '4px', padding: '6px 8px' }}>
-                  <div style={{ fontSize: '9px', color: '#767676', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>{label}</div>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#003d6b', fontFamily: 'monospace' }}>{value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Payment list */}
-          <div style={{ marginBottom: '14px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#767676', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px', fontFamily: 'Lato, sans-serif' }}>Payment List</div>
-            <div style={{ border: '1px solid #d9d9d9', borderRadius: '5px', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-                <thead>
-                  <tr style={{ background: '#003d6b' }}>
-                    {['Vendor', 'Name', 'FI Doc.', 'Due Date', 'Amount', 'Status'].map(h => (
-                      <th key={h} style={{ padding: '6px 8px', color: '#fff', textAlign: h === 'Amount' ? 'right' : 'left', fontSize: '10px', fontWeight: 700, letterSpacing: '0.04em' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr style={{ background: '#dff6dd' }}>
-                    <td style={{ padding: '6px 8px', color: '#003d6b', fontFamily: 'monospace', fontWeight: 700 }}>{f.supplierId || 'VEND-100'}</td>
-                    <td style={{ padding: '6px 8px', color: '#323130', fontFamily: 'Lato, sans-serif' }}>{f.supplierName.split(' ').slice(0, 3).join(' ')}</td>
-                    <td style={{ padding: '6px 8px', color: '#003d6b', fontFamily: 'monospace' }}>{sapDoc}</td>
-                    <td style={{ padding: '6px 8px', color: '#323130', fontFamily: 'monospace' }}>{f.dueDate}</td>
-                    <td style={{ padding: '6px 8px', textAlign: 'right', color: '#003d6b', fontFamily: 'monospace', fontWeight: 700 }}>{fmt(f.totalAmount)}</td>
-                    <td style={{ padding: '6px 8px' }}><span style={{ background: '#107c10', color: '#fff', fontSize: '9px', fontWeight: 700, padding: '2px 7px', borderRadius: '3px' }}>PAID</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Bank transfer details */}
-          <div style={{ border: '1px solid #003d6b', borderRadius: '6px', overflow: 'hidden', marginBottom: '14px' }}>
-            <div style={{ background: '#003d6b', padding: '7px 12px' }}>
-              <span style={{ color: '#fff', fontSize: '11px', fontWeight: 700, fontFamily: 'Lato, sans-serif' }}>Bank Transfer Details</span>
-            </div>
-            <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px' }}>
-              {[
-                { label: 'Beneficiary', value: f.supplierName.split(' ').slice(0, 3).join(' ') },
-                { label: 'Transfer Amount', value: fmt(f.totalAmount) },
-                { label: 'IBAN', value: iban },
-                { label: 'BIC / SWIFT', value: 'DEUTDEDB370' },
-                { label: 'Value Date', value: f.dueDate },
-                { label: 'Payment Reference', value: invoice.invoiceNumber },
-              ].map(({ label, value }) => (
-                <div key={label} style={{ background: '#f3f2f1', borderRadius: '4px', padding: '6px 8px' }}>
-                  <div style={{ fontSize: '9px', color: '#767676', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>{label}</div>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#003d6b', fontFamily: 'monospace', wordBreak: 'break-all' }}>{value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Final completion status */}
-          <div style={{ background: '#dff6dd', border: '1px solid #00a759', borderRadius: '6px', padding: '13px 16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#107c10', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <CheckIcon size={20} />
-            </div>
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: '#107c10', fontFamily: 'Cabin, sans-serif' }}>Invoice Processing Complete — End-to-End</div>
-              <div style={{ fontSize: '12px', color: '#0a6e2a', fontFamily: 'Lato, sans-serif', marginTop: '3px' }}>{invoice.invoiceNumber} · {fmt(f.totalAmount)} · Posted in SAP S/4HANA · Transfer order raised · Processing closed</div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ padding: '11px 20px', borderTop: '1px solid #e0e0e0', background: '#f3f2f1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-          <span style={{ fontSize: '11px', color: '#767676', fontFamily: 'Lato, sans-serif' }}>F110 · Run {today} · Bertelsmann GBS AP Automation</span>
-          <button onClick={onClose} style={{ padding: '7px 18px', background: '#003d6b', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '13px', cursor: 'pointer', fontFamily: 'Lato, sans-serif', fontWeight: 700 }}>Close</button>
         </div>
       </div>
     </div>
@@ -1736,7 +1618,7 @@ function MetroGLMissingCard({ invoice, metroGLApprovalSent, metroApproved, metro
       <div style={{ background: '#fff', border: '2px solid #1b823f', borderRadius: '8px', overflow: 'hidden', animation: 'fadeInUp 0.4s ease-out', marginBottom: '16px' }}>
         <div style={{ background: '#e8f5ee', padding: '14px 20px', borderBottom: '1px solid #c8e6c9', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#1b823f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><CheckIcon size={16} /></div>
-          <span style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1b823f' }}>Invoice Approved — Sent to SAP Payment Run</span>
+          <span style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1b823f' }}>Invoice Posted to SAP — Ready for Payment</span>
           <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, background: '#e8f5ee', border: '1px solid #1b823f', color: '#1b823f', padding: '2px 7px', borderRadius: '4px', fontFamily: 'Lato, sans-serif' }}>APPROVED</span>
         </div>
         <div style={{ padding: '20px' }}>
@@ -1932,7 +1814,7 @@ function PRTCodingCard({ invoice, prtApproved, glApproved, onApprove, invoiceApp
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#e8f5ee', border: '1px solid #c8e6c9', borderRadius: '6px', padding: '12px 16px' }}>
             <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#1b823f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><CheckIcon size={13} /></div>
-            <span style={{ fontFamily: 'Lato, sans-serif', fontSize: '13px', fontWeight: 700, color: '#1b823f' }}>Invoice approved and routed to the SAP Payment Run for processing.</span>
+            <span style={{ fontFamily: 'Lato, sans-serif', fontSize: '13px', fontWeight: 700, color: '#1b823f' }}>Invoice posted to SAP — AP open item created. Ready for payment on due date.</span>
           </div>
         </div>
       </div>
@@ -2439,10 +2321,10 @@ function StickyResolvePanel({ title, subtitle, buttonLabel, onResolve }: { title
 
 function AutoApprovePanel({ invoice, variant = 'auto', onViewPosting }: { invoice: Invoice; variant?: 'auto' | 'gl-resolved' | 'royalty-resolved'; onViewPosting?: () => void }) {
   const title = variant === 'gl-resolved'
-    ? 'GL Code Approved — Sent to SAP Payment Run'
+    ? 'GL Code Approved — Posted to SAP · Ready for Payment'
     : variant === 'royalty-resolved'
-      ? 'Approved at Contract Rate — Sent to SAP Payment Run'
-      : 'Auto-Approved · Sent to SAP Payment Run'
+      ? 'Approved at Contract Rate — Posted to SAP · Ready for Payment'
+      : 'Auto-Approved · Posted to SAP · Ready for Payment'
   const subtitle = variant === 'gl-resolved'
     ? `${invoice.invoiceNumber} — GL code approved by all required parties, invoice routed for payment`
     : variant === 'royalty-resolved'
@@ -2558,8 +2440,8 @@ function StickyManualApprovalPanel({ onApprove, approved, onViewPosting, rescanE
       <div style={{ flexShrink: 0, borderTop: '2px solid #1b823f', background: '#e8f5ee', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1b823f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><CheckIcon size={22} /></div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1b823f' }}>Manually Approved · Sent to SAP Payment Run</div>
-          <div style={{ fontSize: '14px', color: '#1a5c30', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Invoice approved by reviewer — routed for payment processing</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1b823f' }}>Manually Approved · Posted to SAP · Ready for Payment</div>
+          <div style={{ fontSize: '14px', color: '#1a5c30', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Invoice approved by reviewer — posted to SAP, AP open item created, ready for payment on due date</div>
         </div>
         {onViewPosting && (
           <button onClick={onViewPosting} style={{ flexShrink: 0, padding: '9px 20px', background: '#003d6b', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -2606,8 +2488,8 @@ function StickyGLPanel({ onDraftEmail, appliedCode, manualGLCode, onApply, glApp
       <div style={{ flexShrink: 0, borderTop: '2px solid #1b823f', background: '#e8f5ee', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1b823f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><CheckIcon size={22} /></div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1b823f' }}>Invoice Approved — Sent to SAP Payment Run</div>
-          <div style={{ fontSize: '14px', color: '#1a5c30', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>GL code {appliedCode} assigned — invoice routed for payment processing</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1b823f' }}>Invoice Posted to SAP — Ready for Payment</div>
+          <div style={{ fontSize: '14px', color: '#1a5c30', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>GL code {appliedCode} assigned — invoice posted to SAP · AP open item created, ready for payment on due date</div>
         </div>
         {onViewPosting && (
           <button onClick={onViewPosting} style={{ flexShrink: 0, padding: '9px 20px', background: '#003d6b', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -3159,8 +3041,8 @@ function StickyMetroGLPanel({ metroGLApprovalSent, onSendApproval, metroApproved
       <div style={{ flexShrink: 0, borderTop: '2px solid #1b823f', background: '#e8f5ee', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1b823f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><CheckIcon size={22} /></div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1b823f' }}>Invoice Approved — Sent to SAP Payment Run</div>
-          <div style={{ fontSize: '14px', color: '#1a5c30', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>GL code 6720-001 (Management Consulting) confirmed — invoice routed for payment processing</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1b823f' }}>Invoice Posted to SAP — Ready for Payment</div>
+          <div style={{ fontSize: '14px', color: '#1a5c30', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>GL code 6720-001 (Management Consulting) confirmed — invoice posted to SAP · AP open item created, ready for payment on due date</div>
         </div>
         {onViewPosting && (
           <button onClick={onViewPosting} style={{ flexShrink: 0, padding: '9px 20px', background: '#003d6b', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -3496,7 +3378,6 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
   const [icEmailSent, setIcEmailSent] = useState(false)
   const [royaltySent, setRoyaltySent] = useState(false)
   const [showSAPPosting, setShowSAPPosting] = useState(false)
-  const [showSAPPayment, setShowSAPPayment] = useState(false)
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -3921,11 +3802,7 @@ BMG / Bertelsmann — AP Operations`}
         <SAPPostingModal
           invoice={invoice}
           onClose={() => setShowSAPPosting(false)}
-          onViewPayment={() => { setShowSAPPosting(false); setShowSAPPayment(true) }}
         />
-      )}
-      {showSAPPayment && (
-        <SAPPaymentRunModal invoice={invoice} onClose={() => setShowSAPPayment(false)} />
       )}
     </div>
   )
