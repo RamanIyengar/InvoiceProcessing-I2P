@@ -807,7 +807,7 @@ function AgentStatusBar({ step, progress, agentIdx, stepNum, total, failed, isPa
 
 // ─── Agent Huddle ──────────────────────────────────────────────────────────────
 
-function AgentHuddle({ steps, currentStep, progress, completed, isFailed, isDone, isCollapsed, onToggle, invoice }: { steps: Invoice['agentSteps']; currentStep: number; progress: number; completed: Set<number>; isFailed: boolean; isDone: boolean; isCollapsed?: boolean; onToggle?: () => void; invoice?: Invoice }) {
+function AgentHuddle({ steps, currentStep, progress, completed, isFailed, isDone, isCollapsed, onToggle, invoice, hideHeader, onViewPosting }: { steps: Invoice['agentSteps']; currentStep: number; progress: number; completed: Set<number>; isFailed: boolean; isDone: boolean; isCollapsed?: boolean; onToggle?: () => void; invoice?: Invoice; hideHeader?: boolean; onViewPosting?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [expandedAgents, setExpandedAgents] = useState<Set<string>>(new Set())
 
@@ -888,14 +888,16 @@ function AgentHuddle({ steps, currentStep, progress, completed, isFailed, isDone
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#fff' }}>
       {/* Header bar */}
-      <div onClick={onToggle} style={{ padding: '9px 16px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, cursor: onToggle ? 'pointer' : 'default', userSelect: 'none', borderBottom: isCollapsed ? 'none' : '1px solid #f0f1f1' }}>
-        <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: isDone ? '#1b823f' : isFailed ? '#b91f1f' : '#1a3a6b', flexShrink: 0, animation: (!isDone && !isFailed) ? 'pulse-ring 1.5s infinite' : 'none' }} />
-        <span style={{ fontFamily: 'Cabin, sans-serif', fontSize: '11px', fontWeight: 700, color: '#6b767b', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Agent Activity</span>
-        <span style={{ fontSize: '11px', color: '#6b767b', fontFamily: 'Lato, sans-serif' }}>{completed.size} / {steps.length} stages</span>
-        <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', transition: 'transform 0.25s ease', transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)' }}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4.5L6 8L10 4.5" stroke="#6b767b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </span>
-      </div>
+      {!hideHeader && (
+        <div onClick={onToggle} style={{ padding: '9px 16px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, cursor: onToggle ? 'pointer' : 'default', userSelect: 'none', borderBottom: isCollapsed ? 'none' : '1px solid #f0f1f1' }}>
+          <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: isDone ? '#1b823f' : isFailed ? '#b91f1f' : '#1a3a6b', flexShrink: 0, animation: (!isDone && !isFailed) ? 'pulse-ring 1.5s infinite' : 'none' }} />
+          <span style={{ fontFamily: 'Cabin, sans-serif', fontSize: '11px', fontWeight: 700, color: '#6b767b', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Agent Activity</span>
+          <span style={{ fontSize: '11px', color: '#6b767b', fontFamily: 'Lato, sans-serif' }}>{completed.size} / {steps.length} stages</span>
+          <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', transition: 'transform 0.25s ease', transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)' }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4.5L6 8L10 4.5" stroke="#6b767b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </span>
+        </div>
+      )}
 
       {/* Scrollable trace content */}
       <div ref={containerRef} style={{ flex: 1, overflowY: 'auto' }}>
@@ -1052,6 +1054,27 @@ function AgentHuddle({ steps, currentStep, progress, completed, isFailed, isDone
             </div>
             <div style={{ flex: 1, paddingTop: '6px' }}>
               <span style={{ fontSize: '12px', fontWeight: 700, color: '#1b823f', fontFamily: 'Cabin, sans-serif' }}>All stages complete — invoice routed for approval</span>
+            </div>
+          </div>
+        )}
+        {isDone && onViewPosting && (
+          <div style={{ padding: '6px 16px 20px', position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'linear-gradient(135deg, #003d6b 0%, #0070b8 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="20" height="11" viewBox="0 0 20 11" fill="none"><text x="0" y="10" fill="white" fontSize="11" fontWeight="900" fontFamily="'Arial', sans-serif">SAP</text></svg>
+              </div>
+              <div style={{ flex: 1, paddingTop: '2px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#1E293B', fontFamily: 'Cabin, sans-serif', marginBottom: '3px' }}>SAP Posting Agent</div>
+                <div style={{ fontSize: '12px', color: '#16A34A', fontFamily: 'Lato, sans-serif', fontWeight: 500, lineHeight: '1.4', marginBottom: '8px' }}>
+                  Document posted to SAP — AP open item created · Ready for payment on due date
+                </div>
+                <button
+                  onClick={onViewPosting}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 14px', background: '#0F1934', color: '#fff', border: 'none', borderRadius: '5px', fontSize: '11px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.02em' }}
+                >
+                  View SAP Posting →
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -4130,7 +4153,8 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
   const [showMetroGLCommsModal, setShowMetroGLCommsModal] = useState(false)
   const [showRoyaltyCommsModal, setShowRoyaltyCommsModal] = useState(false)
   const [metroInvoiceApproved, setMetroInvoiceApproved] = useState(metroInvoiceApprovedIds?.has(invoice.id) ?? false)
-  const [agentActivityCollapsed, setAgentActivityCollapsed] = useState(skipGLAnimation || skipRoyaltyAnimation || skipTaxAnimation || skipMissingGRAnimation || skipICAnimation)
+  const [agentPanelCollapsed, setAgentPanelCollapsed] = useState(false)
+  const [agentPanelMaximized, setAgentPanelMaximized] = useState(false)
   const [showICCommsModal, setShowICCommsModal] = useState(false)
   const [icEmailSent, setIcEmailSent] = useState(false)
   const [royaltySent, setRoyaltySent] = useState(false)
@@ -4421,23 +4445,51 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
     </>
   )
 
-  const processingPanel = (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      {steps.length > 0 && <Stepper steps={steps} currentStep={currentStep} completed={(isGLResolved || isRoyaltyResolved || isTaxResolved || isMissingGRResolved || isICResolved) ? new Set(steps.map((_, i) => i)) : completed} failed={effectiveFailed} />}
-      {steps.length > 0 && !isDone && !isGLResolved && !isRoyaltyResolved && !isTaxResolved && !isMissingGRResolved && !isICResolved && (
-        <AgentStatusBar step={steps[currentStep]} progress={progress} agentIdx={agentIdx} stepNum={currentStep} total={steps.length} failed={effectiveFailed} isPaused={isPaused} onTogglePause={togglePause} />
+  // ─── Agent panel shared content ────────────────────────────────────────────
+  const agentIsFullyDone = isDone || isGLResolved || isRoyaltyResolved || isTaxResolved || isMissingGRResolved || isICResolved
+  const dotColor = agentIsFullyDone ? '#16A34A' : effectiveFailed ? '#b91f1f' : '#7C3AED'
+
+  const agentPanelContent = (
+    <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      {steps.length > 0 && (
+        <Stepper
+          steps={steps}
+          currentStep={currentStep}
+          completed={(isGLResolved || isRoyaltyResolved || isTaxResolved || isMissingGRResolved || isICResolved) ? new Set(steps.map((_, i) => i)) : completed}
+          failed={effectiveFailed}
+        />
       )}
-      <div style={{ height: agentActivityCollapsed ? '40px' : contentScrolled ? '128px' : '290px', flexShrink: 0, overflow: 'hidden', transition: 'height 0.25s ease' }}>
-        <AgentHuddle steps={steps} currentStep={currentStep} progress={progress} completed={(isGLResolved || isRoyaltyResolved || isTaxResolved || isMissingGRResolved || isICResolved) ? new Set(steps.map((_, i) => i)) : completed} isFailed={effectiveFailed} isDone={isDone || isGLResolved || isRoyaltyResolved || isTaxResolved || isMissingGRResolved || isICResolved} isCollapsed={agentActivityCollapsed} onToggle={() => { setAgentActivityCollapsed(v => !v); setContentScrolled(false) }} invoice={invoice} />
+      {steps.length > 0 && !isDone && !isGLResolved && !isRoyaltyResolved && !isTaxResolved && !isMissingGRResolved && !isICResolved && (
+        <AgentStatusBar
+          step={steps[currentStep]}
+          progress={progress}
+          agentIdx={agentIdx}
+          stepNum={currentStep}
+          total={steps.length}
+          failed={effectiveFailed}
+          isPaused={isPaused}
+          onTogglePause={togglePause}
+        />
+      )}
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        <AgentHuddle
+          steps={steps}
+          currentStep={currentStep}
+          progress={progress}
+          completed={(isGLResolved || isRoyaltyResolved || isTaxResolved || isMissingGRResolved || isICResolved) ? new Set(steps.map((_, i) => i)) : completed}
+          isFailed={effectiveFailed}
+          isDone={agentIsFullyDone}
+          invoice={invoice}
+          hideHeader={true}
+          onViewPosting={() => setShowSAPPosting(true)}
+        />
       </div>
-      <DocumentPanel scrollRef={contentScrollRef} onScroll={() => setContentScrolled((contentScrollRef.current?.scrollTop ?? 0) > 40)} hasContent={completed.size > 0 || isFailed}>
-        {scrollContent}
-      </DocumentPanel>
     </div>
   )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f6f7f7' }}>
+      {/* Invoice header bar */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e4e6e7', padding: '10px 28px', display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#1a3a6b', fontSize: '14px', fontFamily: 'Lato, sans-serif', cursor: 'pointer', padding: 0 }}>← Inbox</button>
         <span style={{ color: '#c8cccf', fontSize: '15px' }}>/</span>
@@ -4458,22 +4510,98 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
         </div>
       </div>
 
+      {/* Main content area + right agent panel */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
-        {showInvoice && (
-          <div style={{ width: '50%', borderRight: '1px solid #e4e6e7', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0 }}>
-            <ScannedInvoice
-              invoice={taxMismatchAutoResolved && invoice.id === 'inv-5' ? correctedTaxInvoice : invoice}
-              isExtractionActive={currentStep === 1}
-              isExtractionDone={completed.has(1)}
-              extractionAgentIdx={currentStep === 1 ? agentIdx : -1}
-            />
+
+        {/* Main content: scanned invoice (if shown) + document details */}
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          {showInvoice && (
+            <div style={{ height: '45%', borderBottom: '1px solid #e4e6e7', flexShrink: 0, overflow: 'hidden' }}>
+              <ScannedInvoice
+                invoice={taxMismatchAutoResolved && invoice.id === 'inv-5' ? correctedTaxInvoice : invoice}
+                isExtractionActive={currentStep === 1}
+                isExtractionDone={completed.has(1)}
+                extractionAgentIdx={currentStep === 1 ? agentIdx : -1}
+              />
+            </div>
+          )}
+          <DocumentPanel
+            scrollRef={contentScrollRef}
+            onScroll={() => setContentScrolled((contentScrollRef.current?.scrollTop ?? 0) > 40)}
+            hasContent={completed.size > 0 || isFailed}
+          >
+            {scrollContent}
+          </DocumentPanel>
+        </div>
+
+        {/* Right Agent Panel — sidebar (hidden when maximized) */}
+        {!agentPanelMaximized && (
+          <div style={{
+            width: agentPanelCollapsed ? '48px' : '420px',
+            flexShrink: 0,
+            borderLeft: '1px solid #e4e6e7',
+            display: 'flex',
+            flexDirection: 'column',
+            background: '#fff',
+            transition: 'width 0.25s ease',
+            overflow: 'hidden',
+          }}>
+            {/* Panel header */}
+            <div style={{ padding: '9px 10px', borderBottom: '1px solid #e4e6e7', display: 'flex', alignItems: 'center', gap: '7px', flexShrink: 0, minHeight: '40px' }}>
+              <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: dotColor, flexShrink: 0, animation: (!agentIsFullyDone && !effectiveFailed) ? 'pulse-ring 1.5s infinite' : 'none' }} />
+              {!agentPanelCollapsed && (
+                <>
+                  <span style={{ fontFamily: 'Cabin, sans-serif', fontSize: '11px', fontWeight: 700, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Agent Activity</span>
+                  <span style={{ fontSize: '11px', color: '#94A3B8', fontFamily: 'Lato, sans-serif', flexShrink: 0 }}>{completed.size}/{steps.length}</span>
+                  {/* Maximize button */}
+                  <button
+                    onClick={() => setAgentPanelMaximized(true)}
+                    title="Expand to full screen"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '3px', display: 'flex', alignItems: 'center', color: '#94A3B8', flexShrink: 0, borderRadius: '3px' }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 4.5V1.5h3M8.5 1.5h3v3M12 8.5v3h-3M4.5 12h-3V9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                </>
+              )}
+              {/* Collapse/expand button */}
+              <button
+                onClick={() => setAgentPanelCollapsed(v => !v)}
+                title={agentPanelCollapsed ? 'Expand panel' : 'Collapse panel'}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '3px', display: 'flex', alignItems: 'center', color: '#94A3B8', flexShrink: 0, borderRadius: '3px', marginLeft: agentPanelCollapsed ? 'auto' : 0 }}
+              >
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ transform: agentPanelCollapsed ? 'rotate(-90deg)' : 'rotate(90deg)', transition: 'transform 0.25s ease' }}>
+                  <path d="M2.5 4.5l5 4 5-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Panel body */}
+            {!agentPanelCollapsed && agentPanelContent}
           </div>
         )}
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          {processingPanel}
-        </div>
       </div>
+
       {stickyPanels}
+
+      {/* Maximized agent panel overlay */}
+      {agentPanelMaximized && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 950, background: '#fff', display: 'flex', flexDirection: 'column' }}>
+          {/* Maximized header */}
+          <div style={{ padding: '10px 20px', borderBottom: '1px solid #e4e6e7', display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0, background: '#fff' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: dotColor, animation: (!agentIsFullyDone && !effectiveFailed) ? 'pulse-ring 1.5s infinite' : 'none' }} />
+            <span style={{ fontFamily: 'Cabin, sans-serif', fontSize: '14px', fontWeight: 700, color: '#1E293B', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Agent Activity</span>
+            <span style={{ fontSize: '13px', color: '#64748B', fontFamily: 'Lato, sans-serif' }}>{completed.size} / {steps.length} stages</span>
+            <button
+              onClick={() => setAgentPanelMaximized(false)}
+              style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', color: '#475569', fontSize: '13px', fontFamily: 'Lato, sans-serif', fontWeight: 600, cursor: 'pointer' }}
+            >
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M5 1.5H2.5v2.5M10.5 1.5H13v2.5M13 8.5v2.5h-2.5M2.5 11H5V8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Collapse
+            </button>
+          </div>
+          {agentPanelContent}
+        </div>
+      )}
 
       {showAudit && <AuditModal invoice={invoice} onClose={() => setShowAudit(false)} decision={null} />}
       {showOutlookModal && <OutlookModal invoice={invoice} onClose={() => setShowOutlookModal(false)} />}
