@@ -2633,11 +2633,386 @@ function StickyDuplicatePanel({ notificationSent, onDraftEmail }: { notification
   )
 }
 
-function CommunicationPreviewModal({ to, cc, subject, body, bodyHtml, subtitle, onSend, onClose }: {
+const LANG_OPTIONS = [
+  { code: 'en', label: 'English' },
+  { code: 'de', label: 'Deutsch (German)' },
+  { code: 'fr', label: 'Français (French)' },
+  { code: 'es', label: 'Español (Spanish)' },
+  { code: 'it', label: 'Italiano (Italian)' },
+  { code: 'nl', label: 'Nederlands (Dutch)' },
+  { code: 'pt', label: 'Português (Portuguese)' },
+]
+
+// Phrase pairs per language — most specific first to avoid partial matches
+const LANG_PHRASES: Record<string, [string, string][]> = {
+  de: [
+    ['Bertelsmann Accounts Payable Operations — AP Automation','Bertelsmann Kreditorenbuchhaltung — AP-Automatisierung'],
+    ['Accounts Payable — Bertelsmann Finance Operations','Kreditorenbuchhaltung — Bertelsmann Finance Operations'],
+    ['Bertelsmann Accounts Payable Operations','Bertelsmann Kreditorenbuchhaltung'],
+    [' Finance Team,',' Finance-Team,'],
+    [' Accounts Payable Team,',' Kreditorenteam,'],
+    [' Royalties Team,',' Royalties-Team,'],
+    [' Billing Team,',' Abrechnungsteam,'],
+    ['Dear ','Sehr geehrte(r) '],
+    ['We are writing to inform you that','Wir möchten Sie darüber informieren, dass'],
+    ['We are writing to notify you that','Wir möchten Sie darüber in Kenntnis setzen, dass'],
+    ['We are writing to flag','Wir möchten Sie auf Folgendes hinweisen:'],
+    ['We have identified an intercompany posting mismatch','Wir haben eine Diskrepanz bei der konzerninternen Buchung festgestellt'],
+    ['We have identified','Wir haben festgestellt'],
+    ['We have received your','Wir haben Ihr/e'],
+    ['Please verify your records and do not resubmit','Bitte überprüfen Sie Ihre Unterlagen und reichen Sie die Rechnung nicht erneut ein'],
+    ['Please resubmit a corrected','Bitte reichen Sie eine korrigierte'],
+    ['Please resubmit','Bitte reichen Sie erneut ein'],
+    ['Please confirm the milestone has been delivered','Bitte bestätigen Sie, dass der Meilenstein abgeschlossen wurde'],
+    ['Please confirm','Bitte bestätigen Sie'],
+    ['Please review and reconcile','Bitte prüfen und abstimmen Sie'],
+    ['Please reply to this email with your confirmation','Bitte antworten Sie auf diese E-Mail mit Ihrer Bestätigung'],
+    ['Please reply to this email','Bitte antworten Sie auf diese E-Mail'],
+    ['could you please confirm which GL account is correct','könnten Sie bitte bestätigen, welches Sachkonto korrekt ist'],
+    ['could you please confirm','könnten Sie bitte bestätigen'],
+    ['has been placed on hold','wurde vorläufig gesperrt'],
+    ['has been identified as a duplicate','wurde als Duplikat identifiziert'],
+    ['has been automatically rejected','wurde automatisch abgelehnt'],
+    ['No further action is required on your part unless','Ihrerseits ist kein weiterer Handlungsbedarf erforderlich, es sei denn,'],
+    ['No further action is required','Kein weiterer Handlungsbedarf erforderlich'],
+    ['will remain on hold pending','bleibt gesperrt bis'],
+    ['will remain rejected until','bleibt abgelehnt, bis'],
+    ['at your earliest convenience','so bald wie möglich'],
+    ['Once both entities are balanced','Sobald beide Einheiten abgestimmt sind'],
+    ['Once you confirm','Sobald Sie bestätigen'],
+    ['if you believe this notification has been issued in error','falls Sie der Meinung sind, dass diese Mitteilung irrtümlich erfolgt ist'],
+    ['please contact our AP team','wenden Sie sich bitte an unser Kreditorenteam'],
+    ['As Cost Centre Owner','Als Kostenstellenverantwortliche(r)'],
+    ['for payment immediately','unverzüglich zur Zahlung'],
+    ['for payment posting','zur Zahlungsbuchung'],
+    ['Kind regards,','Mit freundlichen Grüßen,'],
+    ['Regards,','Mit freundlichen Grüßen,'],
+    ['Purchase Order','Bestellnummer'],
+    ['Service Entry Sheet','Leistungserfassungsblatt'],
+    ['GL accounts','Sachkonten'],
+    ['GL account','Sachkonto'],
+    ['GL code','Sachkonto'],
+    ['royalty rate','Lizenzrate'],
+    ['VAT rate','Mehrwertsteuersatz'],
+    ['our AP team','unser Kreditorenteam'],
+    ['Invoice Number:','Rechnungsnummer:'],
+    ['Invoice Date:','Rechnungsdatum:'],
+    ['Invoice Amount:','Rechnungsbetrag:'],
+    ['Invoice Details:','Rechnungsdetails:'],
+    ['Invoice','Rechnung'],['invoice','Rechnung'],
+    ['payment','Zahlung'],['immediately','unverzüglich'],
+    ['Supplier:','Lieferant:'],
+  ],
+  fr: [
+    ['Bertelsmann Accounts Payable Operations — AP Automation','Comptabilité Fournisseurs Bertelsmann — Automatisation AP'],
+    ['Accounts Payable — Bertelsmann Finance Operations','Comptabilité Fournisseurs — Bertelsmann Finance Operations'],
+    ['Bertelsmann Accounts Payable Operations','Comptabilité Fournisseurs Bertelsmann'],
+    [' Finance Team,',' équipe financière,'],
+    [' Accounts Payable Team,',' équipe comptabilité fournisseurs,'],
+    [' Royalties Team,',' équipe redevances,'],
+    [' Billing Team,',' équipe facturation,'],
+    ['Dear ','Cher/Chère '],
+    ['We are writing to inform you that','Nous vous informons par la présente que'],
+    ['We are writing to notify you that','Nous vous notifions par la présente que'],
+    ['We are writing to flag','Nous vous signalons par la présente'],
+    ['We have identified an intercompany posting mismatch','Nous avons identifié une divergence d\'écriture interentités'],
+    ['We have identified','Nous avons identifié'],
+    ['We have received your','Nous avons reçu votre'],
+    ['Please verify your records and do not resubmit','Veuillez vérifier vos documents et ne soumettez pas à nouveau'],
+    ['Please resubmit a corrected','Veuillez soumettre à nouveau une'],
+    ['Please resubmit','Veuillez soumettre à nouveau'],
+    ['Please confirm the milestone has been delivered','Veuillez confirmer que le jalon a été atteint'],
+    ['Please confirm','Veuillez confirmer'],
+    ['Please review and reconcile','Veuillez examiner et réconcilier'],
+    ['Please reply to this email with your confirmation','Veuillez répondre à cet e-mail avec votre confirmation'],
+    ['Please reply to this email','Veuillez répondre à cet e-mail'],
+    ['could you please confirm which GL account is correct','pourriez-vous confirmer quel compte général est correct'],
+    ['could you please confirm','pourriez-vous confirmer'],
+    ['has been placed on hold','a été suspendue'],
+    ['has been identified as a duplicate','a été identifiée comme doublon'],
+    ['has been automatically rejected','a été automatiquement rejetée'],
+    ['No further action is required on your part unless','Aucune action de votre part n\'est requise, sauf si'],
+    ['No further action is required','Aucune action supplémentaire n\'est requise'],
+    ['will remain on hold pending','restera suspendue dans l\'attente de'],
+    ['will remain rejected until','restera rejetée jusqu\'à'],
+    ['at your earliest convenience','dès que possible'],
+    ['Once both entities are balanced','Une fois les deux entités équilibrées'],
+    ['Once you confirm','Une fois confirmé'],
+    ['if you believe this notification has been issued in error','si vous pensez que cette notification a été émise par erreur'],
+    ['please contact our AP team','veuillez contacter notre équipe comptabilité fournisseurs'],
+    ['As Cost Centre Owner','En tant que responsable de centre de coûts'],
+    ['for payment immediately','pour paiement immédiat'],
+    ['for payment posting','pour comptabilisation du paiement'],
+    ['Kind regards,','Bien cordialement,'],
+    ['Regards,','Cordialement,'],
+    ['Purchase Order','bon de commande'],
+    ['Service Entry Sheet','fiche de saisie de prestation'],
+    ['GL accounts','comptes généraux'],
+    ['GL account','compte général'],
+    ['GL code','code comptable'],
+    ['royalty rate','taux de redevance'],
+    ['VAT rate','taux de TVA'],
+    ['our AP team','notre équipe comptabilité fournisseurs'],
+    ['Invoice Number:','Numéro de facture :'],
+    ['Invoice Date:','Date de facture :'],
+    ['Invoice Amount:','Montant de la facture :'],
+    ['Invoice Details:','Détails de la facture :'],
+    ['Invoice','Facture'],['invoice','facture'],
+    ['payment','paiement'],['immediately','immédiatement'],
+    ['Supplier:','Fournisseur :'],
+  ],
+  es: [
+    ['Bertelsmann Accounts Payable Operations — AP Automation','Cuentas por Pagar Bertelsmann — Automatización AP'],
+    ['Accounts Payable — Bertelsmann Finance Operations','Cuentas por Pagar — Bertelsmann Finance Operations'],
+    ['Bertelsmann Accounts Payable Operations','Cuentas por Pagar Bertelsmann'],
+    [' Finance Team,',' equipo financiero,'],
+    [' Accounts Payable Team,',' equipo de cuentas por pagar,'],
+    [' Royalties Team,',' equipo de regalías,'],
+    [' Billing Team,',' equipo de facturación,'],
+    ['Dear ','Estimado/a '],
+    ['We are writing to inform you that','Le escribimos para informarle que'],
+    ['We are writing to notify you that','Le escribimos para notificarle que'],
+    ['We are writing to flag','Le escribimos para señalar'],
+    ['We have identified an intercompany posting mismatch','Hemos identificado una discrepancia en el registro intercompañía'],
+    ['We have identified','Hemos identificado'],
+    ['We have received your','Hemos recibido su'],
+    ['Please verify your records and do not resubmit','Por favor verifique sus registros y no reenvíe'],
+    ['Please resubmit a corrected','Por favor reenvíe una'],
+    ['Please resubmit','Por favor reenvíe'],
+    ['Please confirm the milestone has been delivered','Por favor confirme que el hito ha sido completado'],
+    ['Please confirm','Por favor confirme'],
+    ['Please review and reconcile','Por favor revise y concilie'],
+    ['Please reply to this email with your confirmation','Por favor responda a este correo con su confirmación'],
+    ['Please reply to this email','Por favor responda a este correo electrónico'],
+    ['could you please confirm which GL account is correct','podría por favor confirmar qué cuenta contable es correcta'],
+    ['could you please confirm','podría por favor confirmar'],
+    ['has been placed on hold','ha sido suspendida'],
+    ['has been identified as a duplicate','ha sido identificada como duplicada'],
+    ['has been automatically rejected','ha sido rechazada automáticamente'],
+    ['No further action is required on your part unless','No se requiere ninguna acción adicional de su parte a menos que'],
+    ['No further action is required','No se requiere ninguna acción adicional'],
+    ['will remain on hold pending','permanecerá suspendida hasta que'],
+    ['will remain rejected until','permanecerá rechazada hasta que'],
+    ['at your earliest convenience','a la mayor brevedad posible'],
+    ['Once both entities are balanced','Una vez que ambas entidades estén equilibradas'],
+    ['Once you confirm','Una vez que confirme'],
+    ['if you believe this notification has been issued in error','si cree que esta notificación ha sido emitida por error'],
+    ['please contact our AP team','por favor contacte con nuestro equipo de cuentas por pagar'],
+    ['As Cost Centre Owner','Como responsable del centro de costes'],
+    ['for payment immediately','para pago inmediato'],
+    ['for payment posting','para contabilización del pago'],
+    ['Kind regards,','Un cordial saludo,'],
+    ['Regards,','Atentamente,'],
+    ['Purchase Order','orden de compra'],
+    ['Service Entry Sheet','hoja de entrada de servicios'],
+    ['GL accounts','cuentas contables'],
+    ['GL account','cuenta contable'],
+    ['GL code','código contable'],
+    ['royalty rate','tasa de regalías'],
+    ['VAT rate','tipo de IVA'],
+    ['our AP team','nuestro equipo de cuentas por pagar'],
+    ['Invoice Number:','Número de factura:'],
+    ['Invoice Date:','Fecha de factura:'],
+    ['Invoice Amount:','Importe de la factura:'],
+    ['Invoice Details:','Detalles de la factura:'],
+    ['Invoice','Factura'],['invoice','factura'],
+    ['payment','pago'],['immediately','inmediatamente'],
+    ['Supplier:','Proveedor:'],
+  ],
+  it: [
+    ['Bertelsmann Accounts Payable Operations — AP Automation','Contabilità Fornitori Bertelsmann — Automazione AP'],
+    ['Accounts Payable — Bertelsmann Finance Operations','Contabilità Fornitori — Bertelsmann Finance Operations'],
+    ['Bertelsmann Accounts Payable Operations','Contabilità Fornitori Bertelsmann'],
+    [' Finance Team,',' team finanziario,'],
+    [' Accounts Payable Team,',' team contabilità fornitori,'],
+    [' Royalties Team,',' team royalty,'],
+    [' Billing Team,',' team fatturazione,'],
+    ['Dear ','Gentile '],
+    ['We are writing to inform you that','Vi scriviamo per informarvi che'],
+    ['We are writing to notify you that','Vi scriviamo per notificarvi che'],
+    ['We are writing to flag','Vi scriviamo per segnalare'],
+    ['We have identified an intercompany posting mismatch','Abbiamo identificato una discrepanza nella registrazione infragruppo'],
+    ['We have identified','Abbiamo identificato'],
+    ['We have received your','Abbiamo ricevuto il/la vostro/a'],
+    ['Please verify your records and do not resubmit','Vi chiediamo di verificare i vostri documenti e di non inviare nuovamente'],
+    ['Please resubmit a corrected','Vi chiediamo di inviare nuovamente una'],
+    ['Please resubmit','Vi chiediamo di inviare nuovamente'],
+    ['Please confirm the milestone has been delivered','Vi chiediamo di confermare che il traguardo è stato raggiunto'],
+    ['Please confirm','Vi chiediamo di confermare'],
+    ['Please review and reconcile','Vi chiediamo di esaminare e riconciliare'],
+    ['Please reply to this email with your confirmation','Vi chiediamo di rispondere a questa e-mail con la vostra conferma'],
+    ['Please reply to this email','Vi chiediamo di rispondere a questa e-mail'],
+    ['could you please confirm which GL account is correct','potrebbe cortesemente confermare quale conto contabile è corretto'],
+    ['could you please confirm','potrebbe cortesemente confermare'],
+    ['has been placed on hold','è stata sospesa'],
+    ['has been identified as a duplicate','è stata identificata come duplicato'],
+    ['has been automatically rejected','è stata automaticamente rifiutata'],
+    ['No further action is required on your part unless','Non è richiesta alcuna ulteriore azione da parte vostra, a meno che'],
+    ['No further action is required','Non è richiesta alcuna ulteriore azione'],
+    ['will remain on hold pending','rimarrà sospesa in attesa di'],
+    ['will remain rejected until','rimarrà rifiutata fino a'],
+    ['at your earliest convenience','il prima possibile'],
+    ['Once both entities are balanced','Una volta che entrambe le entità sono bilanciate'],
+    ['Once you confirm','Una volta confermato'],
+    ['if you believe this notification has been issued in error','se ritenete che questa notifica sia stata emessa per errore'],
+    ['please contact our AP team','vi preghiamo di contattare il nostro team di contabilità fornitori'],
+    ['As Cost Centre Owner','In qualità di responsabile del centro di costo'],
+    ['for payment immediately','per il pagamento immediato'],
+    ['for payment posting','per la registrazione del pagamento'],
+    ['Kind regards,','Distinti saluti,'],
+    ['Regards,','Cordiali saluti,'],
+    ['Purchase Order','ordine di acquisto'],
+    ['Service Entry Sheet','foglio di registrazione servizi'],
+    ['GL accounts','conti contabili'],
+    ['GL account','conto contabile'],
+    ['GL code','codice contabile'],
+    ['royalty rate','percentuale di royalty'],
+    ['VAT rate','aliquota IVA'],
+    ['our AP team','il nostro team di contabilità fornitori'],
+    ['Invoice Number:','Numero fattura:'],
+    ['Invoice Date:','Data fattura:'],
+    ['Invoice Amount:','Importo fattura:'],
+    ['Invoice Details:','Dettagli fattura:'],
+    ['Invoice','Fattura'],['invoice','fattura'],
+    ['payment','pagamento'],['immediately','immediatamente'],
+    ['Supplier:','Fornitore:'],
+  ],
+  nl: [
+    ['Bertelsmann Accounts Payable Operations — AP Automation','Bertelsmann Crediteurenadministratie — AP-Automatisering'],
+    ['Accounts Payable — Bertelsmann Finance Operations','Crediteurenadministratie — Bertelsmann Finance Operations'],
+    ['Bertelsmann Accounts Payable Operations','Bertelsmann Crediteurenadministratie'],
+    [' Finance Team,',' financieel team,'],
+    [' Accounts Payable Team,',' crediteurenadministratieteam,'],
+    [' Royalties Team,',' royaltysteam,'],
+    [' Billing Team,',' factureringsteam,'],
+    ['Dear ','Geachte '],
+    ['We are writing to inform you that','Wij schrijven u om u te informeren dat'],
+    ['We are writing to notify you that','Wij schrijven u om u te notificeren dat'],
+    ['We are writing to flag','Wij schrijven u om het volgende onder uw aandacht te brengen:'],
+    ['We have identified an intercompany posting mismatch','Wij hebben een discrepantie in de intercompany boeking geconstateerd'],
+    ['We have identified','Wij hebben geconstateerd'],
+    ['We have received your','Wij hebben uw'],
+    ['Please verify your records and do not resubmit','Gelieve uw administratie te controleren en niet opnieuw in te dienen'],
+    ['Please resubmit a corrected','Gelieve een gecorrigeerde'],
+    ['Please resubmit','Gelieve opnieuw in te dienen'],
+    ['Please confirm the milestone has been delivered','Gelieve te bevestigen dat de mijlpaal is bereikt'],
+    ['Please confirm','Gelieve te bevestigen'],
+    ['Please review and reconcile','Gelieve te beoordelen en te reconciliëren'],
+    ['Please reply to this email with your confirmation','Gelieve op deze e-mail te reageren met uw bevestiging'],
+    ['Please reply to this email','Gelieve op deze e-mail te reageren'],
+    ['could you please confirm which GL account is correct','zou u a.u.b. kunnen bevestigen welke grootboekrekening correct is'],
+    ['could you please confirm','zou u a.u.b. kunnen bevestigen'],
+    ['has been placed on hold','is in de wacht gezet'],
+    ['has been identified as a duplicate','is geïdentificeerd als duplicaat'],
+    ['has been automatically rejected','is automatisch afgewezen'],
+    ['No further action is required on your part unless','Er is geen verdere actie van uw kant vereist, tenzij'],
+    ['No further action is required','Er is geen verdere actie vereist'],
+    ['will remain on hold pending','blijft in de wacht totdat'],
+    ['will remain rejected until','blijft afgewezen totdat'],
+    ['at your earliest convenience','zo spoedig mogelijk'],
+    ['Once both entities are balanced','Zodra beide entiteiten in balans zijn'],
+    ['Once you confirm','Zodra u bevestigt'],
+    ['if you believe this notification has been issued in error','indien u van mening bent dat deze melding ten onrechte is verzonden'],
+    ['please contact our AP team','neemt u dan contact op met ons crediteurenadministratieteam'],
+    ['As Cost Centre Owner','Als kostenplaatseigenaar'],
+    ['for payment immediately','voor directe betaling'],
+    ['for payment posting','voor betalingsverwerking'],
+    ['Kind regards,','Met vriendelijke groeten,'],
+    ['Regards,','Met vriendelijke groeten,'],
+    ['Purchase Order','inkooporder'],
+    ['Service Entry Sheet','serviceregistratieblad'],
+    ['GL accounts','grootboekrekeningen'],
+    ['GL account','grootboekrekening'],
+    ['GL code','grootboekcode'],
+    ['royalty rate','royaltypercentage'],
+    ['VAT rate','btw-tarief'],
+    ['our AP team','ons crediteurenadministratieteam'],
+    ['Invoice Number:','Factuurnummer:'],
+    ['Invoice Date:','Factuurdatum:'],
+    ['Invoice Amount:','Factuurbedrag:'],
+    ['Invoice Details:','Factuurdetails:'],
+    ['Invoice','Factuur'],['invoice','factuur'],
+    ['payment','betaling'],['immediately','onmiddellijk'],
+    ['Supplier:','Leverancier:'],
+  ],
+  pt: [
+    ['Bertelsmann Accounts Payable Operations — AP Automation','Contas a Pagar Bertelsmann — Automação AP'],
+    ['Accounts Payable — Bertelsmann Finance Operations','Contas a Pagar — Bertelsmann Finance Operations'],
+    ['Bertelsmann Accounts Payable Operations','Contas a Pagar Bertelsmann'],
+    [' Finance Team,',' equipa financeira,'],
+    [' Accounts Payable Team,',' equipa de contas a pagar,'],
+    [' Royalties Team,',' equipa de royalties,'],
+    [' Billing Team,',' equipa de faturação,'],
+    ['Dear ','Caro/a '],
+    ['We are writing to inform you that','Escrevemos para o/a informar que'],
+    ['We are writing to notify you that','Escrevemos para o/a notificar que'],
+    ['We are writing to flag','Escrevemos para assinalar'],
+    ['We have identified an intercompany posting mismatch','Identificámos uma discrepância no lançamento intercompanhia'],
+    ['We have identified','Identificámos'],
+    ['We have received your','Recebemos o/a seu/sua'],
+    ['Please verify your records and do not resubmit','Por favor verifique os seus registos e não reenvie'],
+    ['Please resubmit a corrected','Por favor reenvie uma'],
+    ['Please resubmit','Por favor reenvie'],
+    ['Please confirm the milestone has been delivered','Por favor confirme que o marco foi concluído'],
+    ['Please confirm','Por favor confirme'],
+    ['Please review and reconcile','Por favor reveja e reconcilie'],
+    ['Please reply to this email with your confirmation','Por favor responda a este e-mail com a sua confirmação'],
+    ['Please reply to this email','Por favor responda a este e-mail'],
+    ['could you please confirm which GL account is correct','poderia por favor confirmar qual a conta contabilística correta'],
+    ['could you please confirm','poderia por favor confirmar'],
+    ['has been placed on hold','foi suspensa'],
+    ['has been identified as a duplicate','foi identificada como duplicada'],
+    ['has been automatically rejected','foi automaticamente rejeitada'],
+    ['No further action is required on your part unless','Não é necessária qualquer ação adicional da sua parte, a não ser que'],
+    ['No further action is required','Não é necessária qualquer ação adicional'],
+    ['will remain on hold pending','permanecerá suspensa até'],
+    ['will remain rejected until','permanecerá rejeitada até'],
+    ['at your earliest convenience','assim que possível'],
+    ['Once both entities are balanced','Assim que ambas as entidades estiverem equilibradas'],
+    ['Once you confirm','Assim que confirmar'],
+    ['if you believe this notification has been issued in error','se acreditar que esta notificação foi emitida por engano'],
+    ['please contact our AP team','por favor contacte a nossa equipa de contas a pagar'],
+    ['As Cost Centre Owner','Na qualidade de responsável pelo centro de custos'],
+    ['for payment immediately','para pagamento imediato'],
+    ['for payment posting','para contabilização do pagamento'],
+    ['Kind regards,','Com os melhores cumprimentos,'],
+    ['Regards,','Com os melhores cumprimentos,'],
+    ['Purchase Order','ordem de compra'],
+    ['Service Entry Sheet','folha de registo de serviço'],
+    ['GL accounts','contas contabilísticas'],
+    ['GL account','conta contabilística'],
+    ['GL code','código contabilístico'],
+    ['royalty rate','taxa de royalties'],
+    ['VAT rate','taxa de IVA'],
+    ['our AP team','a nossa equipa de contas a pagar'],
+    ['Invoice Number:','Número de fatura:'],
+    ['Invoice Date:','Data de fatura:'],
+    ['Invoice Amount:','Valor da fatura:'],
+    ['Invoice Details:','Detalhes da fatura:'],
+    ['Invoice','Fatura'],['invoice','fatura'],
+    ['payment','pagamento'],['immediately','imediatamente'],
+    ['Supplier:','Fornecedor:'],
+  ],
+}
+
+function applyTranslation(text: string, lang: string): string {
+  if (lang === 'en' || !LANG_PHRASES[lang]) return text
+  let result = text
+  for (const [src, tgt] of LANG_PHRASES[lang]) result = result.split(src).join(tgt)
+  return result
+}
+
+function CommunicationPreviewModal({ to, cc, subject, body, bodyHtml, subtitle, onSend, onClose, translations, htmlTranslations }: {
   to: string; cc: string; subject: string; body?: string; bodyHtml?: string; subtitle: string;
   onSend: () => void; onClose: () => void;
+  translations?: Record<string, string>;
+  htmlTranslations?: Record<string, string>;
 }) {
   const [maximized, setMaximized] = useState(false)
+  const [lang, setLang] = useState('en')
+  const displaySubject = applyTranslation(subject, lang)
+  const displayBody = (lang !== 'en' && translations?.[lang]) ? translations[lang] : (body ? applyTranslation(body, lang) : undefined)
+  const displayHtml = (lang !== 'en' && htmlTranslations?.[lang]) ? htmlTranslations[lang] : (bodyHtml ? applyTranslation(bodyHtml, lang) : undefined)
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: maximized ? '0' : '24px' }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: maximized ? '0' : '10px', width: maximized ? '100vw' : '100%', height: maximized ? '100vh' : undefined, maxWidth: maximized ? '100vw' : '540px', maxHeight: maximized ? '100vh' : '90vh', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'all 0.2s ease' }} onClick={e => e.stopPropagation()}>
@@ -2649,7 +3024,10 @@ function CommunicationPreviewModal({ to, cc, subject, body, bodyHtml, subtitle, 
             <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1d2f36' }}>Communication Preview</div>
             <div style={{ fontSize: '12px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>{subtitle}</div>
           </div>
-          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            <select value={lang} onChange={e => setLang(e.target.value)} title="Select language" style={{ height: '32px', padding: '0 8px', border: '1px solid #e4e6e7', borderRadius: '6px', background: '#f6f7f7', fontSize: '12px', color: '#1d2f36', fontFamily: 'Lato, sans-serif', cursor: 'pointer', outline: 'none' }}>
+              {LANG_OPTIONS.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+            </select>
             <button onClick={() => setMaximized(m => !m)} title={maximized ? 'Restore' : 'Maximise'} style={{ background: '#f6f7f7', border: '1px solid #e4e6e7', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               {maximized
                 ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#6b767b" strokeWidth="1.6" strokeLinecap="round"><path d="M9 1h4v4M5 13H1V9M13 9v4h-4M1 5V1h4"/></svg>
@@ -2665,17 +3043,23 @@ function CommunicationPreviewModal({ to, cc, subject, body, bodyHtml, subtitle, 
           {[
             { label: 'To', value: to },
             { label: 'Cc', value: cc },
-            { label: 'Subject', value: subject },
+            { label: 'Subject', value: displaySubject },
           ].map(({ label, value }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'flex-start', padding: '10px 20px', borderBottom: '1px solid #f0f1f1', gap: '12px' }}>
               <span style={{ width: '60px', flexShrink: 0, fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', paddingTop: '1px' }}>{label}</span>
               <span style={{ flex: 1, fontSize: '13px', color: '#1d2f36', fontFamily: 'Lato, sans-serif' }}>{value}</span>
             </div>
           ))}
+          {lang !== 'en' && (
+            <div style={{ margin: '0 20px', padding: '6px 10px', background: '#e7f3ff', border: '1px solid #b3d4f5', borderRadius: '6px', fontSize: '11.5px', color: '#1a5276', fontFamily: 'Lato, sans-serif', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>🌐</span>
+              <span>Displaying in <strong>{LANG_OPTIONS.find(l => l.code === lang)?.label}</strong></span>
+            </div>
+          )}
           <div style={{ padding: '16px 20px' }}>
-            {bodyHtml
-              ? <div style={{ fontFamily: 'Lato, sans-serif', fontSize: '13px', color: '#1d2f36', lineHeight: '1.7' }} dangerouslySetInnerHTML={{ __html: bodyHtml }} />
-              : <pre style={{ fontFamily: 'Lato, sans-serif', fontSize: '13px', color: '#1d2f36', lineHeight: '1.7', whiteSpace: 'pre-wrap', margin: 0 }}>{body}</pre>
+            {displayHtml
+              ? <div style={{ fontFamily: 'Lato, sans-serif', fontSize: '13px', color: '#1d2f36', lineHeight: '1.7' }} dangerouslySetInnerHTML={{ __html: displayHtml }} />
+              : <pre style={{ fontFamily: 'Lato, sans-serif', fontSize: '13px', color: '#1d2f36', lineHeight: '1.7', whiteSpace: 'pre-wrap', margin: 0 }}>{displayBody}</pre>
             }
           </div>
         </div>
@@ -2708,12 +3092,26 @@ No further action is required on your part unless you believe there has been an 
 Regards,
 Bertelsmann Accounts Payable Operations — AP Automation`
 
+  const bodyDe = `Sehr geehrte(r) ${invoice.supplier} Finance-Team,
+
+wir möchten Sie darüber informieren, dass Rechnung ${info.originalInvoiceNumber}, eingereicht an die Bertelsmann Kreditorenbuchhaltung, als Duplikat identifiziert und automatisch abgelehnt wurde.
+
+Unsere Unterlagen zeigen, dass diese Rechnung bereits am ${info.processedDate} als AP-Beleg ${info.apDocNumber} verarbeitet wurde. Die Zahlung von ${fmt(info.paymentAmount)} wurde per ${info.paymentMethod} am ${info.paymentDate} angewiesen.
+
+Bitte überprüfen Sie Ihre Unterlagen und reichen Sie diese Rechnung nicht erneut zur Zahlung ein. Sollten Sie der Meinung sein, dass diese Mitteilung irrtümlich erfolgt ist, wenden Sie sich bitte mit entsprechenden Belegen an unser Kreditorenteam und geben Sie dabei die obige Rechnungsnummer an.
+
+Kein weiterer Handlungsbedarf erforderlich, sofern Sie keinen Fehler vermuten.
+
+Mit freundlichen Grüßen,
+Bertelsmann Kreditorenbuchhaltung — AP-Automatisierung`
+
   return (
     <CommunicationPreviewModal
       to={info.senderEmail}
       cc="ap-operations@bertelsmann.de"
       subject={subject}
       body={body}
+      translations={{ de: bodyDe }}
       subtitle="Auto-generated by Invoice Duplicate Detection Agent"
       onSend={onSent}
       onClose={onClose}
@@ -2754,12 +3152,36 @@ Regards,
 Lena Fischer
 Bertelsmann Accounts Payable Operations`
 
+  const bodyDe = `Sehr geehrte(r) ${invoice.supplier} Finance-Team,
+
+wir möchten Sie darüber informieren, dass Rechnung ${invoice.invoiceNumber} aufgrund eines fehlerhaften Mehrwertsteuersatzes in Ihrer Einreichung abgelehnt wurde.
+
+Unser automatisiertes AP-System (SAP DRC) hat festgestellt, dass der angewendete Mehrwertsteuersatz (${info.detectedRate}, ${info.detectedCode}) nicht dem für diesen Vorgang geltenden Satz entspricht. Gedruckte Bücher unterliegen gemäß Bestellung ${invoice.extractedFields.poNumber ?? 'auf Anfrage'} dem reduzierten deutschen Mehrwertsteuersatz von ${info.expectedRate} (${info.expectedCode}).
+
+Fehlerhafte Rechnungsdetails:
+  Rechnungsnummer:              ${invoice.invoiceNumber}
+  Nettobetrag:                  ${cur}${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+  Angewendete MwSt. (${info.detectedRate}): ${cur}${detTax}
+  Rechnungssumme:               ${cur}${invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+
+Bitte reichen Sie eine korrigierte (XRechnung-konforme) Rechnung mit folgenden Werten ein:
+  Nettobetrag:                  ${cur}${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+  MwSt. (${info.expectedRate}):               ${cur}${correctTax}
+  Korrigierte Gesamtsumme:      ${cur}${correctTotal}
+
+Die Rechnung bleibt abgelehnt, bis eine korrigierte Version eingegangen ist. Bitte geben Sie bei der erneuten Einreichung die ursprüngliche Rechnungsnummer an.
+
+Mit freundlichen Grüßen,
+Lena Fischer
+Bertelsmann Kreditorenbuchhaltung`
+
   return (
     <CommunicationPreviewModal
       to={invoice.emailSenderEmail}
       cc={info.apLeadEmail}
       subject={subject}
       body={body}
+      translations={{ de: bodyDe }}
       subtitle="Auto-generated by Tax Rate Mismatch / Notification Agent"
       onSend={onSend}
       onClose={onClose}
@@ -2789,12 +3211,31 @@ This invoice will remain on hold pending SES confirmation.
 Regards,
 Bertelsmann Accounts Payable Operations — AP Automation`
 
+  const bodyDe = `Sehr geehrte(r) ${info.poOwnerName},
+
+wir möchten Sie darüber in Kenntnis setzen, dass Rechnung ${invoice.invoiceNumber} von ${invoice.supplier} (${cur}${invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}) gesperrt wurde, da kein entsprechendes Leistungserfassungsblatt in SAP für den Meilenstein der Bestellung ${info.poNumber} gefunden wurde.
+
+Details:
+  Rechnungsnummer:   ${invoice.invoiceNumber}
+  Lieferant:         ${invoice.supplier}
+  Rechnungsbetrag:   ${cur}${invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+  Bestellnummer:     ${info.poNumber}
+  Problem:           Kein Leistungserfassungsblatt in SAP für den Meilenstein gebucht
+
+Bitte bestätigen Sie, dass der Meilenstein abgeschlossen wurde, und buchen Sie das Leistungserfassungsblatt in SAP so bald wie möglich, damit die Zahlungsabwicklung fortgesetzt werden kann. Falls der Meilenstein noch nicht abgeschlossen ist, teilen Sie uns bitte das voraussichtliche Datum mit.
+
+Diese Rechnung bleibt bis zur LES-Bestätigung gesperrt.
+
+Mit freundlichen Grüßen,
+Bertelsmann Kreditorenbuchhaltung — AP-Automatisierung`
+
   return (
     <CommunicationPreviewModal
       to={info.poOwnerEmail}
       cc="ap-operations@bertelsmann.de"
       subject={subject}
       body={body}
+      translations={{ de: bodyDe }}
       subtitle="Auto-generated by Service Entry / 3-Way Match Agent"
       onSend={onSend}
       onClose={onClose}
@@ -2830,12 +3271,35 @@ Regards,
 Lena Fischer
 Bertelsmann Accounts Payable Operations`
 
+  const bodyDe = `Sehr geehrte(r) Markus,
+
+Rechnung ${invoice.invoiceNumber} von ${invoice.supplier} (${cur}${invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}) wurde gesperrt, da der Matching & GL Advisor (Ma) 3 konkurrierende Sachkonten identifiziert hat, bei denen kein einzelnes Konto den Schwellenwert von 60 % für die automatische Zuweisung überschreitet.
+
+Identifizierte Sachkonten (nach KI-Konfidenz sortiert):
+${sortedConflicts.map((c, i) => `  ${i === 0 ? '★ ' : '  '}${c.code} – ${c.label}  (${c.percentage}%)${i === 0 ? ' ← KI-Empfehlung' : ''}`).join('\n')}
+
+Die beste KI-Empfehlung ist ${topConflict.code} (${topConflict.label}) mit ${topConflict.percentage} % Konfidenz, was unter dem Schwellenwert von 60 % für eine automatische Zuweisung liegt. Als Kostenstellenverantwortliche(r) könnten Sie bitte bestätigen, welches Sachkonto korrekt ist?
+
+Rechnungsdetails:
+  Rechnungsnummer:   ${invoice.invoiceNumber}
+  Lieferant:         ${invoice.supplier}
+  Rechnungsbetrag:   ${cur}${invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+  Rechnungsdatum:    ${invoice.extractedFields.invoiceDate}
+  Leistung:          ${invoice.extractedFields.expenseDescription ?? 'Beratungsdienstleistungen'}
+
+Sobald Sie den Sachkonto-Code bestätigen, wird Anja Krüger (AP-Leiterin) die endgültige Genehmigung erteilen und wir werden die Rechnung unverzüglich zur Zahlung freigeben.
+
+Mit freundlichen Grüßen,
+Lena Fischer
+Bertelsmann Kreditorenbuchhaltung`
+
   return (
     <CommunicationPreviewModal
       to="m.weber@bertelsmann.de"
       cc="a.krueger@bertelsmann.de"
       subject={subject}
       body={body}
+      translations={{ de: bodyDe }}
       subtitle="Auto-generated by GL Coding Agent — Internal Approval Required"
       onSend={onSend}
       onClose={onClose}
@@ -2875,12 +3339,40 @@ Lena Fischer
 Accounts Payable — Bertelsmann Finance Operations
 accounts.payable@bertelsmann.de`
 
+  const bodyDe = `Sehr geehrte(r) ${info.royaltyManagerName},
+
+wir möchten Sie auf eine Abweichung der Lizenzrate bei folgender Rechnung von ${invoice.supplier} hinweisen.
+
+Rechnungsdetails:
+  Rechnungsnummer:   ${invoice.invoiceNumber}
+  Autor:             ${info.author}
+  Titel:             ${info.title}
+  Vertragsreferenz:  ${info.contractRef}
+  Rechnungsdatum:    ${invoice.extractedFields.invoiceDate}
+
+Festgestellte Ratenabweichung:
+  Berechnete Rate:   ${info.invoicedRate} auf Hardcover-Nettoerlöse
+  Vertragsrate:      ${info.contractRate} auf Hardcover-Nettoerlöse (gemäß SAP-Vertragsmaster)
+  Betrag bei ${info.invoicedRate}: ${invoicedAmt}
+  Betrag bei ${info.contractRate}: ${contractAmt}
+  Differenz:         $${info.variance.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+
+Unser KI-Agent hat die Rechnung mit den abstrahierten Vertragsbedingungen (${info.contractRef}) abgeglichen und eine Abweichung von $${info.variance.toLocaleString('en-US', { minimumFractionDigits: 2 })} festgestellt. Könnten Sie bitte die korrekte Rate bestätigen und die Zahlung im entsprechenden Betrag genehmigen?
+
+Bitte antworten Sie auf diese E-Mail mit Ihrer Bestätigung. Kein Handlungsbedarf Ihrerseits, falls die berechnete Rate von ${info.invoicedRate} korrekt ist und einer vereinbarten Vertragsänderung entspricht.
+
+Mit freundlichen Grüßen,
+Lena Fischer
+Kreditorenbuchhaltung — Bertelsmann Finance Operations
+accounts.payable@bertelsmann.de`
+
   return (
     <CommunicationPreviewModal
       to={`${info.royaltyManagerName} <${info.royaltyManagerEmail}>`}
       cc="ap-operations@bertelsmann.de"
       subject={subject}
       body={body}
+      translations={{ de: bodyDe }}
       subtitle={`Auto-generated by Predictive IC & Royalty Agent — deviation flagged on ${invoice.invoiceNumber}`}
       onSend={onSend}
       onClose={onClose}
@@ -2913,12 +3405,34 @@ Lena Fischer
 Accounts Payable — Bertelsmann Finance Operations
 accounts.payable@bertelsmann.de`
 
+  const bodyDe = `Sehr geehrte(r) ${info.contactName},
+
+wir haben eine Diskrepanz bei der konzerninternen Buchung der folgenden Verrechnung festgestellt und bitten um eine ICE-Abstimmung, um die Differenz vor der Zahlungsfreigabe zu klären.
+
+Details zur konzerninternen Buchung:
+  IC-Rechnung (${info.entityA}):   ${info.docA}   ${fmt(info.amountA)}
+  IC-Clearing (${info.entityB}):   ${info.docB}   ${fmt(info.amountB)}
+  Differenz:                        ${fmt(info.variance)}
+
+ICE-Referenz:    ${info.iceRef}
+Gesellschaften:  ${info.entityA} ↔ ${info.entityB}
+
+Der Predictive IC & Royalty Agent hat diese Abweichung festgestellt. Die Differenz könnte auf eine noch nicht gebuchte Produktionskostenverrechnung oder eine Formatrechte-Anpassung zurückzuführen sein, die auf der Seite von ${info.entityB} noch nicht erfasst wurde.
+
+Bitte prüfen und stimmen Sie beide Seiten dieser Buchung im ICE-System (${info.iceRef}) ab. Sobald beide Gesellschaften ausgeglichen sind, antworten Sie bitte auf diese E-Mail mit der Bestätigung der Klärung, damit wir die Rechnung zur Zahlungsbuchung freigeben können.
+
+Mit freundlichen Grüßen,
+Lena Fischer
+Kreditorenbuchhaltung — Bertelsmann Finance Operations
+accounts.payable@bertelsmann.de`
+
   return (
     <CommunicationPreviewModal
       to={`${info.contactName} <${info.contactEmail}>`}
       cc="a.krueger@bertelsmann.de"
       subject={subject}
       body={body}
+      translations={{ de: bodyDe }}
       subtitle={`Auto-generated by Predictive IC & Royalty Agent — mismatch flagged on ${info.docA}`}
       onSend={onSend}
       onClose={onClose}
@@ -3000,12 +3514,59 @@ function GLModal({ invoice, appliedCode, onSend, onClose }: { invoice: Invoice; 
 <p style="margin:0 0 10px"><strong>Action Required:</strong><br>Could you please confirm whether PRH Procurement issued the advance written notice to RR Donnelley authorising the Clause 8.2 PPPC-linked surcharge for Q2 2026? If confirmed, we will code and release the invoice at $31,600.00. If not pre-approved, we will contact RR Donnelley to request a revised invoice at the agreed rate of $29,200.00.</p>
 <p style="margin:0;color:#6b767b;font-size:12px">Regards,<br><strong style="color:#1d2f36">Lena Fischer — Accounts Payable, Penguin Random House</strong><br>ap@penguinrandomhouse.com &nbsp;|&nbsp; Bertelsmann GBS AP Operations</p>`
 
+  const prtBodyHtmlDe = `
+<p style="margin:0 0 14px">Sehr geehrte(r) Claudia &amp; Marc,</p>
+<p style="margin:0 0 14px">der <strong>Matching &amp; GL Advisor</strong> hat einen WBS-Codierungsstring für die untenstehende Rechnung generiert. Es wurde eine <strong>Co-Produktions-Episodenaufteilung</strong> erkannt (Episoden 9–10 unterliegen der Co-Produktionsvereinbarung mit Canal+ International). Ihre doppelte Genehmigung ist vor der Zahlungsfreigabe erforderlich.</p>
+<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:13px">
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;width:40%;border:1px solid #e4e6e7">Rechnungsnummer</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">${invoice.invoiceNumber}</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Lieferant</td><td style="padding:6px 10px;border:1px solid #e4e6e7">${invoice.supplier}</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Rechnungsbetrag</td><td style="padding:6px 10px;border:1px solid #e4e6e7">${amt}</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Produktion</td><td style="padding:6px 10px;border:1px solid #e4e6e7">"Rising Tides" — RTL+ Original Drama, S01, EP7–10</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Kostenstelle</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">CC-FRM-PROD-2026</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Kontonummer</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">6320-001  Content-Produktion — VFX &amp; Digitale Postproduktion</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Episodenbereich</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">E07-10  (EP7–8: Fremantle-finanziert · EP9–10: Co-Produktion)</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Produktionsnummer</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">P-RT01-26</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Vertragsreferenz</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">C-PXM2026  (Co-Prod: CPRO-2026-RT-003)</td></tr>
+</table>
+<div style="background:#fff3d6;border:1px solid #f59e0b;border-radius:6px;padding:12px 14px;margin-bottom:14px">
+  <div style="font-size:11px;font-weight:700;color:#92600a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Generierter WBS-Codierungsstring</div>
+  <div style="font-family:monospace;font-size:13px;font-weight:700;color:#b06b00;word-break:break-all">${prtCodingString}</div>
+</div>
+<p style="margin:0 0 10px"><strong>Handlungsbedarf:</strong><br>Sowohl <strong>Claudia Bauer (Production Finance Manager)</strong> als auch <strong>Marc Olivier-Leblanc (VP Finance, Content — RTL Group)</strong> müssen die Episodenkostenaufteilung bestätigen und genehmigen, bevor die Rechnung zur Zahlung freigegeben wird. Bitte antworten Sie mit der bestätigten Episodenallokation (€-Beträge für EP7–8 und EP9–10) und Ihrer Genehmigung.</p>
+<p style="margin:0 0 14px">→ <a href="${snUrl}" style="color:#1a3a6b;text-decoration:none;font-weight:600">Rechnung in SAP VIM öffnen ↗</a> &nbsp;|&nbsp; <a href="mailto:ap-operations@bertelsmann.de" style="color:#1a3a6b;text-decoration:none;font-weight:600">AP Operations kontaktieren</a></p>
+<p style="margin:0;color:#6b767b;font-size:12px">Mit freundlichen Grüßen,<br><strong style="color:#1d2f36">Bertelsmann Kreditorenbuchhaltung</strong> — AP-Automatisierung<br>ap-automation@bertelsmann.de</p>`
+
+  const stdBodyHtmlDe = `
+<p style="margin:0 0 14px">Sehr geehrte(r) Caroline,</p>
+<p style="margin:0 0 14px">Die Kreditorenbuchhaltung hat Rechnung <strong>${invoice.invoiceNumber}</strong> von <strong>${invoice.supplier}</strong> (${amt}) für Kampagnen-Kreativleistungen erhalten, die im Juni 2026 an das Territory-Marketingteam erbracht wurden. Als Kostenstellenverantwortliche(r) für <strong>CC-BMS-MKT-2026</strong> ist Ihre Bestätigung zu zwei Punkten erforderlich, bevor wir die Rechnung zur Zahlung freigeben können.</p>
+<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:13px">
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;width:40%;border:1px solid #e4e6e7">Rechnungsnummer</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">${invoice.invoiceNumber}</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Lieferant</td><td style="padding:6px 10px;border:1px solid #e4e6e7">${invoice.supplier} (JVM-5591)</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Rechnungsbetrag</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-weight:700">${amt}</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Kostenstelle</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace">CC-BMS-MKT-2026</td></tr>
+  <tr style="background:#f6f7f7"><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">Zahlungsbedingungen</td><td style="padding:6px 10px;border:1px solid #e4e6e7">Netto 15 — fällig 01.07.2026</td></tr>
+  <tr><td style="padding:6px 10px;font-weight:600;border:1px solid #e4e6e7">AP-empfohlenes Sachkonto</td><td style="padding:6px 10px;border:1px solid #e4e6e7;font-family:monospace;font-weight:700;color:#1b823f">${appliedCode ?? '6610-002 — Marketing & Werbung'}</td></tr>
+</table>
+<div style="background:#fff3d6;border:1px solid #f59e0b;border-radius:6px;padding:12px 14px;margin-bottom:14px">
+  <div style="font-size:11px;font-weight:700;color:#92600a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Sachkonto-Unklarheit — Bestätigung erforderlich</div>
+  <div style="font-size:13px;color:#6b767b;margin-bottom:6px">Unser GL Coding Agent hat 3 konkurrierende Konten identifiziert. Keines überschritt den Schwellenwert von 60 % für die automatische Zuweisung:</div>
+  <table style="width:100%;font-size:12px;border-collapse:collapse">
+    <tr><td style="padding:3px 8px;font-family:monospace;font-weight:700;color:#b91f1f">6610-002</td><td style="padding:3px 8px">Marketing &amp; Werbung</td><td style="padding:3px 8px;font-weight:700;color:#b06b00">38%</td></tr>
+    <tr><td style="padding:3px 8px;font-family:monospace;color:#555">6620-001</td><td style="padding:3px 8px;color:#555">Kreativagentur-Honorare</td><td style="padding:3px 8px;color:#555">34%</td></tr>
+    <tr><td style="padding:3px 8px;font-family:monospace;color:#555">6630-005</td><td style="padding:3px 8px;color:#555">Marken- &amp; Kampagnendienste</td><td style="padding:3px 8px;color:#555">28%</td></tr>
+  </table>
+</div>
+<p style="margin:0 0 10px"><strong>Handlungsbedarf:</strong><br>Könnten Sie bitte per E-Mail-Antwort bestätigen: <strong>(1)</strong> das korrekte Sachkonto und <strong>(2)</strong> dass alle drei unten aufgeführten Leistungen erhalten und abgenommen wurden?</p>
+<p style="margin:0 0 6px;font-size:12px;color:#555">Zu bestätigende Leistungen:<br>— Kreativkonzeptentwicklung &amp; Strategie: 6.200,00 €<br>— Key Visual Design (3 Formate, 2 Überarbeitungen): 7.400,00 €<br>— Asset-Produktion &amp; Formatadaption: 4.800,00 €</p>
+<p style="margin:14px 0 0;color:#6b767b;font-size:12px">Mit freundlichen Grüßen,<br><strong style="color:#1d2f36">Lena Fischer — Kreditorenbuchhaltung, Bertelsmann GBS</strong><br>ap-operations@bertelsmann.de</p>`
+
   return (
     <CommunicationPreviewModal
       to={isPRT ? 'c.bauer@fremantle.com' : isVendorDispute ? 'j.hartmann@penguinrandomhouse.com' : 'c.hoffmann@bertelsmannmediagroup.de'}
       cc={isPRT ? 'm.olivier-leblanc@rtlgroup.de' : 'ap-operations@bertelsmann.de'}
       subject={subject}
       bodyHtml={isPRT ? prtBodyHtml : isVendorDispute ? rrdBodyHtml : stdBodyHtml}
+      htmlTranslations={isPRT ? { de: prtBodyHtmlDe } : isVendorDispute ? undefined : { de: stdBodyHtmlDe }}
       subtitle={isPRT ? 'Auto-generated by WBS Coding Agent — DOA Approval Required' : isVendorDispute ? 'Internal query — Procurement pre-approval confirmation required' : 'Routed to Cost Centre Owner — GL code confirmation + service receipt'}
       onSend={onSend}
       onClose={onClose}
