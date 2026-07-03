@@ -1590,6 +1590,8 @@ export const kobaltRescanReplyEmail: ReplyEmail = {
   time: 'just now',
   relatedInvoiceId: 'inv-9',
   isUnread: true,
+  attachmentName: 'KOB-RY-2026-0831-native.pdf',
+  attachmentInvoiceId: 'inv-9',
   body: `Dear Lena,
 
 Apologies for the inconvenience — our distribution system inadvertently attached a scanned copy rather than the native PDF export for this statement.

@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { Invoice, ReplyEmail, SentEmail } from '../types'
 import { ScannedInvoice } from './ScannedInvoice'
-import { correctedTaxInvoice } from '../data/mockData'
+import { correctedTaxInvoice, mockInvoices } from '../data/mockData'
+
+const kobaltInvoice = mockInvoices.find(i => i.id === 'inv-9')!
 
 const ATTACHMENT_INVOICE_MAP: Record<string, Invoice> = {
   'inv-5-r1': correctedTaxInvoice,
+  'inv-9': kobaltInvoice,
 }
 
 interface Props {
