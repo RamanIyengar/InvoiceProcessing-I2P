@@ -11,7 +11,6 @@ interface Props {
   invoices: Invoice[]
   replyEmails: ReplyEmail[]
   sentEmails?: SentEmail[]
-  initialFolder?: 'inbox' | 'sent' | 'vim'
   onMarkReplyRead: (id: string) => void
   onClose: () => void
 }
@@ -64,19 +63,16 @@ function EmptyStateIcon() {
 }
 
 
-export function OutlookInbox({ invoices, replyEmails, sentEmails = [], initialFolder, onMarkReplyRead, onClose }: Props) {
+export function OutlookInbox({ invoices, replyEmails, sentEmails = [], onMarkReplyRead, onClose }: Props) {
   const [selectedItem, setSelectedItem] = useState<SelectedItem>(null)
-  const [activeFolder, setActiveFolder] = useState<'inbox' | 'sent' | 'vim'>(initialFolder ?? 'inbox')
+  const [activeFolder, setActiveFolder] = useState<'inbox' | 'sent'>('inbox')
 
-  // Split items by channel: VIM vs real email
+  // Filter out VIM items — those belong in the SAP VIM Worklist, not Outlook
   const isVimSent = (s: SentEmail) => s.toEmail === 'vim-no-reply@sap.bertelsmann.de'
   const isVimReply = (r: ReplyEmail) => r.senderEmail === 'vim-no-reply@sap.bertelsmann.de'
 
   const emailSentItems = sentEmails.filter(s => !isVimSent(s))
   const emailReplyItems = replyEmails.filter(r => !isVimReply(r))
-  const vimSentItems = sentEmails.filter(isVimSent)
-  const vimReplyItems = replyEmails.filter(isVimReply)
-  const vimUnreadCount = vimReplyItems.filter(r => r.isUnread).length
 
   const handleSelectInvoice = (invoice: Invoice) => {
     setSelectedItem({ kind: 'invoice', invoice })
@@ -185,9 +181,6 @@ export function OutlookInbox({ invoices, replyEmails, sentEmails = [], initialFo
           <FolderItem label="Inbox" isActive={activeFolder === 'inbox'} onClick={() => { setActiveFolder('inbox'); setSelectedItem(null) }} />
           <FolderItem label="Sent Items" isActive={activeFolder === 'sent'} onClick={() => { setActiveFolder('sent'); setSelectedItem(null) }} count={emailSentItems.length > 0 ? emailSentItems.length : undefined} countColor="#1b823f" />
           <FolderItem label="Archive" isActive={false} onClick={() => {}} />
-          <div style={{ height: '1px', background: '#d8dde0', margin: '6px 12px' }} />
-          <div style={{ padding: '6px 12px 4px', fontSize: '11px', fontWeight: 700, color: '#1c3f6e', textTransform: 'uppercase', letterSpacing: '0.07em' }}>SAP Systems</div>
-          <FolderItem label="SAP VIM Worklist" isActive={activeFolder === 'vim'} onClick={() => { setActiveFolder('vim'); setSelectedItem(null) }} count={vimUnreadCount > 0 ? vimUnreadCount : undefined} countColor="#1c3f6e" isVim />
         </div>
 
         {/* Message list */}
@@ -213,8 +206,8 @@ export function OutlookInbox({ invoices, replyEmails, sentEmails = [], initialFo
               flexShrink: 0,
             }}
           >
-            <span style={{ fontSize: '14px', fontWeight: 700, color: activeFolder === 'vim' ? '#1c3f6e' : '#1d2f36' }}>
-              {activeFolder === 'sent' ? 'Sent Items' : activeFolder === 'vim' ? 'SAP VIM Worklist' : 'Inbox'}
+            <span style={{ fontSize: '14px', fontWeight: 700, color: '#1d2f36' }}>
+              {activeFolder === 'sent' ? 'Sent Items' : 'Inbox'}
             </span>
             <select style={{ fontSize: '12px', border: 'none', background: 'transparent', color: '#6b767b', cursor: 'pointer' }}>
               <option>Date ↓</option>
@@ -268,92 +261,6 @@ export function OutlookInbox({ invoices, replyEmails, sentEmails = [], initialFo
               No sent items
             </div>
           )}
-
-          {/* SAP VIM Worklist — completion notifications first, then dispatched */}
-          {activeFolder === 'vim' && vimReplyItems.length === 0 && vimSentItems.length === 0 && (
-            <div style={{ padding: '32px 16px', textAlign: 'center', color: '#6b767b', fontSize: '13px', fontFamily: "'Segoe UI', sans-serif" }}>
-              No VIM notifications
-            </div>
-          )}
-          {activeFolder === 'vim' && vimReplyItems.map(reply => {
-            const isSelected = selectedReply?.id === reply.id
-            return (
-              <div
-                key={reply.id}
-                onClick={() => handleSelectReply(reply)}
-                style={{
-                  padding: '12px',
-                  borderBottom: '1px solid #f0f1f1',
-                  cursor: 'pointer',
-                  background: isSelected ? '#e8eef7' : reply.isUnread ? 'rgba(28,63,110,0.06)' : 'white',
-                  borderLeft: isSelected ? '3px solid #1c3f6e' : reply.isUnread ? '3px solid #1c3f6e' : '3px solid rgba(28,63,110,0.25)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {reply.isUnread && (
-                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#1c3f6e', flexShrink: 0 }} />
-                  )}
-                  <div style={{ width: '36px', height: '36px', borderRadius: '6px', background: '#1c3f6e', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, flexShrink: 0, letterSpacing: '0.03em' }}>
-                    VIM
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '13px', fontWeight: reply.isUnread ? 700 : 500, color: '#1d2f36', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>
-                        SAP VIM — Automated
-                      </span>
-                      <span style={{ fontSize: '12px', color: '#6b767b', flexShrink: 0 }}>{reply.time}</span>
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#1d2f36', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{reply.subject}</div>
-                    <div style={{ fontSize: '12px', color: '#6b767b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span style={{ fontSize: '10px', background: 'rgba(27,107,46,0.12)', color: '#1b6b2e', borderRadius: '4px', padding: '1px 5px', fontWeight: 700, flexShrink: 0 }}>Completed</span>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{reply.body.substring(0, 55)}...</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-          {activeFolder === 'vim' && vimSentItems.map(sent => {
-            const isSelected = selectedSent?.id === sent.id
-            return (
-              <div
-                key={sent.id}
-                onClick={() => handleSelectSent(sent)}
-                style={{
-                  padding: '12px',
-                  borderBottom: '1px solid #f0f1f1',
-                  cursor: 'pointer',
-                  background: isSelected ? '#e8eef7' : 'white',
-                  borderLeft: isSelected ? '3px solid #1c3f6e' : '3px solid rgba(28,63,110,0.2)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '6px', background: 'rgba(28,63,110,0.12)', color: '#1c3f6e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, flexShrink: 0, letterSpacing: '0.03em' }}>
-                    VIM
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 500, color: '#1d2f36', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>
-                        {sent.toName.replace('SAP VIM — ', '')}
-                      </span>
-                      <span style={{ fontSize: '12px', color: '#6b767b', flexShrink: 0 }}>{sent.time}</span>
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#1d2f36', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sent.subject}</div>
-                    <div style={{ fontSize: '12px', color: '#6b767b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span style={{ fontSize: '10px', background: 'rgba(28,63,110,0.1)', color: '#1c3f6e', borderRadius: '4px', padding: '1px 5px', fontWeight: 700, flexShrink: 0 }}>Dispatched</span>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sent.body.substring(0, 55)}...</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
 
           {/* Reply emails at top (inbox only) — email replies only */}
           {activeFolder === 'inbox' && emailReplyItems.map(reply => {
@@ -500,10 +407,6 @@ export function OutlookInbox({ invoices, replyEmails, sentEmails = [], initialFo
                 Select a message to read
               </div>
             </div>
-          ) : selectedSent && isVimSent(selectedSent) ? (
-            <VIMReadingPane subject={selectedSent.subject} body={selectedSent.body} badge="Dispatched" time={selectedSent.time} toName={selectedSent.toName} />
-          ) : selectedReply && isVimReply(selectedReply) ? (
-            <VIMReadingPane subject={selectedReply.subject} body={selectedReply.body} badge="Completed" time={selectedReply.time} />
           ) : selectedSent ? (
             <SentReadingPane sent={selectedSent} />
           ) : selectedReply ? (
@@ -517,8 +420,7 @@ export function OutlookInbox({ invoices, replyEmails, sentEmails = [], initialFo
   )
 }
 
-function FolderItem({ label, isActive, count, countColor, isVim, onClick }: { label: string; isActive: boolean; count?: number; countColor?: string; isVim?: boolean; onClick?: () => void }) {
-  const activeColor = isVim ? '#1c3f6e' : '#0078d4'
+function FolderItem({ label, isActive, count, countColor, onClick }: { label: string; isActive: boolean; count?: number; countColor?: string; onClick?: () => void }) {
   return (
     <div
       onClick={onClick}
@@ -531,22 +433,15 @@ function FolderItem({ label, isActive, count, countColor, isVim, onClick }: { la
         fontSize: '13px',
         fontFamily: "'Segoe UI', sans-serif",
         cursor: 'pointer',
-        background: isActive ? (isVim ? 'rgba(28,63,110,0.08)' : 'rgba(0,120,212,0.08)') : 'transparent',
-        borderLeft: isActive ? `3px solid ${activeColor}` : '3px solid transparent',
-        color: isActive ? activeColor : '#1d2f36',
+        background: isActive ? 'rgba(0,120,212,0.08)' : 'transparent',
+        borderLeft: isActive ? '3px solid #0078d4' : '3px solid transparent',
+        color: isActive ? '#0078d4' : '#1d2f36',
         fontWeight: isActive ? 600 : 400,
       }}
     >
-      {isVim ? (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
-          <rect x="1" y="3" width="14" height="10" rx="1.5" />
-          <path d="M5 7h6M5 9.5h4" strokeLinecap="round" />
-        </svg>
-      ) : (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
-          <path d="M1 4 L1 13 C1 13.55 1.45 14 2 14 L14 14 C14.55 14 15 13.55 15 13 L15 6 C15 5.45 14.55 5 14 5 L8 5 L6.5 3 L2 3 C1.45 3 1 3.45 1 4 Z" />
-        </svg>
-      )}
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+        <path d="M1 4 L1 13 C1 13.55 1.45 14 2 14 L14 14 C14.55 14 15 13.55 15 13 L15 6 C15 5.45 14.55 5 14 5 L8 5 L6.5 3 L2 3 C1.45 3 1 3.45 1 4 Z" />
+      </svg>
       <span style={{ flex: 1 }}>{label}</span>
       {count != null && count > 0 && (
         <span
@@ -756,50 +651,6 @@ function ReplyReadingPane({ reply }: { reply: ReplyEmail }) {
       {showAttachment && attachmentInvoice && (
         <AttachmentPreviewModal invoice={attachmentInvoice} onClose={() => setShowAttachment(false)} />
       )}
-    </div>
-  )
-}
-
-function VIMReadingPane({ subject, body, badge, time, toName }: { subject: string; body: string; badge: 'Dispatched' | 'Completed'; time: string; toName?: string }) {
-  const isCompleted = badge === 'Completed'
-  return (
-    <div>
-      {/* VIM header bar */}
-      <div style={{ background: '#1c3f6e', padding: '16px 28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '6px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <rect x="2" y="4" width="16" height="12" rx="2" stroke="white" strokeWidth="1.6" />
-              <path d="M6 9h8M6 12h5" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '13px', fontWeight: 700, color: '#fff' }}>SAP VIM — Automated Workflow Notification</div>
-            <div style={{ fontFamily: 'Lato, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.65)', marginTop: '2px' }}>vim-no-reply@sap.bertelsmann.de · {time}</div>
-          </div>
-          <div style={{ marginLeft: 'auto' }}>
-            <span style={{
-              fontSize: '11px', fontWeight: 700, fontFamily: 'Lato, sans-serif',
-              background: isCompleted ? '#1b6b2e' : 'rgba(255,255,255,0.15)',
-              color: '#fff', borderRadius: '12px', padding: '3px 10px',
-            }}>
-              {isCompleted ? '✓ Completed' : '→ Dispatched'}
-            </span>
-          </div>
-        </div>
-        <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '18px', fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>{subject}</div>
-        {toName && (
-          <div style={{ fontFamily: 'Lato, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.65)', marginTop: '6px' }}>
-            Routed to: {toName}
-          </div>
-        )}
-      </div>
-      {/* Body */}
-      <div style={{ padding: '24px 28px', fontFamily: 'Lato, sans-serif', fontSize: '14px', lineHeight: '1.75', color: '#1d2f36', background: '#f8fafc' }}>
-        <div style={{ background: '#fff', border: '1px solid #dde3ea', borderRadius: '6px', padding: '20px 24px', whiteSpace: 'pre-wrap', fontFamily: "'Courier New', Courier, monospace", fontSize: '13px', lineHeight: '1.7', color: '#1d2f36' }}>
-          {body}
-        </div>
-      </div>
     </div>
   )
 }

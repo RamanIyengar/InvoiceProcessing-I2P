@@ -10,6 +10,7 @@ import { AuditTrailPage } from './components/AuditTrailPage'
 import { taxMismatchReplyEmails, glApprovalReplyEmail, metroGLReplyEmails, prtGLReplyEmails, missingGRReplyEmail, royaltyMismatchReplyEmail, royaltyDeviationSentEmail, taxMismatchSentEmail, missingGRSentEmail, glApprovalSentEmail, prtGLSentEmail, metroGLSentEmail, icMismatchSentEmail, icMismatchReplyEmail, rrdDisputeSentEmail, rrdDisputeReplyEmail, kobaltRescanSentEmail, kobaltRescanReplyEmail, mockInvoices } from './data/mockData'
 import { LandingScreen } from './components/LandingScreen'
 import { OutlookInbox } from './components/OutlookInbox'
+import { SAPVIMWorklist } from './components/SAPVIMWorklist'
 import { TicketsView } from './components/TicketsView'
 import { SettingsPage } from './components/SettingsPage'
 
@@ -485,13 +486,12 @@ export default function App() {
     )
   }
 
-  if (appView === 'outlook' || appView === 'outlook-vim') {
+  if (appView === 'outlook') {
     return (
       <OutlookInbox
         invoices={mockInvoices}
         replyEmails={replyEmails}
         sentEmails={sentEmails}
-        initialFolder={appView === 'outlook-vim' ? 'vim' : 'inbox'}
         onMarkReplyRead={handleMarkReplyRead}
         onClose={() => {
           if (prtGLBothApproved && selectedInvoice?.glMissingVariant === 'prt-coding') {
@@ -499,6 +499,17 @@ export default function App() {
           }
           setAppView(selectedInvoice ? 'sap' : 'home')
         }}
+      />
+    )
+  }
+
+  if (appView === 'outlook-vim') {
+    return (
+      <SAPVIMWorklist
+        replyEmails={replyEmails}
+        sentEmails={sentEmails}
+        onMarkReplyRead={handleMarkReplyRead}
+        onClose={() => setAppView(selectedInvoice ? 'sap' : 'home')}
       />
     )
   }
