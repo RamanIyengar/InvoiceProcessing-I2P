@@ -84,7 +84,7 @@ export function AgentTimeline({ invoice, onShowAudit, onDecide, decision }: Prop
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'var(--now-text-secondary)',
+          color: '#64748B',
           fontSize: '13px',
           fontStyle: 'italic',
         }}
@@ -115,10 +115,10 @@ export function AgentTimeline({ invoice, onShowAudit, onDecide, decision }: Prop
                       width: '2px',
                       background:
                         status === 'complete'
-                          ? '#1b823f'
+                          ? '#16A34A'
                           : status === 'running'
-                          ? '#1a3a6b'
-                          : '#e4e6e7',
+                          ? '#7C3AED'
+                          : '#E2E8F0',
                       transition: 'background 0.3s ease',
                     }}
                   />
@@ -132,7 +132,7 @@ export function AgentTimeline({ invoice, onShowAudit, onDecide, decision }: Prop
                         width: '24px',
                         height: '24px',
                         borderRadius: '50%',
-                        background: '#1b823f',
+                        background: '#16A34A',
                         color: 'white',
                         display: 'flex',
                         alignItems: 'center',
@@ -149,8 +149,8 @@ export function AgentTimeline({ invoice, onShowAudit, onDecide, decision }: Prop
                         width: '24px',
                         height: '24px',
                         borderRadius: '50%',
-                        border: '2px solid #e4e6e7',
-                        borderTopColor: '#1a3a6b',
+                        border: '2px solid #E2E8F0',
+                        borderTopColor: '#7C3AED',
                         animation: 'spin 0.8s linear infinite',
                       }}
                     />
@@ -161,7 +161,7 @@ export function AgentTimeline({ invoice, onShowAudit, onDecide, decision }: Prop
                         width: '24px',
                         height: '24px',
                         borderRadius: '50%',
-                        border: '2px solid #c8cccf',
+                        border: '2px solid #CBD5E1',
                         background: 'white',
                       }}
                     />
@@ -177,10 +177,10 @@ export function AgentTimeline({ invoice, onShowAudit, onDecide, decision }: Prop
                       fontWeight: 600,
                       color:
                         status === 'complete'
-                          ? 'var(--now-text)'
+                          ? '#1E293B'
                           : status === 'running'
-                          ? 'var(--now-primary)'
-                          : 'var(--now-text-disabled)',
+                          ? '#7C3AED'
+                          : '#CBD5E1',
                       marginBottom: status !== 'queued' ? '4px' : '0',
                     }}
                   >
@@ -192,7 +192,7 @@ export function AgentTimeline({ invoice, onShowAudit, onDecide, decision }: Prop
                       style={{
                         fontFamily: 'Lato, sans-serif',
                         fontSize: '11px',
-                        color: 'var(--now-text-secondary)',
+                        color: '#64748B',
                         lineHeight: '1.5',
                         marginBottom: '6px',
                       }}
@@ -208,11 +208,11 @@ export function AgentTimeline({ invoice, onShowAudit, onDecide, decision }: Prop
                           key={agent}
                           style={{
                             background: '#f0f1f1',
-                            border: '1px solid #e4e6e7',
+                            border: '1px solid #E2E8F0',
                             borderRadius: '3px',
                             padding: '2px 7px',
                             fontSize: '10px',
-                            color: 'var(--now-text)',
+                            color: '#1E293B',
                             fontFamily: 'monospace',
                           }}
                         >
@@ -231,8 +231,8 @@ export function AgentTimeline({ invoice, onShowAudit, onDecide, decision }: Prop
         {showRecommendation && invoice.recommendation && (
           <div
             style={{
-              background: '#e8f5ee',
-              border: '1px solid #1b823f',
+              background: '#F0FDF4',
+              border: '1px solid #16A34A',
               borderRadius: 'var(--radius-lg)',
               padding: '14px 16px',
               marginBottom: '8px',
@@ -251,7 +251,7 @@ export function AgentTimeline({ invoice, onShowAudit, onDecide, decision }: Prop
                   fontFamily: 'Cabin, sans-serif',
                   fontSize: '13px',
                   fontWeight: 700,
-                  color: '#1b823f',
+                  color: '#16A34A',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
@@ -264,11 +264,11 @@ export function AgentTimeline({ invoice, onShowAudit, onDecide, decision }: Prop
                 onClick={onShowAudit}
                 style={{
                   background: 'none',
-                  border: '1px solid #1b823f',
+                  border: '1px solid #16A34A',
                   borderRadius: 'var(--radius-sm)',
                   padding: '3px 10px',
                   fontSize: '11px',
-                  color: '#1b823f',
+                  color: '#16A34A',
                   cursor: 'pointer',
                   fontFamily: 'Lato, sans-serif',
                 }}

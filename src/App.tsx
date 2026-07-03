@@ -1,26 +1,31 @@
 import { useState } from 'react'
 import { Invoice, ReplyEmail, SentEmail } from './types'
 import { LoginScreen } from './components/LoginScreen'
-import { OutlookLoginScreen } from './components/OutlookLoginScreen'
-import { AppHeader } from './components/AppHeader'
-import { Sidebar, SidebarTab } from './components/Sidebar'
+import { AppHeader, NavSection } from './components/AppHeader'
 import { DashboardView } from './components/DashboardView'
 import { InvoiceWorkspace } from './components/InvoiceWorkspace'
 import { AuditTrailPage } from './components/AuditTrailPage'
-import { taxMismatchReplyEmails, glApprovalReplyEmail, metroGLReplyEmails, prtGLReplyEmails, missingGRReplyEmail, royaltyMismatchReplyEmail, royaltyDeviationSentEmail, taxMismatchSentEmail, missingGRSentEmail, glApprovalSentEmail, prtGLSentEmail, metroGLSentEmail, icMismatchSentEmail, icMismatchReplyEmail, rrdDisputeSentEmail, rrdDisputeReplyEmail, kobaltRescanSentEmail, kobaltRescanReplyEmail, mockInvoices } from './data/mockData'
-import { LandingScreen } from './components/LandingScreen'
-import { OutlookInbox } from './components/OutlookInbox'
-import { SAPVIMWorklist } from './components/SAPVIMWorklist'
+import { SubmissionInbox } from './components/SubmissionInbox'
+import {
+  taxMismatchReplyEmails, glApprovalReplyEmail, metroGLReplyEmails, prtGLReplyEmails,
+  missingGRReplyEmail, royaltyMismatchReplyEmail, royaltyDeviationSentEmail,
+  taxMismatchSentEmail, missingGRSentEmail, glApprovalSentEmail, prtGLSentEmail,
+  metroGLSentEmail, icMismatchSentEmail, icMismatchReplyEmail, rrdDisputeSentEmail,
+  rrdDisputeReplyEmail, kobaltRescanSentEmail, kobaltRescanReplyEmail,
+} from './data/mockData'
 import { TicketsView } from './components/TicketsView'
 import { SettingsPage } from './components/SettingsPage'
 
 // ─── Analytics charts ────────────────────────────────────────────────────────
 
+const I2P_PURPLE = '#7C3AED'
+const I2P_SUCCESS = '#16A34A'
+
 function BarChart() {
   const bars = [
-    { label: 'PO', count: 6, color: '#1a3a6b' },
-    { label: 'Non-PO', count: 6, color: '#b06b00' },
-    { label: 'ECC Legacy', count: 2, color: '#1b823f' },
+    { label: 'PO', count: 6, color: I2P_PURPLE },
+    { label: 'Non-PO', count: 6, color: '#D97706' },
+    { label: 'ECC Legacy', count: 2, color: I2P_SUCCESS },
   ]
   const max = 8
   const barW = 52
@@ -31,16 +36,16 @@ function BarChart() {
   const baseY = svgH - 30
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #e4e6e7', borderRadius: '8px', padding: '20px' }}>
-      <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1d2f36', marginBottom: '4px' }}>Invoice Volume by Category</div>
-      <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginBottom: '16px' }}>Current batch · today</div>
+    <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '20px' }}>
+      <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1E293B', marginBottom: '4px' }}>Invoice Volume by Category</div>
+      <div style={{ fontSize: '12px', color: '#64748B', fontFamily: 'Lato, sans-serif', marginBottom: '16px' }}>Current batch · today</div>
       <svg width="100%" viewBox={`0 0 ${svgW} ${svgH}`} style={{ overflow: 'visible' }}>
         {[0, 2, 4, 6, 8].map((v) => {
           const y = baseY - (v / max) * chartH
           return (
             <g key={v}>
-              <line x1={gap / 2} x2={svgW - gap / 2} y1={y} y2={y} stroke="#f0f1f1" strokeWidth="1" />
-              <text x={gap / 2 - 4} y={y + 4} fontSize="10" fill="#c8cccf" textAnchor="end">{v}</text>
+              <line x1={gap / 2} x2={svgW - gap / 2} y1={y} y2={y} stroke="#F1F5F9" strokeWidth="1" />
+              <text x={gap / 2 - 4} y={y + 4} fontSize="10" fill="#CBD5E1" textAnchor="end">{v}</text>
             </g>
           )
         })}
@@ -50,9 +55,9 @@ function BarChart() {
           const y = baseY - barH
           return (
             <g key={b.label}>
-              <rect x={x} y={y} width={barW} height={barH} fill={b.color} rx="4" opacity="0.9" />
+              <rect x={x} y={y} width={barW} height={barH} fill={b.color} rx="4" opacity="0.85" />
               <text x={x + barW / 2} y={y - 6} fontSize="13" fontWeight="700" fill={b.color} textAnchor="middle">{b.count}</text>
-              <text x={x + barW / 2} y={baseY + 14} fontSize="11" fill="#6b767b" textAnchor="middle">{b.label}</text>
+              <text x={x + barW / 2} y={baseY + 14} fontSize="11" fill="#64748B" textAnchor="middle">{b.label}</text>
             </g>
           )
         })}
@@ -69,43 +74,27 @@ function DonutChart() {
   const agentPct = 0.84
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #e4e6e7', borderRadius: '8px', padding: '20px' }}>
-      <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1d2f36', marginBottom: '4px' }}>Actions by Actor Type</div>
-      <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginBottom: '12px' }}>Agent vs Human intervention</div>
+    <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '20px' }}>
+      <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1E293B', marginBottom: '4px' }}>Actions by Actor Type</div>
+      <div style={{ fontSize: '12px', color: '#64748B', fontFamily: 'Lato, sans-serif', marginBottom: '12px' }}>Agent vs Human intervention</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <svg width="130" height="130" viewBox="0 0 220 160">
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f0f1f1" strokeWidth="26" />
-          <circle
-            cx={cx} cy={cy} r={r}
-            fill="none"
-            stroke="#1b823f"
-            strokeWidth="26"
-            strokeDasharray={`${circ} ${circ}`}
-            strokeDashoffset={0}
-            transform={`rotate(-90 ${cx} ${cy})`}
-          />
-          <circle
-            cx={cx} cy={cy} r={r}
-            fill="none"
-            stroke="#1a3a6b"
-            strokeWidth="26"
-            strokeDasharray={`${agentPct * circ} ${circ}`}
-            strokeDashoffset={0}
-            transform={`rotate(-90 ${cx} ${cy})`}
-          />
-          <text x={cx} y={cy - 6} textAnchor="middle" fontSize="20" fontWeight="700" fill="#1d2f36">84%</text>
-          <text x={cx} y={cy + 12} textAnchor="middle" fontSize="11" fill="#6b767b">Agent</text>
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F1F5F9" strokeWidth="26" />
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke={I2P_SUCCESS} strokeWidth="26" strokeDasharray={`${circ} ${circ}`} strokeDashoffset={0} transform={`rotate(-90 ${cx} ${cy})`} />
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke={I2P_PURPLE} strokeWidth="26" strokeDasharray={`${agentPct * circ} ${circ}`} strokeDashoffset={0} transform={`rotate(-90 ${cx} ${cy})`} />
+          <text x={cx} y={cy - 6} textAnchor="middle" fontSize="20" fontWeight="700" fill="#1E293B">84%</text>
+          <text x={cx} y={cy + 12} textAnchor="middle" fontSize="11" fill="#64748B">Agent</text>
         </svg>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {[
-            { label: 'Agent actions', pct: '84%', color: '#1a3a6b' },
-            { label: 'Human actions', pct: '16%', color: '#1b823f' },
+            { label: 'Agent actions', pct: '84%', color: I2P_PURPLE },
+            { label: 'Human actions', pct: '16%', color: I2P_SUCCESS },
           ].map((item) => (
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
               <div>
-                <div style={{ fontFamily: 'Lato, sans-serif', fontSize: '14px', color: '#1d2f36', fontWeight: 600 }}>{item.pct}</div>
-                <div style={{ fontFamily: 'Lato, sans-serif', fontSize: '12px', color: '#6b767b' }}>{item.label}</div>
+                <div style={{ fontFamily: 'Lato, sans-serif', fontSize: '14px', color: '#1E293B', fontWeight: 600 }}>{item.pct}</div>
+                <div style={{ fontFamily: 'Lato, sans-serif', fontSize: '12px', color: '#64748B' }}>{item.label}</div>
               </div>
             </div>
           ))}
@@ -117,51 +106,36 @@ function DonutChart() {
 
 function LineChart() {
   const data = [
-    { day: 'Mon', v: 3 },
-    { day: 'Tue', v: 5 },
-    { day: 'Wed', v: 4 },
-    { day: 'Thu', v: 8 },
-    { day: 'Fri', v: 6 },
-    { day: 'Sat', v: 2 },
-    { day: 'Sun', v: 7 },
+    { day: 'Mon', v: 3 }, { day: 'Tue', v: 5 }, { day: 'Wed', v: 4 },
+    { day: 'Thu', v: 8 }, { day: 'Fri', v: 6 }, { day: 'Sat', v: 2 }, { day: 'Sun', v: 7 },
   ]
-  const svgW = 280
-  const svgH = 160
-  const padL = 28
-  const padR = 12
-  const padT = 16
-  const padB = 28
-  const chartW = svgW - padL - padR
-  const chartH = svgH - padT - padB
-  const maxV = 10
-  const pts = data.map((d, i) => ({
-    x: padL + (i / (data.length - 1)) * chartW,
-    y: padT + chartH - (d.v / maxV) * chartH,
-  }))
+  const svgW = 280, svgH = 160, padL = 28, padR = 12, padT = 16, padB = 28
+  const chartW = svgW - padL - padR, chartH = svgH - padT - padB, maxV = 10
+  const pts = data.map((d, i) => ({ x: padL + (i / (data.length - 1)) * chartW, y: padT + chartH - (d.v / maxV) * chartH }))
   const lineD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
   const areaD = `${lineD} L${pts[pts.length - 1].x},${padT + chartH} L${pts[0].x},${padT + chartH} Z`
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #e4e6e7', borderRadius: '8px', padding: '20px' }}>
-      <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '16px', fontWeight: 700, color: '#1d2f36', marginBottom: '4px' }}>Processing Volume</div>
-      <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginBottom: '12px' }}>Last 7 days · invoices per day</div>
+    <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '20px' }}>
+      <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1E293B', marginBottom: '4px' }}>Processing Volume</div>
+      <div style={{ fontSize: '12px', color: '#64748B', fontFamily: 'Lato, sans-serif', marginBottom: '12px' }}>Last 7 days · invoices per day</div>
       <svg width="100%" viewBox={`0 0 ${svgW} ${svgH}`}>
         {[0, 2, 4, 6, 8, 10].map((v) => {
           const y = padT + chartH - (v / maxV) * chartH
           return (
             <g key={v}>
-              <line x1={padL} x2={padL + chartW} y1={y} y2={y} stroke="#f0f1f1" strokeWidth="1" />
-              <text x={padL - 4} y={y + 4} fontSize="9" fill="#c8cccf" textAnchor="end">{v}</text>
+              <line x1={padL} x2={padL + chartW} y1={y} y2={y} stroke="#F1F5F9" strokeWidth="1" />
+              <text x={padL - 4} y={y + 4} fontSize="9" fill="#CBD5E1" textAnchor="end">{v}</text>
             </g>
           )
         })}
-        <path d={areaD} fill="#1a3a6b" opacity="0.1" />
-        <path d={lineD} fill="none" stroke="#1a3a6b" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <path d={areaD} fill={I2P_PURPLE} opacity="0.08" />
+        <path d={lineD} fill="none" stroke={I2P_PURPLE} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         {pts.map((p, i) => (
           <g key={i}>
-            <circle cx={p.x} cy={p.y} r="4" fill="#1a3a6b" />
+            <circle cx={p.x} cy={p.y} r="4" fill={I2P_PURPLE} />
             <circle cx={p.x} cy={p.y} r="2" fill="#fff" />
-            <text x={p.x} y={padT + chartH + 14} fontSize="10" fill="#6b767b" textAnchor="middle">{data[i].day}</text>
+            <text x={p.x} y={padT + chartH + 14} fontSize="10" fill="#64748B" textAnchor="middle">{data[i].day}</text>
           </g>
         ))}
       </svg>
@@ -169,52 +143,9 @@ function LineChart() {
   )
 }
 
-function AnalyticsPage() {
-  const stats = [
-    { label: 'Straight-Through Rate', value: '87.4%', trend: '+2.1% vs last month', color: '#1b823f' },
-    { label: 'Avg. Processing Time', value: '4.2 min', trend: '−73% vs manual', color: '#1a3a6b' },
-    { label: 'Auto-resolved Exceptions', value: '94.6%', trend: '+1.8% vs last month', color: '#1b823f' },
-    { label: 'Supplier Queries Avoided', value: '1,240', trend: 'This month', color: '#1a3a6b' },
-  ]
-  return (
-    <div style={{ height: '100%', overflowY: 'auto', background: '#fff', padding: '32px' }}>
-      <h1 style={{ fontFamily: 'Cabin, sans-serif', fontSize: '26px', fontWeight: 700, color: '#1d2f36', marginBottom: '8px' }}>
-        Analytics
-      </h1>
-      <p style={{ fontSize: '15px', color: '#6b767b', marginBottom: '28px' }}>
-        Invoice processing performance and agent metrics · Bertelsmann Invoice Processing Automation
-      </p>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '28px' }}>
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            style={{
-              background: '#fff',
-              border: '1px solid #e4e6e7',
-              borderTop: `3px solid ${stat.color}`,
-              borderRadius: '8px',
-              padding: '20px',
-            }}
-          >
-            <div style={{ fontSize: '32px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, color: stat.color }}>{stat.value}</div>
-            <div style={{ fontSize: '15px', fontWeight: 600, color: '#1d2f36', margin: '6px 0 4px', fontFamily: 'Lato, sans-serif' }}>{stat.label}</div>
-            <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif' }}>{stat.trend}</div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-        <BarChart />
-        <DonutChart />
-        <LineChart />
-      </div>
-    </div>
-  )
-}
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<SidebarTab>('inbox')
+  const [activeSection, setActiveSection] = useState<NavSection>('cases')
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
   const [processedInvoiceIds, setProcessedInvoiceIds] = useState<Set<string>>(new Set())
   const [replyEmails, setReplyEmails] = useState<ReplyEmail[]>([])
@@ -235,17 +166,21 @@ export default function App() {
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | null>(null)
-  const [appView, setAppView] = useState<'home' | 'outlook-login' | 'outlook' | 'outlook-vim' | 'sap-login' | 'sap'>('home')
+  const [appView, setAppView] = useState<'login' | 'app'>('login')
 
-  if (appView === 'sap-login') {
-    return <LoginScreen onLogin={() => setAppView('sap')} />
-  }
-
-  if (appView === 'outlook-login') {
-    return <OutlookLoginScreen onLogin={() => setAppView('outlook')} onBack={() => setAppView('home')} />
+  if (appView === 'login') {
+    return <LoginScreen onLogin={() => setAppView('app')} />
   }
 
   const inboxBadgeCount = replyEmails.filter((e) => e.isUnread).length
+
+  const showToast = (message: string, action?: { label: string; onClick: () => void }) => {
+    setToastMessage(message)
+    setToastAction(action ?? null)
+    setToastVisible(true)
+  }
+
+  const hideToast = (delay = 0) => setTimeout(() => setToastVisible(false), delay)
 
   const handleTaxMismatchSent = () => {
     if (taxMismatchEmailSent) return
@@ -255,21 +190,18 @@ export default function App() {
       return [...taxMismatchReplyEmails, ...prev]
     })
     setTaxMismatchEmailSent(true)
-    // First toast — rejection sent
-    setToastMessage('Invoice rejection sent to rechnung@lehmanns.de · CC: a.krueger@bertelsmann.de')
-    setToastAction(null)
-    setToastVisible(true)
-    const hideFirst = setTimeout(() => setToastVisible(false), 4000)
-    // Second toast — supplier reply received (2s delay)
+    showToast('Invoice rejection sent to rechnung@lehmanns.de · CC: a.krueger@i2p.accenture.com')
+    const t1 = hideToast(4000)
     setTimeout(() => {
-      clearTimeout(hideFirst)
+      clearTimeout(t1)
       setToastVisible(false)
       setTimeout(() => {
         setTaxMismatchRepliesReceived(true)
-        setToastMessage('Corrected invoice received from Lehmanns Media · Anja Krüger acknowledged')
-        setToastAction({ label: 'Go to Outlook', onClick: () => setAppView('outlook') })
-        setToastVisible(true)
-        setTimeout(() => { setToastVisible(false); setToastAction(null) }, 6000)
+        showToast('Corrected invoice received from Lehmanns Media · Anja Krüger acknowledged', {
+          label: 'View in Submission',
+          onClick: () => setActiveSection('submission'),
+        })
+        hideToast(6000)
       }, 80)
     }, 2000)
   }
@@ -278,13 +210,10 @@ export default function App() {
     if (missingGRSent) return
     setMissingGRSent(true)
     setSentEmails(prev => prev.some(e => e.id === missingGRSentEmail.id) ? prev : [missingGRSentEmail, ...prev])
-    setToastMessage('VIM WI-2026-8823 dispatched to SAP VIM — Fremantle Germany Worklist')
-    setToastAction(null)
-    setToastVisible(true)
-    const hideFirst = setTimeout(() => setToastVisible(false), 4000)
-    // Simulate Sophie Brandt's reply arriving ~2.5s later
+    showToast('I2P WF-2026-8823 submitted to I2P Workflow — Fremantle Germany Queue')
+    const t1 = hideToast(4000)
     setTimeout(() => {
-      clearTimeout(hideFirst)
+      clearTimeout(t1)
       setToastVisible(false)
       setTimeout(() => {
         setMissingGRReplyReceived(true)
@@ -292,10 +221,11 @@ export default function App() {
           if (prev.some(e => e.id === missingGRReplyEmail.id)) return prev
           return [missingGRReplyEmail, ...prev]
         })
-        setToastMessage('VIM WI-2026-8823 completed — Sophie Brandt confirmed SES-2026-88412 booked')
-        setToastAction({ label: 'View in SAP VIM', onClick: () => setAppView('outlook-vim') })
-        setToastVisible(true)
-        setTimeout(() => { setToastVisible(false); setToastAction(null) }, 6000)
+        showToast('I2P WF-2026-8823 completed — Sophie Brandt confirmed SES-2026-88412 booked', {
+          label: 'View in Submission',
+          onClick: () => setActiveSection('submission'),
+        })
+        hideToast(6000)
       }, 80)
     }, 2500)
   }
@@ -304,23 +234,21 @@ export default function App() {
     if (royaltySent) return
     setRoyaltySent(true)
     setSentEmails(prev => prev.some(e => e.id === royaltyDeviationSentEmail.id) ? prev : [royaltyDeviationSentEmail, ...prev])
-    setToastMessage('VIM WI-2026-3312 dispatched to SAP VIM — PRH Royalties Worklist')
-    setToastAction(null)
-    setToastVisible(true)
-    const hideFirst = setTimeout(() => setToastVisible(false), 4000)
-    // Simulate Claire Newton's reply arriving ~3s later
+    showToast('I2P WF-2026-3312 submitted to I2P Workflow — PRH Royalties Queue')
+    const t1 = hideToast(4000)
     setTimeout(() => {
-      clearTimeout(hideFirst)
+      clearTimeout(t1)
       setToastVisible(false)
       setTimeout(() => {
         setReplyEmails(prev => {
           if (prev.some(e => e.id === royaltyMismatchReplyEmail.id)) return prev
           return [royaltyMismatchReplyEmail, ...prev]
         })
-        setToastMessage('VIM WI-2026-3312 completed — Claire Newton confirmed contract rate 12.5%')
-        setToastAction({ label: 'View in SAP VIM', onClick: () => setAppView('outlook-vim') })
-        setToastVisible(true)
-        setTimeout(() => { setToastVisible(false); setToastAction(null) }, 6000)
+        showToast('I2P WF-2026-3312 completed — Claire Newton confirmed contract rate 12.5%', {
+          label: 'View in Submission',
+          onClick: () => setActiveSection('submission'),
+        })
+        hideToast(6000)
       }, 80)
     }, 3000)
   }
@@ -329,12 +257,10 @@ export default function App() {
     if (icSent) return
     setIcSent(true)
     setSentEmails(prev => prev.some(e => e.id === icMismatchSentEmail.id) ? prev : [icMismatchSentEmail, ...prev])
-    setToastMessage('VIM WI-2026-6647 dispatched to SAP VIM — Bertelsmann Finance Worklist')
-    setToastAction(null)
-    setToastVisible(true)
-    const hideFirst = setTimeout(() => setToastVisible(false), 4000)
+    showToast('I2P WF-2026-6647 submitted to I2P Workflow — Bertelsmann Finance Queue')
+    const t1 = hideToast(4000)
     setTimeout(() => {
-      clearTimeout(hideFirst)
+      clearTimeout(t1)
       setToastVisible(false)
       setTimeout(() => {
         setIcReplyReceived(true)
@@ -342,10 +268,11 @@ export default function App() {
           if (prev.some(e => e.id === icMismatchReplyEmail.id)) return prev
           return [icMismatchReplyEmail, ...prev]
         })
-        setToastMessage('VIM WI-2026-6647 completed — Pieter Janssen confirmed ICE-REC-2026-0619 cleared')
-        setToastAction({ label: 'View in SAP VIM', onClick: () => setAppView('outlook-vim') })
-        setToastVisible(true)
-        setTimeout(() => { setToastVisible(false); setToastAction(null) }, 6000)
+        showToast('I2P WF-2026-6647 completed — Pieter Janssen confirmed ICE-REC-2026-0619 cleared', {
+          label: 'View in Submission',
+          onClick: () => setActiveSection('submission'),
+        })
+        hideToast(6000)
       }, 80)
     }, 3000)
   }
@@ -354,93 +281,77 @@ export default function App() {
     if (rescanSent) return
     setRescanSent(true)
     setSentEmails(prev => prev.some(e => e.id === kobaltRescanSentEmail.id) ? prev : [kobaltRescanSentEmail, ...prev])
-    setToastMessage('Re-scan request sent to Kobalt Music Group · royalties@kobaltmusic.com')
-    setToastAction(null)
-    setToastVisible(true)
-    const hideFirst = setTimeout(() => setToastVisible(false), 4000)
+    showToast('Re-scan request sent to Kobalt Music Group · royalties@kobaltmusic.com')
+    const t1 = hideToast(4000)
     setTimeout(() => {
-      clearTimeout(hideFirst)
+      clearTimeout(t1)
       setToastVisible(false)
       setTimeout(() => {
         setReplyEmails(prev => {
           if (prev.some(e => e.id === kobaltRescanReplyEmail.id)) return prev
           return [kobaltRescanReplyEmail, ...prev]
         })
-        setToastMessage('Kobalt resent KOB-RY-2026-0831 as native PDF — reprocessing at 97% confidence')
-        setToastAction({ label: 'View in Outlook', onClick: () => setAppView('outlook') })
-        setToastVisible(true)
-        setTimeout(() => { setToastVisible(false); setToastAction(null) }, 6000)
+        showToast('Kobalt resent KOB-RY-2026-0831 as native PDF — reprocessing at 97% confidence', {
+          label: 'View in Submission',
+          onClick: () => setActiveSection('submission'),
+        })
+        hideToast(6000)
       }, 80)
     }, 2500)
   }
 
   const handleGLApprovalSent = () => {
     const isPRT = selectedInvoice?.glMissingVariant === 'prt-coding'
-
     if (isPRT) {
       setSentEmails(prev => prev.some(e => e.id === prtGLSentEmail.id) ? prev : [prtGLSentEmail, ...prev])
-      setToastMessage('VIM WI-2026-5390 dispatched to SAP VIM — Fremantle Germany Worklist')
-      setToastAction(null)
-      setToastVisible(true)
-      const hideFirst = setTimeout(() => setToastVisible(false), 4000)
-      // First reply — Alex Morgan after 2s
+      showToast('I2P WF-2026-5390 submitted to I2P Workflow — Fremantle Germany Queue')
+      const t1 = hideToast(4000)
       setTimeout(() => {
-        clearTimeout(hideFirst)
+        clearTimeout(t1)
         setToastVisible(false)
-        setReplyEmails(prev => {
-          if (prev.some(e => e.id === 'reply-prt-gl-1')) return prev
-          return [prtGLReplyEmails[0], ...prev]
-        })
+        setReplyEmails(prev => prev.some(e => e.id === 'reply-prt-gl-1') ? prev : [prtGLReplyEmails[0], ...prev])
         if (selectedInvoice?.id) setGLApprovedInvoiceIds(prev => new Set([...prev, selectedInvoice.id]))
         setTimeout(() => {
-          setToastMessage('VIM WI-2026-5390 part-completed — Claudia Bauer approved WBS coding')
-          setToastAction({ label: 'View in SAP VIM', onClick: () => setAppView('outlook-vim') })
-          setToastVisible(true)
-          setTimeout(() => { setToastVisible(false); setToastAction(null) }, 5000)
+          showToast('I2P WF-2026-5390 part-completed — Claudia Bauer approved WBS coding', {
+            label: 'View in Submission',
+            onClick: () => setActiveSection('submission'),
+          })
+          hideToast(5000)
         }, 80)
       }, 2000)
-      // Second reply — David Turner after 4s
       setTimeout(() => {
-        setReplyEmails(prev => {
-          if (prev.some(e => e.id === 'reply-prt-gl-2')) return prev
-          return [prtGLReplyEmails[1], ...prev]
-        })
+        setReplyEmails(prev => prev.some(e => e.id === 'reply-prt-gl-2') ? prev : [prtGLReplyEmails[1], ...prev])
         setPrtGLBothApproved(true)
         setTimeout(() => {
-          setToastMessage('VIM WI-2026-5390 completed — Marc Olivier-Leblanc approved DOA — PXM-2026-FRM-1142 cleared')
-          setToastAction({ label: 'View in SAP VIM', onClick: () => setAppView('outlook-vim') })
-          setToastVisible(true)
-          setTimeout(() => { setToastVisible(false); setToastAction(null) }, 5000)
+          showToast('I2P WF-2026-5390 completed — Marc Olivier-Leblanc approved DOA — PXM-2026-FRM-1142 cleared', {
+            label: 'View in Submission',
+            onClick: () => setActiveSection('submission'),
+          })
+          hideToast(5000)
         }, 80)
       }, 4000)
       return
     }
 
-    // Standard GL flow (or RRD vendor dispute)
     const currentInvoiceId = selectedInvoice?.id ?? ''
-    const currentInvoiceNum = selectedInvoice?.invoiceNumber ?? selectedInvoice?.id ?? 'invoice'
     const isRRDDispute = currentInvoiceId === 'inv-7'
     const sentEmailObj = isRRDDispute ? rrdDisputeSentEmail : glApprovalSentEmail
     const replyEmailObj = isRRDDispute ? rrdDisputeReplyEmail : glApprovalReplyEmail
     const replyEmailId = isRRDDispute ? 'reply-rrd-dispute' : 'reply-gl-approval'
     setSentEmails(prev => prev.some(e => e.id === sentEmailObj.id) ? prev : [sentEmailObj, ...prev])
-    setToastMessage(isRRDDispute ? `VIM WI-2026-2281 dispatched to SAP VIM — PRH Procurement Worklist` : `VIM WI-2026-7714 dispatched to SAP VIM — BMS Marketing Worklist`)
-    setToastAction(null)
-    setToastVisible(true)
-    const hideFirst = setTimeout(() => setToastVisible(false), 4000)
+    showToast(isRRDDispute ? 'I2P WF-2026-2281 submitted to I2P Workflow — PRH Procurement Queue' : 'I2P WF-2026-7714 submitted to I2P Workflow — BMS Marketing Queue')
+    const t1 = hideToast(4000)
     setTimeout(() => {
-      clearTimeout(hideFirst)
+      clearTimeout(t1)
       setToastVisible(false)
-      setReplyEmails(prev => {
-        if (prev.some(e => e.id === replyEmailId)) return prev
-        return [replyEmailObj, ...prev]
-      })
+      setReplyEmails(prev => prev.some(e => e.id === replyEmailId) ? prev : [replyEmailObj, ...prev])
       if (currentInvoiceId) setGLApprovedInvoiceIds(prev => new Set([...prev, currentInvoiceId]))
       setTimeout(() => {
-        setToastMessage(isRRDDispute ? `VIM WI-2026-2281 completed — Julia Hartmann confirmed surcharge approved` : `VIM WI-2026-7714 completed — Caroline Hoffmann confirmed GL code`)
-        setToastAction({ label: 'View in SAP VIM', onClick: () => setAppView('outlook-vim') })
-        setToastVisible(true)
-        setTimeout(() => { setToastVisible(false); setToastAction(null) }, 6000)
+        showToast(
+          isRRDDispute ? 'I2P WF-2026-2281 completed — Julia Hartmann confirmed surcharge approved' : 'I2P WF-2026-7714 completed — Caroline Hoffmann confirmed GL code',
+          { label: 'View in Submission', onClick: () => setActiveSection('submission') }
+        )
+        hideToast(6000)
       }, 80)
     }, 2000)
   }
@@ -449,84 +360,37 @@ export default function App() {
     if (metroGLApprovalSent) return
     setMetroGLApprovalSent(true)
     setSentEmails(prev => prev.some(e => e.id === metroGLSentEmail.id) ? prev : [metroGLSentEmail, ...prev])
-    // First toast — approval request sent
-    setToastMessage('VIM WI-2026-4561 dispatched to SAP VIM — Arvato Connect Worklist')
-    setToastAction(null)
-    setToastVisible(true)
-    const hideFirst = setTimeout(() => setToastVisible(false), 4000)
-    // 2s delay → add reply emails + second toast
+    showToast('I2P WF-2026-4561 submitted to I2P Workflow — Arvato Connect Queue')
+    const t1 = hideToast(4000)
     setTimeout(() => {
-      clearTimeout(hideFirst)
+      clearTimeout(t1)
       setToastVisible(false)
-      setReplyEmails(prev => {
-        if (prev.some(e => e.id === 'reply-metro-gl-1')) return prev
-        return [...metroGLReplyEmails, ...prev]
-      })
+      setReplyEmails(prev => prev.some(e => e.id === 'reply-metro-gl-1') ? prev : [...metroGLReplyEmails, ...prev])
       setTimeout(() => {
-        setToastMessage('VIM WI-2026-4561 completed — Markus Weber & Anja Krüger confirmed GL 6720-001')
-        setToastAction({ label: 'View in SAP VIM', onClick: () => setAppView('outlook-vim') })
-        setToastVisible(true)
-        setTimeout(() => { setToastVisible(false); setToastAction(null) }, 6000)
+        showToast('I2P WF-2026-4561 completed — Markus Weber & Anja Krüger confirmed GL 6720-001', {
+          label: 'View in Submission',
+          onClick: () => setActiveSection('submission'),
+        })
+        hideToast(6000)
       }, 80)
     }, 2000)
   }
 
   const handleMarkReplyRead = (id: string) => {
-    setReplyEmails((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, isUnread: false } : e))
-    )
-  }
-
-  if (appView === 'home') {
-    return (
-      <LandingScreen
-        onSelectOutlook={() => setAppView('outlook-login')}
-        onSelectSAP={() => setAppView('sap-login')}
-      />
-    )
-  }
-
-  if (appView === 'outlook') {
-    return (
-      <OutlookInbox
-        invoices={mockInvoices}
-        replyEmails={replyEmails}
-        sentEmails={sentEmails}
-        onMarkReplyRead={handleMarkReplyRead}
-        onClose={() => {
-          if (prtGLBothApproved && selectedInvoice?.glMissingVariant === 'prt-coding') {
-            setPrtOutlookReturned(true)
-          }
-          setAppView(selectedInvoice ? 'sap' : 'home')
-        }}
-      />
-    )
-  }
-
-  if (appView === 'outlook-vim') {
-    return (
-      <SAPVIMWorklist
-        replyEmails={replyEmails}
-        sentEmails={sentEmails}
-        onMarkReplyRead={handleMarkReplyRead}
-        onClose={() => setAppView(selectedInvoice ? 'sap' : 'home')}
-      />
-    )
+    setReplyEmails((prev) => prev.map((e) => (e.id === id ? { ...e, isUnread: false } : e)))
   }
 
   const handleSelectInvoice = (invoice: Invoice) => {
     if (invoice.agentSteps.length > 0) {
       setSelectedInvoice(invoice)
-      if (activeTab === 'dashboard') {
-        setActiveTab('inbox')
-      }
+      if (activeSection !== 'cases') setActiveSection('cases')
     }
   }
 
   const handleBack = () => setSelectedInvoice(null)
 
-  const handleTabChange = (tab: SidebarTab) => {
-    setActiveTab(tab)
+  const handleSectionChange = (section: NavSection) => {
+    setActiveSection(section)
     setSelectedInvoice(null)
   }
 
@@ -538,102 +402,107 @@ export default function App() {
   const glEmailsViewed = selectedInvoice?.glMissingVariant === 'prt-coding'
     ? prtOutlookReturned ||
       (replyEmails.filter(e => e.id === 'reply-prt-gl-1' || e.id === 'reply-prt-gl-2').length === 2 &&
-      replyEmails.filter(e => e.id === 'reply-prt-gl-1' || e.id === 'reply-prt-gl-2').every(e => !e.isUnread))
+       replyEmails.filter(e => e.id === 'reply-prt-gl-1' || e.id === 'reply-prt-gl-2').every(e => !e.isUnread))
     : selectedInvoice?.id === 'inv-7'
       ? replyEmails.some(e => e.id === 'reply-rrd-dispute' && !e.isUnread)
       : replyEmails.some(e => e.id === 'reply-gl-approval' && !e.isUnread)
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <AppHeader onBack={undefined} currentInvoice={selectedInvoice} onLogout={() => setAppView('home')} />
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F8FAFC' }}>
+      <AppHeader
+        activeSection={activeSection}
+        onSectionChange={handleSectionChange}
+        currentInvoice={selectedInvoice}
+        onLogout={() => setAppView('login')}
+        inboxBadge={inboxBadgeCount}
+      />
 
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <Sidebar
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          inboxBadge={inboxBadgeCount}
-        />
-
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          {activeTab === 'inbox' && selectedInvoice ? (
-            <InvoiceWorkspace
-              invoice={selectedInvoice}
-              onBack={handleBack}
-              onTaxMismatchSent={handleTaxMismatchSent}
-              taxMismatchAutoResolved={taxMismatchRepliesReceived && selectedInvoice?.failType === 'tax-mismatch'}
-              onMissingGRSent={handleMissingGRSent}
-              missingGRAutoResolved={missingGRReplyReceived && selectedInvoice?.failType === 'missing-gr'}
-              onGLApprovalSent={handleGLApprovalSent}
-              glApprovalReceived={selectedInvoice?.failType === 'gl-missing' && selectedInvoice?.glMissingVariant !== 'internal-approval' && (selectedInvoice?.glMissingVariant === 'prt-coding' ? prtGLBothApproved : glApprovedInvoiceIds.has(selectedInvoice?.id ?? ''))}
-              onProcessingComplete={id => setProcessedInvoiceIds(prev => new Set([...prev, id]))}
-              metroGLApprovalSent={metroGLApprovalSent && selectedInvoice?.id === 'inv-4'}
-              onMetroGLApprovalSend={handleMetroGLApprovalSend}
-              metroApproved={metroApproved && selectedInvoice?.id === 'inv-4'}
-              onMetroApprove={() => setMetroApprovedIds(prev => new Set([...prev, 'inv-4']))}
-              metroInvoiceApprovedIds={metroApprovedIds}
-              glEmailsViewed={glEmailsViewed}
-              onRoyaltySent={handleRoyaltySent}
-              royaltyMismatchAutoResolved={royaltyMismatchAutoResolved && selectedInvoice?.failType === 'royalty-mismatch'}
-              onICMismatchSend={handleICMismatchSend}
-              icMismatchAutoResolved={icMismatchAutoResolved && selectedInvoice?.failType === 'ic-mismatch'}
-              onRescanSent={handleRescanSent}
-              rescanReplyReceived={rescanReplyReceived && selectedInvoice?.id === 'inv-9'}
-            />
-          ) : activeTab === 'inbox' ? (
-            <TicketsView
-              onSelectInvoice={handleSelectInvoice}
-              replyEmails={replyEmails}
-              onMarkReplyRead={handleMarkReplyRead}
-              processedIds={processedInvoiceIds}
-              rejectedInvoiceIds={taxMismatchEmailSent && !taxMismatchRepliesReceived ? new Set(['inv-5']) : undefined}
-              straightPassInvoiceIds={taxMismatchRepliesReceived ? new Set(['inv-5']) : undefined}
-              metroApprovedIds={metroApprovedIds}
-            />
-          ) : activeTab === 'dashboard' ? (
-            <DashboardView onSelectInvoice={handleSelectInvoice} />
-          ) : activeTab === 'audit' ? (
-            <AuditTrailPage />
-          ) : activeTab === 'analytics' ? (
-            <AnalyticsPage />
-          ) : (
-            <SettingsPage />
-          )}
-        </div>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {activeSection === 'cases' && selectedInvoice ? (
+          <InvoiceWorkspace
+            invoice={selectedInvoice}
+            onBack={handleBack}
+            onTaxMismatchSent={handleTaxMismatchSent}
+            taxMismatchAutoResolved={taxMismatchRepliesReceived && selectedInvoice?.failType === 'tax-mismatch'}
+            onMissingGRSent={handleMissingGRSent}
+            missingGRAutoResolved={missingGRReplyReceived && selectedInvoice?.failType === 'missing-gr'}
+            onGLApprovalSent={handleGLApprovalSent}
+            glApprovalReceived={selectedInvoice?.failType === 'gl-missing' && selectedInvoice?.glMissingVariant !== 'internal-approval' && (selectedInvoice?.glMissingVariant === 'prt-coding' ? prtGLBothApproved : glApprovedInvoiceIds.has(selectedInvoice?.id ?? ''))}
+            onProcessingComplete={id => setProcessedInvoiceIds(prev => new Set([...prev, id]))}
+            metroGLApprovalSent={metroGLApprovalSent && selectedInvoice?.id === 'inv-4'}
+            onMetroGLApprovalSend={handleMetroGLApprovalSend}
+            metroApproved={metroApproved && selectedInvoice?.id === 'inv-4'}
+            onMetroApprove={() => setMetroApprovedIds(prev => new Set([...prev, 'inv-4']))}
+            metroInvoiceApprovedIds={metroApprovedIds}
+            glEmailsViewed={glEmailsViewed}
+            onRoyaltySent={handleRoyaltySent}
+            royaltyMismatchAutoResolved={royaltyMismatchAutoResolved && selectedInvoice?.failType === 'royalty-mismatch'}
+            onICMismatchSend={handleICMismatchSend}
+            icMismatchAutoResolved={icMismatchAutoResolved && selectedInvoice?.failType === 'ic-mismatch'}
+            onRescanSent={handleRescanSent}
+            rescanReplyReceived={rescanReplyReceived && selectedInvoice?.id === 'inv-9'}
+          />
+        ) : activeSection === 'cases' ? (
+          <TicketsView
+            onSelectInvoice={handleSelectInvoice}
+            replyEmails={replyEmails}
+            onMarkReplyRead={handleMarkReplyRead}
+            processedIds={processedInvoiceIds}
+            rejectedInvoiceIds={taxMismatchEmailSent && !taxMismatchRepliesReceived ? new Set(['inv-5']) : undefined}
+            straightPassInvoiceIds={taxMismatchRepliesReceived ? new Set(['inv-5']) : undefined}
+            metroApprovedIds={metroApprovedIds}
+          />
+        ) : activeSection === 'insights' ? (
+          <DashboardView onSelectInvoice={handleSelectInvoice} />
+        ) : activeSection === 'submission' ? (
+          <SubmissionInbox
+            replyEmails={replyEmails}
+            sentEmails={sentEmails}
+            onMarkReplyRead={handleMarkReplyRead}
+            onClose={() => {
+              if (prtGLBothApproved && selectedInvoice?.glMissingVariant === 'prt-coding') {
+                setPrtOutlookReturned(true)
+              }
+              setActiveSection('cases')
+            }}
+          />
+        ) : activeSection === 'audit' ? (
+          <AuditTrailPage />
+        ) : activeSection === 'configuration' ? (
+          <SettingsPage />
+        ) : null}
       </div>
 
       {toastVisible && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '28px',
-            right: '28px',
-            zIndex: 9999,
-            background: '#fff',
-            color: '#1d2f36',
-            padding: '14px 20px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.08)',
-            fontSize: '14px',
-            fontFamily: 'Lato, sans-serif',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            border: '1px solid #e4e6e7',
-            maxWidth: '420px',
-          }}
-        >
-          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#e8f5ee', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{
+          position: 'fixed',
+          bottom: '28px',
+          right: '28px',
+          zIndex: 9999,
+          background: '#fff',
+          color: '#1E293B',
+          padding: '14px 20px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.08)',
+          fontSize: '14px',
+          fontFamily: 'Lato, sans-serif',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          border: '1px solid #E2E8F0',
+          maxWidth: '440px',
+        }}>
+          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2.5 7l3.5 3.5 5.5-6" stroke="#1b823f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2.5 7l3.5 3.5 5.5-6" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
           <span style={{ flex: 1 }}>{toastMessage}</span>
           {toastAction && (
             <button
               onClick={() => { toastAction.onClick(); setToastVisible(false); setToastAction(null) }}
-              style={{ padding: '6px 14px', background: '#1a3a6b', color: '#fff', border: 'none', borderRadius: '5px', fontSize: '13px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ padding: '6px 14px', background: '#7C3AED', color: '#fff', border: 'none', borderRadius: '5px', fontSize: '13px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
             >
-              <svg width="12" height="10" viewBox="0 0 14 12" fill="white"><rect x="0" y="0" width="14" height="12" rx="1.5" fill="none" stroke="white" strokeWidth="1.3"/><polyline points="0,0 7,7 14,0" fill="none" stroke="white" strokeWidth="1.3"/></svg>
               {toastAction.label}
             </button>
           )}
