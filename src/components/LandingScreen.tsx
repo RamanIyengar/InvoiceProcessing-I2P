@@ -709,3 +709,89 @@ export function LandingScreen({ onSelectOutlook, onSelectSAP }: Props) {
     </>
   )
 }
+
+export function UseCasesPanel() {
+  const [selectedCard, setSelectedCard] = useState<number | null>(null)
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null)
+
+  return (
+    <>
+      {selectedCard !== null && (
+        <UseCaseCardModal
+          no={selectedCard}
+          onClose={() => setSelectedCard(null)}
+          onPrev={() => setSelectedCard(n => Math.max(1, (n ?? 1) - 1))}
+          onNext={() => setSelectedCard(n => Math.min(USE_CASES.length, (n ?? 1) + 1))}
+        />
+      )}
+      <div style={{ flex: 1, overflowY: 'auto', background: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
+        {/* Header banner */}
+        <div style={{ background: '#0F1934', padding: '28px 40px 24px', flexShrink: 0 }}>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '22px', fontWeight: 700, color: '#FFFFFF', marginBottom: '6px' }}>
+            Demo Briefing — Use Cases
+          </div>
+          <div style={{ fontFamily: 'Lato, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.55)' }}>
+            AI-Powered AP Automation · Bertelsmann · 11 Use Cases · Click any row to open context card
+          </div>
+        </div>
+
+        {/* Table */}
+        <div style={{ flex: 1, padding: '28px 40px 40px' }}>
+          <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}>
+            {/* Table header */}
+            <div style={{ display: 'flex', alignItems: 'center', padding: '10px 20px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0' }}>
+              <div style={{ width: '32px', flexShrink: 0, fontFamily: 'Cabin, sans-serif', fontSize: '10px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>#</div>
+              <div style={{ flex: 1, fontFamily: 'Cabin, sans-serif', fontSize: '10px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Use Case</div>
+              <div style={{ flexShrink: 0, width: '130px', fontFamily: 'Cabin, sans-serif', fontSize: '10px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Ticket</div>
+              <div style={{ flexShrink: 0, width: '130px', textAlign: 'right', fontFamily: 'Cabin, sans-serif', fontSize: '10px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Amount</div>
+              <div style={{ flexShrink: 0, width: '28px' }} />
+            </div>
+
+            {USE_CASES.map((uc) => (
+              <div
+                key={uc.no}
+                onClick={() => setSelectedCard(uc.no)}
+                onMouseEnter={() => setHoveredRow(uc.no)}
+                onMouseLeave={() => setHoveredRow(null)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '13px 20px',
+                  borderBottom: '1px solid #F1F5F9',
+                  cursor: 'pointer',
+                  background: hoveredRow === uc.no ? '#F5F3FF' : 'transparent',
+                  transition: 'background 0.12s',
+                }}
+              >
+                <div style={{ width: '32px', flexShrink: 0, fontFamily: 'Cabin, sans-serif', fontSize: '14px', fontWeight: 700, color: '#7C3AED' }}>{uc.no}</div>
+                <div style={{ flex: 1, fontFamily: 'Lato, sans-serif', fontSize: '14px', color: '#1E293B', fontWeight: 500, paddingRight: '16px' }}>{uc.label}</div>
+                <div style={{ flexShrink: 0, width: '130px', fontFamily: 'Lato, sans-serif', fontSize: '12px', color: '#94A3B8', whiteSpace: 'nowrap' }}>{uc.ticket}</div>
+                <div style={{ flexShrink: 0, width: '130px', textAlign: 'right', fontFamily: 'Cabin, sans-serif', fontSize: '14px', fontWeight: 700, color: '#1E293B', whiteSpace: 'nowrap' }}>{uc.amount}</div>
+                <div style={{
+                  flexShrink: 0,
+                  marginLeft: '12px',
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  background: hoveredRow === uc.no ? '#7C3AED' : '#E2E8F0',
+                  color: hoveredRow === uc.no ? '#fff' : '#94A3B8',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.12s',
+                  fontFamily: 'Lato, sans-serif',
+                }}>i</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: '16px', fontFamily: 'Lato, sans-serif', fontSize: '12px', color: '#94A3B8', textAlign: 'right' }}>
+            Bertelsmann Invoice Processing Automation · Accenture · {USE_CASES.length} use cases
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}

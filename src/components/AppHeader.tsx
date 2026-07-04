@@ -1,6 +1,6 @@
 import { Invoice } from '../types'
 
-export type NavSection = 'cases' | 'insights' | 'submission' | 'audit' | 'configuration'
+export type NavSection = 'cases' | 'insights' | 'submission' | 'audit' | 'configuration' | 'usecases'
 
 interface Props {
   activeSection: NavSection
@@ -10,12 +10,13 @@ interface Props {
   inboxBadge?: number
 }
 
-const NAV_ITEMS: { id: NavSection; label: string }[] = [
+const NAV_ITEMS: { id: NavSection; label: string; highlight?: boolean }[] = [
   { id: 'cases',         label: 'Cases' },
   { id: 'insights',      label: 'Insights' },
   { id: 'submission',    label: 'Submission' },
   { id: 'audit',         label: 'Audit Trail' },
   { id: 'configuration', label: 'Configuration' },
+  { id: 'usecases',      label: 'Use Cases', highlight: true },
 ]
 
 function SearchIcon() {
@@ -69,18 +70,19 @@ export function AppHeader({ activeSection, onSectionChange, currentInvoice, onLo
         <nav style={{ display: 'flex', gap: '2px', flex: 1 }}>
           {NAV_ITEMS.map(item => {
             const isActive = activeSection === item.id
+            const isHighlight = item.highlight
             return (
               <button
                 key={item.id}
                 onClick={() => onSectionChange(item.id)}
                 style={{
-                  background: isActive ? 'rgba(124,58,237,0.2)' : 'transparent',
+                  background: isActive ? (isHighlight ? 'rgba(124,58,237,0.25)' : 'rgba(124,58,237,0.2)') : 'transparent',
                   border: 'none',
                   borderBottom: isActive ? '2px solid #A78BFA' : '2px solid transparent',
-                  color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.65)',
+                  color: isActive ? '#FFFFFF' : isHighlight ? '#C4B5FD' : 'rgba(255,255,255,0.65)',
                   fontSize: '13px',
                   fontFamily: 'Lato, sans-serif',
-                  fontWeight: isActive ? 600 : 400,
+                  fontWeight: isActive || isHighlight ? 600 : 400,
                   padding: '0 16px',
                   height: '52px',
                   cursor: 'pointer',
@@ -93,7 +95,7 @@ export function AppHeader({ activeSection, onSectionChange, currentInvoice, onLo
                   whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.color = '#FFFFFF'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)' } }}
-                onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.65)'; (e.currentTarget as HTMLElement).style.background = 'transparent' } }}
+                onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.color = isHighlight ? '#C4B5FD' : 'rgba(255,255,255,0.65)'; (e.currentTarget as HTMLElement).style.background = 'transparent' } }}
               >
                 {item.label}
                 {item.id === 'submission' && inboxBadge != null && inboxBadge > 0 && (
@@ -109,9 +111,11 @@ export function AppHeader({ activeSection, onSectionChange, currentInvoice, onLo
                     {inboxBadge}
                   </span>
                 )}
-                <svg width="10" height="10" viewBox="0 0 10 6" fill="none" style={{ opacity: 0.5, marginLeft: '2px' }}>
-                  <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                {!isHighlight && (
+                  <svg width="10" height="10" viewBox="0 0 10 6" fill="none" style={{ opacity: 0.5, marginLeft: '2px' }}>
+                    <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
               </button>
             )
           })}

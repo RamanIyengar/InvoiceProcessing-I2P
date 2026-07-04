@@ -15,6 +15,7 @@ import {
 } from './data/mockData'
 import { TicketsView } from './components/TicketsView'
 import { SettingsPage } from './components/SettingsPage'
+import { UseCasesPanel } from './components/LandingScreen'
 
 // ─── Analytics charts ────────────────────────────────────────────────────────
 
@@ -470,6 +471,8 @@ export default function App() {
           <AuditTrailPage />
         ) : activeSection === 'configuration' ? (
           <SettingsPage />
+        ) : activeSection === 'usecases' ? (
+          <UseCasesPanel />
         ) : null}
       </div>
 
