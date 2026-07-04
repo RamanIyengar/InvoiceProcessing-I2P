@@ -316,13 +316,13 @@ function DocTableRow({ row, index, effectiveStatus, isClassified, onOpen }: { ro
       <td style={{ padding: '10px 12px', fontSize: '12px', fontFamily: 'monospace', color: '#64748B' }}>{row.ageing}</td>
       <td style={{ padding: '10px 12px', fontSize: '12px', color: row.noErrors > 0 ? '#DC2626' : '#64748B', fontWeight: row.noErrors > 0 ? 600 : 400, textAlign: 'center' }}>{row.noErrors}</td>
       <td style={{ padding: '10px 12px', fontSize: '13px', color: '#1E293B', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {isClassified ? row.invoice.supplier : <span style={{ color: '#CBD5E1' }}>—</span>}
+        {row.invoice.supplier}
       </td>
       <td style={{ padding: '10px 12px', fontSize: '12px', color: '#475569' }}>{row.queueName}</td>
       <td style={{ padding: '10px 12px' }}><StatusChip status={effectiveStatus} /></td>
       <td style={{ padding: '10px 12px', fontSize: '11px', color: '#64748B', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{row.currentOwner}</td>
       <td style={{ padding: '10px 12px', fontSize: '11px', color: '#64748B', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{row.invoice.receivedAt} {row.invoice.emailTime}</td>
-      <td style={{ padding: '10px 12px' }}>{isClassified && <PriorityBadge priority={row.priority} />}</td>
+      <td style={{ padding: '10px 12px' }}><PriorityBadge priority={row.priority} /></td>
       <td style={{ padding: '10px 12px', fontSize: '12px', fontFamily: 'monospace', color: '#94A3B8' }}>{row.documentId}</td>
       <td style={{ padding: '10px 12px' }}>
         <button
