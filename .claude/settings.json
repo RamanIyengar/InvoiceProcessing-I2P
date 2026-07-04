@@ -65,10 +65,21 @@
       "PowerShell(Get-ChildItem -Path \"$env:APPDATA\" -Filter \"config.json\" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName)",
       "Read(//c/Users/r.thothadri.iyengar/AppData/Roaming/netlify/Config/**)",
       "PowerShell(cd \"C:\\\\Users\\\\r.thothadri.iyengar\\\\Downloads\\\\InvoiceProcessing-Bertelsmann\"; $env:NETLIFY_AUTH_TOKEN = \"nfc_edC55Lq6x976Ug3UA6fGQR28meocuBoT1a1a\"; npx netlify deploy --dir=dist --prod 2>&1)",
-      "PowerShell(cd \"C:\\\\Users\\\\r.thothadri.iyengar\\\\Downloads\\\\InvoiceProcessing-Bertelsmann\"; $env:NETLIFY_AUTH_TOKEN = \"nfc_edC55Lq6x976Ug3UA6fGQR28meocuBoT1a1a\"; npx netlify deploy --dir=dist --prod --debug 2>&1 | Select-Object -Last 30)"
+      "PowerShell(cd \"C:\\\\Users\\\\r.thothadri.iyengar\\\\Downloads\\\\InvoiceProcessing-Bertelsmann\"; $env:NETLIFY_AUTH_TOKEN = \"nfc_edC55Lq6x976Ug3UA6fGQR28meocuBoT1a1a\"; npx netlify deploy --dir=dist --prod --debug 2>&1 | Select-Object -Last 30)",
+      "Bash(mkdir -p \"c:/Users/r.thothadri.iyengar/Downloads/InvoiceProcessing-Bertelsmann/.github/workflows\")",
+      "Bash(git commit -m 'Separate VIM notifications from Outlook into dedicated SAP VIM folder *)",
+      "PowerShell(Get-Process -Name node -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force -ErrorAction SilentlyContinue)",
+      "Bash(git commit -m 'Route VIM completion toasts to SAP VIM worklist, not Outlook *)",
+      "Bash(git commit -m 'Replace embedded VIM folder in Outlook with standalone SAP VIM Worklist *)",
+      "Bash(git commit -m 'Show Kobalt native PDF attachment in Outlook reply reading pane *)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\r.thothadri.iyengar\\\\Downloads\\\\InvoiceProcessing-Bertelsmann\"; Start-Process -FilePath \"npx\" -ArgumentList \"vite --port 3002\" -WindowStyle Hidden; Start-Sleep 6; try { $r = Invoke-WebRequest -Uri \"http://localhost:3002\" -UseBasicParsing -TimeoutSec 4; $r.StatusCode } catch { \"not ready: $_\" })",
+      "PowerShell(cd \"C:\\\\Users\\\\r.thothadri.iyengar\\\\Downloads\\\\InvoiceProcessing-Bertelsmann\"; \\(Get-Command playwright -ErrorAction SilentlyContinue\\).Source; npx playwright --version 2>&1 | Select-Object -First 2)",
+      "PowerShell(docker run -d -p 3001:80 --name invoiceprocessing-i2p invoiceprocessing-i2p)"
     ],
     "additionalDirectories": [
-      "c:\\Users\\r.thothadri.iyengar\\Downloads\\InvoiceProcessing-Bertelsmann"
+      "c:\\Users\\r.thothadri.iyengar\\Downloads\\InvoiceProcessing-Bertelsmann",
+      "c:\\Users\\r.thothadri.iyengar\\Downloads\\InvoiceProcessing-Bertelsmann\\.github"
     ]
   }
 }

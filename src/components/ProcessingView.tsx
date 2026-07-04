@@ -54,10 +54,29 @@ const CloseIcon = ({ size = 20, color = '#fff' }: { size?: number; color?: strin
 // ─── Agent profile icons ──────────────────────────────────────────────────────
 
 const AGENT_ICONS: Record<string, { initials: string; gradient: string }> = {
-  'VIM Mailbox Adapter':            { initials: 'VM', gradient: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)' },
+  // ── I2P agent names ─────────────────────────────────────────────────────────
+  'Document Classification Agent':  { initials: 'DC', gradient: 'linear-gradient(135deg, #3730a3 0%, #818cf8 100%)' },
   'Document Status Agent':          { initials: 'DS', gradient: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)' },
+  'Document Extraction Agent':      { initials: 'DE', gradient: 'linear-gradient(135deg, #7c2d12 0%, #f97316 100%)' },
+  'GPT Vision':                     { initials: 'GV', gradient: 'linear-gradient(135deg, #0c4a6e 0%, #38bdf8 100%)' },
+  'Gemini':                         { initials: 'Gm', gradient: 'linear-gradient(135deg, #1e3a8a 0%, #60a5fa 100%)' },
+  'Document Quality Agent':         { initials: 'DQ', gradient: 'linear-gradient(135deg, #1e1b4b 0%, #7C3AED 100%)' },
+  'Invoice Validation Agent':       { initials: 'IV', gradient: 'linear-gradient(135deg, #5b21b6 0%, #a78bfa 100%)' },
+  'Patterns Derivation Agent':      { initials: 'PD', gradient: 'linear-gradient(135deg, #164e63 0%, #22d3ee 100%)' },
+  'Vendor Master Agent':            { initials: 'VM', gradient: 'linear-gradient(135deg, #065f46 0%, #34d399 100%)' },
+  'PO Mapping Agent':               { initials: 'PM', gradient: 'linear-gradient(135deg, #064e3b 0%, #10b981 100%)' },
+  'Payment Validator':              { initials: 'PV', gradient: 'linear-gradient(135deg, #78350f 0%, #f59e0b 100%)' },
+  'Anomaly Detection Agent':        { initials: 'AD', gradient: 'linear-gradient(135deg, #1f2937 0%, #6b7280 100%)' },
+  'Tax & Compliance Agent':         { initials: 'TC', gradient: 'linear-gradient(135deg, #042f2e 0%, #0d9488 100%)' },
+  'Exception Orchestrator':         { initials: 'EO', gradient: 'linear-gradient(135deg, #831843 0%, #ec4899 100%)' },
+  'Coding Agent':                   { initials: 'CA', gradient: 'linear-gradient(135deg, #1e3a5f 0%, #0ea5e9 100%)' },
+  'IC Reconciliation Agent':        { initials: 'IC', gradient: 'linear-gradient(135deg, #134e4a 0%, #2dd4bf 100%)' },
+  'Predictive Royalty Agent':       { initials: 'PR', gradient: 'linear-gradient(135deg, #4a044e 0%, #c026d3 100%)' },
+  'GenAI Milestone Interpreter':    { initials: 'MI', gradient: 'linear-gradient(135deg, #4a044e 0%, #d946ef 100%)' },
+  // ── Legacy SAP VIM names ─────────────────────────────────────────────────────
+  'I2P Submission Adapter':         { initials: 'IA', gradient: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)' },
   'Invoice Classification (Ic)':    { initials: 'Ic', gradient: 'linear-gradient(135deg, #3730a3 0%, #818cf8 100%)' },
-  'SAP DOX Digitization Agent':     { initials: 'Id', gradient: 'linear-gradient(135deg, #7c2d12 0%, #f97316 100%)' },
+  'SAP DOX Digitization Agent':     { initials: 'DX', gradient: 'linear-gradient(135deg, #7c2d12 0%, #f97316 100%)' },
   'Invoice Extractor (Id)':         { initials: 'Ex', gradient: 'linear-gradient(135deg, #0c4a6e 0%, #38bdf8 100%)' },
   'Formatter Agent':                { initials: 'Fm', gradient: 'linear-gradient(135deg, #4a044e 0%, #d946ef 100%)' },
   'Field Validation Agent':         { initials: 'Fv', gradient: 'linear-gradient(135deg, #1e1b4b 0%, #6d28d9 100%)' },
@@ -71,7 +90,6 @@ const AGENT_ICONS: Record<string, { initials: string; gradient: string }> = {
   'NPO Exception Orchestrator (Eg)':{ initials: 'NP', gradient: 'linear-gradient(135deg, #831843 0%, #ec4899 100%)' },
   'Exception Gatekeeper (Eg)':      { initials: 'Eg', gradient: 'linear-gradient(135deg, #831843 0%, #f472b6 100%)' },
   'Predictive IC & Royalty Agent':  { initials: 'IC', gradient: 'linear-gradient(135deg, #134e4a 0%, #2dd4bf 100%)' },
-  'GenAI Milestone Interpreter':    { initials: 'AI', gradient: 'linear-gradient(135deg, #4a044e 0%, #c026d3 100%)' },
 }
 
 function AgentAvatar({ name, size = 28 }: { name: string; size?: number }) {
@@ -86,6 +104,11 @@ function AgentAvatar({ name, size = 28 }: { name: string; size?: number }) {
 // ─── Agent tier classification ────────────────────────────────────────────────
 
 const SUPER_AGENTS = new Set([
+  'Document Classification Agent',
+  'Document Extraction Agent',
+  'Document Quality Agent',
+  'Patterns Derivation Agent',
+  // legacy
   'SAP DOX Digitization Agent',
   'Invoice Validation (Iv)',
 ])
@@ -93,11 +116,147 @@ const SUPER_AGENTS = new Set([
 // ─── Stage metadata ────────────────────────────────────────────────────────────
 
 const AGENT_HUDDLE_MESSAGES: Record<string, string[]> = {
-  'VIM Mailbox Adapter': [
-    'Monitoring AP mailbox via OpenText VIM — new email received, parsing MIME headers',
+  // ── I2P agent names (active in mock data) ──────────────────────────────────
+  'Document Classification Agent': [
+    'Loading PDF binary — initiating document structure and layout analysis',
+    'Detecting invoice type: PO / Non-PO, service, freight, royalty or intercompany',
+    'Scanning for PO reference patterns across header, body, and footer sections',
+    'Scanning for contract or framework agreement reference numbers',
+    'Checking for recurring invoice markers and statement indicators',
+    'Category determined — confidence score computed and threshold applied',
+    'Document type confirmed — routing to extraction pipeline',
+  ],
+  'Document Extraction Agent': [
+    'Loading PDF binary — parsing document structure and layout',
+    'Initiating parallel multi-model extraction: GPT Vision + Gemini (concurrent inference)',
+    'Document sections identified: Header, Remit-to, Line Items, Totals, Footer',
+    'Running SAP DOX-compatible OCR — segmenting text blocks and table regions',
+    'Extracting invoice fields from each model output independently',
+    'Merging extractions into unified schema — resolving field conflicts by confidence score',
+    'All 12 invoice fields captured and forwarded to quality validation stage',
+  ],
+  'GPT Vision': [
+    'PDF page rendered as high-resolution image — submitting to GPT-4 Vision API',
+    'Analysing invoice layout: identifying field zones, table boundaries, and logo area',
+    'Extracting header fields: invoice number, date, supplier name, currency, total',
+    'Extracting line items: description, quantity, unit price, line amount per row',
+    'Extracting remittance section: bank account, IBAN, payment reference',
+    'Vision extraction complete — confidence scores assigned per extracted field',
+  ],
+  'Gemini': [
+    'PDF submitted to Gemini 1.5 Flash multimodal endpoint for parallel extraction',
+    'Structural analysis: detecting tables, merged cells, and multi-column layouts',
+    'Extracting structured data from line item tables and remittance section',
+    'Cross-referencing extracted values against standard invoice field schema',
+    'Calculating field-level extraction confidence using token probability scores',
+    'Gemini extraction complete — output forwarded to field merger for cross-validation',
+  ],
+  'Document Quality Agent': [
+    'All extraction outputs received — initiating field-level quality evaluation',
+    'Checking mandatory field presence: invoice number, supplier, date, amount',
+    'Running visual confidence scoring on each extracted field (threshold: 85%)',
+    'Detecting ambiguous or low-confidence fields that may require human review',
+    'Cross-checking currency symbols, numeric formatting, and decimal alignment',
+    'Comparing GPT Vision and Gemini outputs — flagging extraction divergences',
+    'Quality evaluation complete — confidence report generated per field',
+  ],
+  'Invoice Validation Agent': [
+    'Loading business rule set for this invoice category and supplier tier',
+    'Payment terms compliance: validating against the approved vendor terms matrix',
+    'Tax rate plausibility check: applied rate validated against service category',
+    'Invoice date vs received date delta: checking within acceptable SLA window',
+    'Due date arithmetic check: verifying Net terms correctly calculate from invoice date',
+    'Line item description completeness: checking against minimum content requirements',
+    'All business rules evaluated — validation clearance report issued',
+  ],
+  'Patterns Derivation Agent': [
+    'Majority Match algorithm applied — fields with score above 80% confidence confirmed',
+    'Fields with empty or null values processed via Pattern algorithm fallback',
+    'Pattern-matched values cross-referenced against field-level extraction outputs',
+    'Zero-token fields preserved using Model direct confidence scores',
+    'Conflicting field values arbitrated by highest-confidence extraction source',
+    'Final merged field set produced — ready for vendor master cross-check',
+  ],
+  'Vendor Master Agent': [
+    'Querying SAP S/4HANA vendor master for supplier registration details',
+    'Validating supplier name and ID against the approved vendor registry',
+    'Cross-referencing bank account IBAN against registered vendor payment details',
+    'Checking vendor status: active / blocked / flagged for sanctions',
+    'Verifying VAT ID format and cross-referencing against the EU VAT registry',
+    'OFAC and EU consolidated sanctions list screen completed for supplier legal name',
+    'Vendor validation complete — supplier confirmed in SAP Vendor master',
+  ],
+  'PO Mapping Agent': [
+    'Querying the I2P PO registry using extracted PO reference number',
+    'PO header retrieved — comparing supplier, currency, and total amount',
+    'Querying SAP MM for the Service Entry Sheet / goods receipt against this PO',
+    'SES/GR record located — confirming quantity matches the invoiced quantity',
+    'Calculating invoice-to-PO variance — applying ±0.5% tolerance threshold',
+    'Running pre-payment duplicate scan — checking 12-month payment history',
+    'Match result determined — exception raised if outside tolerance window',
+  ],
+  'Payment Validator': [
+    'Running pre-payment controls including advanced duplicate detection',
+    'Exact match scan: searching for identical invoice numbers in the payment archive',
+    'Fuzzy match scan: checking for near-duplicate amounts within ±2% range',
+    'Same-day resubmission check: detecting suspicious timing patterns',
+    'Cross-referencing against SAP settled items for prior payment on this invoice',
+    'Pre-payment duplicate control complete — result recorded to audit trail',
+  ],
+  'Anomaly Detection Agent': [
+    'Loading 12-month historical invoice data for this supplier',
+    'Statistical range check: comparing invoice amount to historical mean ± 2σ',
+    'Line item count check: comparing to supplier average line item count',
+    'Unit price anomaly check: detecting unusual per-unit pricing vs historical data',
+    'Running ML-based anomaly classifier on extracted invoice feature vector',
+    'Anomaly scan complete — risk score computed and recorded',
+  ],
+  'Tax & Compliance Agent': [
+    'Identifying billing entity and applicable tax jurisdiction from the invoice',
+    'Querying tax matrix: service/goods type × jurisdiction → applicable VAT code',
+    'Validating supplier-applied VAT rate against the registered jurisdiction rate',
+    'Checking reduced-rate eligibility (e.g. printed books at 7% in Germany)',
+    'Cross-checking tax code against SAP DRC digital reporting compliance rules',
+    'Tax code and compliance validation complete — discrepancies flagged if any',
+  ],
+  'Exception Orchestrator': [
+    'Invoice category confirmed: Non-PO service invoice — PO path not applicable',
+    'GL coding result received — evaluating against the 60% auto-assign threshold',
+    'Checking Decision of Authority matrix for invoice amount and service category',
+    'Identifying required approver tier based on invoice value thresholds',
+    'Selecting approval workflow template from the Non-PO workflow catalogue',
+    'Routing instructions set — approval request queued for dispatch',
+  ],
+  'Coding Agent': [
+    'Querying vendor spend history and historical GL coding patterns for this supplier',
+    'Analysing invoice description against the GL account taxonomy (Risk Book)',
+    'Running AI touchless coding — scoring 3 candidate GL accounts by confidence',
+    'Applying 60% confidence threshold for auto-assign eligibility check',
+    'Cross-referencing with cost centre data and advisory services supplier category',
+    'GL code recommendation produced — forwarding to compliance and tax validation',
+  ],
+  'IC Reconciliation Agent': [
+    'Loading intercompany trading-partner map and registered entity codes',
+    'Matching both sides of the intercompany posting against ICE clearing accounts',
+    'Calculating variance between posted IC invoice and expected clearing value',
+    'Checking for open items on both entity-A and entity-B ledger sides',
+    'Applying auto-reconciliation threshold — flagging genuine variances for review',
+    'IC reconciliation analysis complete — result recorded to audit trail',
+  ],
+  'Predictive Royalty Agent': [
+    'Loading abstracted royalty contract terms for this supplier and title',
+    'GenAI comparing invoice royalty line items against contract rate and basis',
+    'Calculating variance between invoiced royalty rate and the contracted rate',
+    'Checking for contract amendments or rate override approvals in the system',
+    'Applying deviation threshold — flagging amounts outside the tolerance band',
+    'Real-time royalty deviation detection complete — result recorded',
+  ],
+  // ── Legacy SAP VIM agent names (kept for backward compatibility) ───────────
+  'I2P Submission Adapter': [
+    'Monitoring I2P submission inbox — new invoice submission received',
     'Attachment extracted: PDF document — initiating antivirus scan',
     'AV scan passed — no threats detected, attachment safe to process',
-    'Email metadata archived — message-id and timestamps logged to audit trail',
+    'Submission metadata archived — message-id and timestamps logged to audit trail',
     'Sender domain validated against approved vendor registry',
     'Forwarding attachment and metadata to document intake pipeline',
   ],
@@ -228,10 +387,28 @@ const AGENT_HUDDLE_MESSAGES: Record<string, string[]> = {
 }
 
 const AGENT_IN_PROGRESS: Record<string, string> = {
-  'VIM Mailbox Adapter':            'Monitoring AP inbox (OpenText VIM) for new invoices...',
-  'Document Status Agent':          'Creating invoice record in the S/4 Data Hub...',
+  // ── I2P agent names ────────────────────────────────────────────────────────
+  'Document Classification Agent':  'Analysing document structure and classifying invoice type...',
+  'Document Status Agent':          'Creating invoice record in the I2P Data Hub...',
+  'Document Extraction Agent':      'Running multi-model extraction (GPT Vision + Gemini) on PDF...',
+  'GPT Vision':                     'Extracting invoice fields via GPT-4 Vision multimodal...',
+  'Gemini':                         'Extracting structured data via Gemini multimodal...',
+  'Document Quality Agent':         'Evaluating extraction quality and field confidence scores...',
+  'Invoice Validation Agent':       'Running business rule validations on extracted fields...',
+  'Patterns Derivation Agent':      'Applying Majority Match and Pattern algorithms to extractions...',
+  'Vendor Master Agent':            'Cross-checking supplier against SAP S/4HANA vendor master...',
+  'PO Mapping Agent':               'Querying PO registry and running 3-way match analysis...',
+  'Payment Validator':              'Running pre-payment duplicate controls...',
+  'Anomaly Detection Agent':        'Running ML anomaly detection on invoice feature vector...',
+  'Tax & Compliance Agent':         'Validating tax codes and running compliance checks...',
+  'Exception Orchestrator':         'Determining approval workflow for non-PO invoice...',
+  'Coding Agent':                   'Searching GL codes via Risk Book and coding tool...',
+  'IC Reconciliation Agent':        'Reconciling intercompany posting against ICE clearing accounts...',
+  'Predictive Royalty Agent':       'Comparing royalty invoice against abstracted contract terms...',
+  // ── Legacy SAP VIM names ────────────────────────────────────────────────────
+  'I2P Submission Adapter':         'Monitoring I2P submission inbox for new invoices...',
   'Invoice Classification (Ic)':    'Analysing document structure and content...',
-  'SAP DOX Digitization Agent':     'Running SAP DOX OCR scan on PDF attachment...',
+  'SAP DOX Digitization Agent':     'Running OCR scan on PDF attachment...',
   'Invoice Extractor (Id)':         'Extracting invoice fields from document...',
   'Formatter Agent':                'Normalising extracted field values...',
   'Field Validation Agent':         'Validating field completeness and formats...',
@@ -248,15 +425,33 @@ const AGENT_IN_PROGRESS: Record<string, string> = {
 }
 
 const AGENT_COMPLETION: Record<string, string> = {
-  'VIM Mailbox Adapter':            'Email and attachment forwarded to intake pipeline',
+  // ── I2P agent names ────────────────────────────────────────────────────────
+  'Document Classification Agent':  'Document classified — routing to extraction pipeline',
   'Document Status Agent':          'Invoice record created — status set to IN_PROGRESS',
+  'Document Extraction Agent':      '12 invoice fields extracted and cross-validated across 3 models',
+  'GPT Vision':                     'Vision extraction complete — all fields captured with confidence scores',
+  'Gemini':                         'Multimodal extraction complete — output forwarded to field merger',
+  'Document Quality Agent':         'Quality evaluation passed — all fields above confidence threshold',
+  'Invoice Validation Agent':       'Business rules passed — invoice cleared for matching stage',
+  'Patterns Derivation Agent':      'Pattern derivation complete — unified field set produced',
+  'Vendor Master Agent':            'Vendor confirmed in SAP master — bank account and VAT validated',
+  'PO Mapping Agent':               'PO and SES/GR verified — 3-way match within ±0.5% tolerance',
+  'Payment Validator':              'Pre-payment controls clear — no duplicate detected',
+  'Anomaly Detection Agent':        'Anomaly scan clear — amount within expected statistical band',
+  'Tax & Compliance Agent':         'Tax code validated — VAT rate confirmed for service/goods category',
+  'Exception Orchestrator':         'Non-PO workflow initiated — routed for approver determination',
+  'Coding Agent':                   'GL codes assigned — all line items coded successfully via Risk Book',
+  'IC Reconciliation Agent':        'IC posting validated — clearing accounts reconciled',
+  'Predictive Royalty Agent':       'Real-time royalty reconciliation complete',
+  // ── Legacy SAP VIM names ────────────────────────────────────────────────────
+  'I2P Submission Adapter':         'Submission forwarded to document intake pipeline',
   'Invoice Classification (Ic)':    'Classified — routing to the appropriate processing pipeline',
-  'SAP DOX Digitization Agent':     'PDF parsed via SAP DOX — 4 sections identified',
+  'SAP DOX Digitization Agent':     'PDF parsed — 4 document sections identified',
   'Invoice Extractor (Id)':         '12 invoice fields extracted successfully',
   'Formatter Agent':                'Fields normalised — dates, currency, and references formatted',
-  'Field Validation Agent':         'All fields validated — supplier confirmed in SAP Vendor master',
+  'Field Validation Agent':         'All fields validated — supplier confirmed in vendor master',
   'Invoice Validation (Iv)':        'Business rules passed — payment terms compliant',
-  'Matching & GL Advisor (Ma)':     'PO and SES/GR records verified in SAP S/4HANA',
+  'Matching & GL Advisor (Ma)':     'PO and SES/GR records verified',
   'S/4 Data Hub':                   'Transaction logged to immutable audit trail',
   '3-Way Match Agent':              '3-way match confirmed — within ±0.5% tolerance',
   'Payment Validator (Pv)':         'Pre-payment controls clear — no duplicate found',
@@ -807,7 +1002,7 @@ function AgentStatusBar({ step, progress, agentIdx, stepNum, total, failed, isPa
 
 // ─── Agent Huddle ──────────────────────────────────────────────────────────────
 
-function AgentHuddle({ steps, currentStep, progress, completed, isFailed, isDone, isCollapsed, onToggle, invoice, hideHeader, onViewPosting }: { steps: Invoice['agentSteps']; currentStep: number; progress: number; completed: Set<number>; isFailed: boolean; isDone: boolean; isCollapsed?: boolean; onToggle?: () => void; invoice?: Invoice; hideHeader?: boolean; onViewPosting?: () => void }) {
+function AgentHuddle({ steps, currentStep, progress, completed, isFailed, isDone, isCollapsed, onToggle, invoice, hideHeader, onViewPosting, expandAll }: { steps: Invoice['agentSteps']; currentStep: number; progress: number; completed: Set<number>; isFailed: boolean; isDone: boolean; isCollapsed?: boolean; onToggle?: () => void; invoice?: Invoice; hideHeader?: boolean; onViewPosting?: () => void; expandAll?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [expandedAgents, setExpandedAgents] = useState<Set<string>>(new Set())
 
@@ -846,11 +1041,17 @@ function AgentHuddle({ steps, currentStep, progress, completed, isFailed, isDone
     const effectiveFailingIdx = (() => {
       if (!stepFailed) return -1
       const agentForFailType: Record<string, string> = {
-        'missing-gr':       'Matching & GL Advisor (Ma)',
-        'duplicate':        'Payment Validator (Pv)',
-        'tax-mismatch':     '3-Way Match Agent',
-        'ic-mismatch':      'Predictive IC & Royalty Agent',
-        'royalty-mismatch': 'Predictive IC & Royalty Agent',
+        'missing-gr':       'PO Mapping Agent',
+        'duplicate':        'Payment Validator',
+        'tax-mismatch':     'Tax & Compliance Agent',
+        'ic-mismatch':      'IC Reconciliation Agent',
+        'royalty-mismatch': 'Predictive Royalty Agent',
+        // legacy fallbacks
+        'missing-gr-legacy':       'Matching & GL Advisor (Ma)',
+        'duplicate-legacy':        'Payment Validator (Pv)',
+        'tax-mismatch-legacy':     '3-Way Match Agent',
+        'ic-mismatch-legacy':      'Predictive IC & Royalty Agent',
+        'royalty-mismatch-legacy': 'Predictive IC & Royalty Agent',
       }
       const target = agentForFailType[invoice?.failType ?? '']
       const idx = target ? step.agents.indexOf(target) : -1
@@ -931,7 +1132,7 @@ function AgentHuddle({ steps, currentStep, progress, completed, isFailed, isDone
                 )}
                 {group.entries.map((entry, i) => {
                   const entryKey = `${group.stepIdx}-${entry.agentName}`
-                  const isExpanded = expandedAgents.has(entryKey)
+                  const isExpanded = expandAll || expandedAgents.has(entryKey)
                   const isNonPO = invoice && !invoice.extractedFields.poNumber
                   const isInternalApproval = invoice?.glMissingVariant === 'internal-approval'
                   const detailMsgs = (() => {
@@ -949,21 +1150,50 @@ function AgentHuddle({ steps, currentStep, progress, completed, isFailed, isDone
                           : 'GL coding candidate identified — proceeding to NPO approval workflow',
                       ]
                     }
-                    if (entry.agentName === 'NPO Exception Orchestrator (Eg)' && isInternalApproval) {
+                    if ((entry.agentName === 'NPO Exception Orchestrator (Eg)' || entry.agentName === 'Exception Orchestrator') && isInternalApproval) {
                       return [
                         'Invoice category confirmed: Non-PO service invoice — PO path not applicable',
                         'GL coding result received: 3 conflicting accounts, no single code above 60% threshold',
-                        'Checking Decision of Authority matrix for invoice amount €42,840 and advisory category',
+                        'Checking Decision of Authority matrix for invoice amount and advisory services category',
                         'Dual cost-centre approval required — identifying Cost Centre Owner and AP Lead',
                         'Approval request generated — routing to Cost Centre Owner and AP Lead for GL determination',
                       ]
                     }
                     return AGENT_HUDDLE_MESSAGES[entry.agentName] ?? []
                   })()
-                  const inProgressText = (entry.agentName === 'Matching & GL Advisor (Ma)' && isNonPO)
-                    ? 'Querying SAP S/4HANA vendor master, spend history, and GL coding patterns...'
+                  const inProgressText = (
+                    (entry.agentName === 'Coding Agent' || entry.agentName === 'Matching & GL Advisor (Ma)') && isNonPO
+                  )
+                    ? 'Querying vendor spend history and GL coding patterns...'
                     : (AGENT_IN_PROGRESS[entry.agentName] ?? 'Processing...')
                   const completionText = (() => {
+                    // I2P agent names
+                    if (entry.agentName === 'Predictive Royalty Agent' && entry.isEntryFailed && invoice?.failType === 'royalty-mismatch') {
+                      const info = invoice.royaltyMismatchInfo
+                      return `Royalty rate deviation detected — invoiced at ${info?.invoicedRate}, contract rate ${info?.contractRate} (${info?.contractRef}). Variance $${info?.variance?.toLocaleString('en-US', { minimumFractionDigits: 2 })} flagged for Royalties Management review`
+                    }
+                    if (entry.agentName === 'PO Mapping Agent' && entry.isEntryFailed && invoice?.failType === 'missing-gr') {
+                      return 'Service Entry Sheet not found — milestone not booked in SAP. Processing halted pending SES confirmation'
+                    }
+                    if (entry.agentName === 'Payment Validator' && entry.isEntryFailed && invoice?.failType === 'duplicate') {
+                      return 'Duplicate detected — invoice reference already present in 12-month payment history'
+                    }
+                    if (entry.agentName === 'Tax & Compliance Agent' && entry.isEntryFailed && invoice?.failType === 'tax-mismatch') {
+                      return 'Tax rate mismatch — VAT on invoice differs from statutory rate. Routed to Tax Review Queue'
+                    }
+                    if (entry.agentName === 'IC Reconciliation Agent' && entry.isEntryFailed && invoice?.failType === 'ic-mismatch') {
+                      const info = invoice.icMismatchInfo
+                      return `Intercompany mismatch detected — variance of €${info?.variance?.toLocaleString('en-US', { minimumFractionDigits: 2 })} between ${info?.entityA} and ${info?.entityB}. Escalated for ICE reconciliation`
+                    }
+                    if ((entry.agentName === 'Coding Agent') && isNonPO) {
+                      return isInternalApproval
+                        ? 'GL ambiguity detected — 3 competing accounts, none above 60% confidence threshold'
+                        : 'GL codes assigned successfully — all line items coded via Risk Book'
+                    }
+                    if ((entry.agentName === 'Exception Orchestrator' || entry.agentName === 'NPO Exception Orchestrator (Eg)') && isInternalApproval) {
+                      return 'GL ambiguity confirmed — dual cost-centre approval workflow initiated'
+                    }
+                    // Legacy agent name fallbacks
                     if (entry.agentName === 'Predictive IC & Royalty Agent' && entry.isEntryFailed && invoice?.failType === 'royalty-mismatch') {
                       const info = invoice.royaltyMismatchInfo
                       return `Royalty rate deviation detected — invoiced at ${info?.invoicedRate}, contract rate ${info?.contractRate} (${info?.contractRef}). Variance $${info?.variance?.toLocaleString('en-US', { minimumFractionDigits: 2 })} flagged for Royalties Management review`
@@ -975,15 +1205,12 @@ function AgentHuddle({ steps, currentStep, progress, completed, isFailed, isDone
                       return 'Duplicate detected — invoice reference already present in 12-month payment history'
                     }
                     if (entry.agentName === '3-Way Match Agent' && entry.isEntryFailed && invoice?.failType === 'tax-mismatch') {
-                      return 'Tax rate mismatch — VAT on invoice differs from statutory rate in SAP DRC. Routed to Tax Review Queue'
+                      return 'Tax rate mismatch — VAT on invoice differs from statutory rate. Routed to Tax Review Queue'
                     }
                     if (entry.agentName === 'Matching & GL Advisor (Ma)' && isNonPO) {
                       return isInternalApproval
                         ? 'GL ambiguity detected — 3 competing accounts, none above 60% confidence threshold'
                         : 'Vendor spend history and GL patterns queried — coding candidate determined'
-                    }
-                    if (entry.agentName === 'NPO Exception Orchestrator (Eg)' && isInternalApproval) {
-                      return 'GL ambiguity confirmed — dual cost-centre approval workflow initiated'
                     }
                     return AGENT_COMPLETION[entry.agentName] ?? (entry.isEntryFailed ? 'Error — manual intervention required' : 'Task complete')
                   })()
@@ -2537,7 +2764,6 @@ function StickyGLPanel({ onDraftEmail, appliedCode, manualGLCode, onApply, glApp
             <CheckIcon size={16} />
             Post to SAP
           </button>
-          <button style={{ padding: '9px 18px', background: '#fff', color: '#b91f1f', border: '1.5px solid #b91f1f', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
         </div>
       </div>
     )
@@ -2549,8 +2775,8 @@ function StickyGLPanel({ onDraftEmail, appliedCode, manualGLCode, onApply, glApp
       <div style={{ flexShrink: 0, borderTop: '2px solid #b06b00', background: '#fff3d6', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: '2.5px solid #b06b00', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
         <div>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>{disputeVariant ? 'VIM Work Item Routed — Awaiting PRH Procurement Confirmation' : 'VIM Work Item Routed — Awaiting GL Confirmation'}</div>
-          <div style={{ fontSize: '13px', color: '#7a4a00', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>{disputeVariant ? 'WI-2026-2281 sent to Julia Hartmann\'s SAP VIM worklist. Awaiting procurement surcharge confirmation.' : 'WI-2026-7714 sent to Caroline Hoffmann\'s SAP VIM worklist. Awaiting GL code confirmation.'}</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>{disputeVariant ? 'Approval Request Sent — Awaiting PRH Procurement Confirmation' : 'Approval Request Sent — Awaiting GL Confirmation'}</div>
+          <div style={{ fontSize: '13px', color: '#7a4a00', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>{disputeVariant ? 'Request sent to Julia Hartmann (PRH Procurement). Awaiting procurement surcharge confirmation.' : 'Request sent to Caroline Hoffmann (Cost Centre Owner). Awaiting GL code confirmation.'}</div>
         </div>
       </div>
     )
@@ -2561,15 +2787,14 @@ function StickyGLPanel({ onDraftEmail, appliedCode, manualGLCode, onApply, glApp
     return (
       <div style={{ flexShrink: 0, borderTop: '2px solid #b06b00', background: '#fff', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ flexShrink: 0 }}>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>{disputeVariant ? 'Step 2 of 3: Route VIM Approval Task to PRH Procurement' : 'Step 2 of 3: Route VIM Approval Task'}</div>
-          <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>{disputeVariant ? <>Code <strong style={{ fontFamily: 'monospace' }}>{appliedCode}</strong> applied. Route VIM work item to Julia Hartmann (PRH Procurement) to confirm whether the Clause 8.2 surcharge was pre-approved.</> : <>Code <strong style={{ fontFamily: 'monospace' }}>{appliedCode}</strong> applied. Route VIM work item to Caroline Hoffmann (Cost Centre Owner) for GL code confirmation.</>}</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>{disputeVariant ? 'Step 2 of 3: Send for Approval — PRH Procurement' : 'Step 2 of 3: Send for GL Approval'}</div>
+          <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>{disputeVariant ? <>Code <strong style={{ fontFamily: 'monospace' }}>{appliedCode}</strong> applied. Send approval request to Julia Hartmann (PRH Procurement) to confirm whether the Clause 8.2 surcharge was pre-approved.</> : <>Code <strong style={{ fontFamily: 'monospace' }}>{appliedCode}</strong> applied. Send approval request to Caroline Hoffmann (Cost Centre Owner) for GL code confirmation.</>}</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', flexShrink: 0 }}>
-          <button onClick={onDraftEmail} style={{ padding: '9px 20px', background: '#1c3f6e', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px' }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="4.5" height="4.5" rx="0.8" fill="white" opacity="0.9"/><rect x="8.5" y="8.5" width="4.5" height="4.5" rx="0.8" fill="white" opacity="0.9"/><path d="M3.25 5.5v3.5Q3.25 11 6 11h2.5" stroke="white" strokeWidth="1.3" strokeLinecap="round" fill="none"/><polyline points="7.5,9.5 8.5,11 7.5,12.5" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
-            {disputeVariant ? 'Route VIM Work Item' : 'Route VIM Approval Task'}
+          <button onClick={onDraftEmail} style={{ padding: '9px 20px', background: '#7C3AED', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px' }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 6-12 6V8.5l8-2.5-8-2.5V1z" fill="white"/></svg>
+            {disputeVariant ? 'Send Approval Request' : 'Send Approval Request'}
           </button>
-          <button style={{ padding: '9px 18px', background: '#fff', color: '#b91f1f', border: '1.5px solid #b91f1f', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
         </div>
       </div>
     )
@@ -2593,7 +2818,6 @@ function StickyGLPanel({ onDraftEmail, appliedCode, manualGLCode, onApply, glApp
         >
           Apply GL Code
         </button>
-        <button style={{ padding: '9px 18px', background: '#fff', color: '#b91f1f', border: '1.5px solid #b91f1f', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
       </div>
     </div>
   )
@@ -2605,8 +2829,8 @@ function StickyMissingGRPanel({ notificationSent, onOpenComms }: { notificationS
       <div style={{ flexShrink: 0, borderTop: '2px solid #1b823f', background: '#e8f5ee', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#1b823f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><CheckIcon size={18} /></div>
         <div>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1b823f' }}>VIM Work Item Routed — Awaiting SES Confirmation</div>
-          <div style={{ fontSize: '13px', color: '#1a5c30', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>WI-2026-8823 sent to Sophie Brandt's SAP VIM worklist. Invoice on hold pending Service Entry Sheet confirmation in SAP.</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1b823f' }}>Exception Escalated — Awaiting SES Confirmation</div>
+          <div style={{ fontSize: '13px', color: '#1a5c30', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Exception sent to Sophie Brandt (Production Owner). Invoice on hold pending Service Entry Sheet confirmation in SAP.</div>
         </div>
       </div>
     )
@@ -2618,11 +2842,10 @@ function StickyMissingGRPanel({ notificationSent, onOpenComms }: { notificationS
         <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Contact the production owner to book the Service Entry Sheet in SAP before processing can continue</div>
       </div>
       <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', flexShrink: 0 }}>
-        <button onClick={onOpenComms} style={{ padding: '9px 20px', background: '#1c3f6e', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px' }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="4.5" height="4.5" rx="0.8" fill="white" opacity="0.9"/><rect x="8.5" y="8.5" width="4.5" height="4.5" rx="0.8" fill="white" opacity="0.9"/><path d="M3.25 5.5v3.5Q3.25 11 6 11h2.5" stroke="white" strokeWidth="1.3" strokeLinecap="round" fill="none"/><polyline points="7.5,9.5 8.5,11 7.5,12.5" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
-          Route VIM Work Item
+        <button onClick={onOpenComms} style={{ padding: '9px 20px', background: '#7C3AED', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px' }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 6-12 6V8.5l8-2.5-8-2.5V1z" fill="white"/></svg>
+          Escalate to Exception Queue
         </button>
-        <button style={{ padding: '9px 18px', background: '#b91f1f', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
       </div>
     </div>
   )
@@ -3034,7 +3257,7 @@ function AssigneeRow({ label, name }: { label: string; name: string }) {
       </div>
       <div>
         <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#1d2f36', fontFamily: 'Lato, sans-serif' }}>{name}</div>
-        <div style={{ fontSize: '10.5px', color: '#6b767b', fontFamily: 'Lato, sans-serif' }}>{label} · SAP VIM Worklist</div>
+        <div style={{ fontSize: '10.5px', color: '#6b767b', fontFamily: 'Lato, sans-serif' }}>{label} · I2P Exception Queue</div>
       </div>
     </div>
   )
@@ -3053,19 +3276,16 @@ function VIMWorkflowModal({ workItemId, workItemType, priority, assignedTo, ccAs
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: maximized ? '0' : '24px' }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: maximized ? '0' : '10px', width: maximized ? '100vw' : '100%', height: maximized ? '100vh' : undefined, maxWidth: maximized ? '100vw' : '560px', maxHeight: maximized ? '100vh' : '90vh', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'all 0.2s ease' }} onClick={e => e.stopPropagation()}>
-        <div style={{ background: '#1c3f6e', padding: '14px 20px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '6px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ background: '#0F1934', padding: '14px 20px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+          <div style={{ width: '38px', height: '38px', borderRadius: '6px', background: 'rgba(124,58,237,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <rect x="2" y="2" width="6" height="6" rx="1" fill="white" opacity="0.9"/>
-              <rect x="12" y="2" width="6" height="6" rx="1" fill="white" opacity="0.9"/>
-              <rect x="7" y="12" width="6" height="6" rx="1" fill="white" opacity="0.9"/>
-              <path d="M5 8v3.5h5" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.8"/>
-              <path d="M15 8v3.5h-5" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.8"/>
+              <circle cx="10" cy="10" r="8" stroke="white" strokeWidth="1.5" opacity="0.8"/>
+              <path d="M7 10h6M10 7l3 3-3 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#fff' }}>VIM Workflow Notification</div>
-            <div style={{ fontSize: '11.5px', color: 'rgba(255,255,255,0.7)', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>SAP OpenText VIM · {subtitle}</div>
+            <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#fff' }}>I2P Exception Notification</div>
+            <div style={{ fontSize: '11.5px', color: 'rgba(255,255,255,0.7)', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>I2P Automation · {subtitle}</div>
           </div>
           <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
             <button onClick={() => setMaximized(m => !m)} title={maximized ? 'Restore' : 'Maximise'} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '6px', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -3121,14 +3341,11 @@ function VIMWorkflowModal({ workItemId, workItemType, priority, assignedTo, ccAs
         </div>
         <div style={{ padding: '13px 20px', borderTop: '1px solid #e4e6e7', display: 'flex', gap: '10px', justifyContent: 'flex-end', background: '#fafbfc' }}>
           <button onClick={onClose} style={{ padding: '9px 18px', background: '#fff', border: '1px solid #c8cccf', borderRadius: '6px', fontSize: '14px', color: '#6b767b', cursor: 'pointer', fontFamily: 'Lato, sans-serif' }}>Cancel</button>
-          <button onClick={() => { onSend(); onClose() }} style={{ padding: '9px 22px', background: '#1b6b2e', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button onClick={() => { onSend(); onClose() }} style={{ padding: '9px 22px', background: '#7C3AED', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="1" width="4.5" height="4.5" rx="0.8" fill="white" opacity="0.9"/>
-              <rect x="8.5" y="8.5" width="4.5" height="4.5" rx="0.8" fill="white" opacity="0.9"/>
-              <path d="M3.25 5.5v3.5Q3.25 11 6 11h2.5" stroke="white" strokeWidth="1.3" strokeLinecap="round" fill="none"/>
-              <polyline points="7.5,9.5 8.5,11 7.5,12.5" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              <path d="M1 1l12 6-12 6V8.5l8-2.5-8-2.5V1z" fill="white"/>
             </svg>
-            Route to VIM Worklist
+            Send to Exception Queue
           </button>
         </div>
       </div>
@@ -3631,7 +3848,7 @@ Entities:        ${info.entityA} ↔ ${info.entityB}
 
 The Predictive IC & Royalty Agent has flagged this mismatch. The variance may relate to an unposted production cost recharge or a format rights adjustment not yet reflected on the ${info.entityB} side.
 
-Please review and reconcile both sides of this posting in the ICE system (${info.iceRef}). Once both entities are balanced, complete this VIM work item to release the invoice for payment posting.
+Please review and reconcile both sides of this posting in the ICE system (${info.iceRef}). Once both entities are balanced, please reply to confirm clearance so we can release the invoice for payment posting.
 
 AP Automation Engine — Bertelsmann Finance Operations`
 
@@ -3681,8 +3898,8 @@ function GLModal({ invoice, appliedCode, onSend, onClose }: { invoice: Invoice; 
   <div style="font-size:11px;font-weight:700;color:#92600a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Generated Production WBS Coding String</div>
   <div style="font-family:monospace;font-size:13px;font-weight:700;color:#b06b00;word-break:break-all">${prtCodingString}</div>
 </div>
-<p style="margin:0 0 10px"><strong>Action Required:</strong><br>Both <strong>Claudia Bauer (Production Finance Manager)</strong> and <strong>Marc Olivier-Leblanc (VP Finance, Content — RTL Group)</strong> must confirm the episode cost split and approve before the invoice is released for payment. Please complete this VIM work item with the confirmed per-episode allocation (€ amounts for EP7–8 and EP9–10).</p>
-<p style="margin:0 0 14px">→ <a href="${snUrl}" style="color:#1a3a6b;text-decoration:none;font-weight:600">Open Invoice in SAP VIM ↗</a> &nbsp;|&nbsp; <a href="mailto:ap-operations@bertelsmann.de" style="color:#1a3a6b;text-decoration:none;font-weight:600">Contact AP Operations</a></p>
+<p style="margin:0 0 10px"><strong>Action Required:</strong><br>Both <strong>Claudia Bauer (Production Finance Manager)</strong> and <strong>Marc Olivier-Leblanc (VP Finance, Content — RTL Group)</strong> must confirm the episode cost split and approve before the invoice is released for payment. Please reply with the confirmed per-episode allocation (€ amounts for EP7–8 and EP9–10).</p>
+<p style="margin:0 0 14px">→ <a href="mailto:ap-operations@bertelsmann.de" style="color:#7C3AED;text-decoration:none;font-weight:600">Contact AP Operations</a></p>
 <p style="margin:0;color:#6b767b;font-size:12px">Regards,<br><strong style="color:#1d2f36">Bertelsmann Accounts Payable Operations</strong> — AP Automation<br>ap-automation@bertelsmann.de</p>`
 
   const stdBodyHtml = `
@@ -3704,7 +3921,7 @@ function GLModal({ invoice, appliedCode, onSend, onClose }: { invoice: Invoice; 
     <tr><td style="padding:3px 8px;font-family:monospace;color:#555">6630-005</td><td style="padding:3px 8px;color:#555">Brand &amp; Campaign Services</td><td style="padding:3px 8px;color:#555">28%</td></tr>
   </table>
 </div>
-<p style="margin:0 0 10px"><strong>Action Required:</strong><br>Please complete this VIM work item confirming: <strong>(1)</strong> the correct GL account to use, and <strong>(2)</strong> that all three deliverables below were received and accepted.</p>
+<p style="margin:0 0 10px"><strong>Action Required:</strong><br>Please reply confirming: <strong>(1)</strong> the correct GL account to use, and <strong>(2)</strong> that all three deliverables below were received and accepted.</p>
 <p style="margin:0 0 6px;font-size:12px;color:#555">Services to confirm:<br>— Creative Concept Development &amp; Strategy: €6,200.00<br>— Key Visual Design (3 formats, 2 revisions): €7,400.00<br>— Asset Production &amp; Format Adaptation: €4,800.00</p>
 <p style="margin:14px 0 0;color:#6b767b;font-size:12px">Regards,<br><strong style="color:#1d2f36">Lena Fischer — Accounts Payable, Bertelsmann GBS</strong><br>ap-operations@bertelsmann.de</p>`
 
@@ -3741,7 +3958,7 @@ function GLModal({ invoice, appliedCode, onSend, onClose }: { invoice: Invoice; 
   <div style="font-family:monospace;font-size:13px;font-weight:700;color:#b06b00;word-break:break-all">${prtCodingString}</div>
 </div>
 <p style="margin:0 0 10px"><strong>Handlungsbedarf:</strong><br>Sowohl <strong>Claudia Bauer (Production Finance Manager)</strong> als auch <strong>Marc Olivier-Leblanc (VP Finance, Content — RTL Group)</strong> müssen die Episodenkostenaufteilung bestätigen und genehmigen, bevor die Rechnung zur Zahlung freigegeben wird. Bitte antworten Sie mit der bestätigten Episodenallokation (€-Beträge für EP7–8 und EP9–10) und Ihrer Genehmigung.</p>
-<p style="margin:0 0 14px">→ <a href="${snUrl}" style="color:#1a3a6b;text-decoration:none;font-weight:600">Rechnung in SAP VIM öffnen ↗</a> &nbsp;|&nbsp; <a href="mailto:ap-operations@bertelsmann.de" style="color:#1a3a6b;text-decoration:none;font-weight:600">AP Operations kontaktieren</a></p>
+<p style="margin:0 0 14px">→ <a href="mailto:ap-operations@bertelsmann.de" style="color:#7C3AED;text-decoration:none;font-weight:600">AP Operations kontaktieren</a></p>
 <p style="margin:0;color:#6b767b;font-size:12px">Mit freundlichen Grüßen,<br><strong style="color:#1d2f36">Bertelsmann Kreditorenbuchhaltung</strong> — AP-Automatisierung<br>ap-automation@bertelsmann.de</p>`
 
   const stdBodyHtmlDe = `
@@ -3807,7 +4024,6 @@ function StickyTaxMismatchPanel({ notificationSent, onOpenComms, supplierName }:
           <svg width="14" height="12" viewBox="0 0 14 12" fill="white"><rect x="0" y="0" width="14" height="12" rx="2" fill="none" stroke="white" strokeWidth="1.3"/><polyline points="0,0 7,7 14,0" fill="none" stroke="white" strokeWidth="1.3"/></svg>
           Generate Communication
         </button>
-        <button style={{ padding: '9px 18px', background: '#b91f1f', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
       </div>
     </div>
   )
@@ -3847,7 +4063,6 @@ function StickyMetroGLPanel({ metroGLApprovalSent, onSendApproval, metroApproved
             <CheckIcon size={16} />
             Approve Invoice
           </button>
-          <button style={{ padding: '9px 18px', background: '#fff', color: '#b91f1f', border: '1.5px solid #b91f1f', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
         </div>
       </div>
     )
@@ -3859,26 +4074,25 @@ function StickyMetroGLPanel({ metroGLApprovalSent, onSendApproval, metroApproved
       <div style={{ flexShrink: 0, borderTop: '2px solid #b06b00', background: '#fff3d6', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: '2.5px solid #b06b00', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
         <div>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>VIM Work Item Routed — Awaiting GL Approval</div>
-          <div style={{ fontSize: '13px', color: '#7a4a00', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>WI-2026-4561 sent to Markus Weber's SAP VIM worklist. Anja Krüger (AP Lead) also notified.</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>Approval Request Sent — Awaiting GL Approval</div>
+          <div style={{ fontSize: '13px', color: '#7a4a00', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Request sent to Markus Weber (Cost Centre Owner). Anja Krüger (AP Lead) also notified. Awaiting GL code approval.</div>
         </div>
       </div>
     )
   }
 
-  // Default: not yet sent — show Route VIM + Reject buttons
+  // Default: not yet sent — show Send Approval Request
   return (
     <div style={{ flexShrink: 0, borderTop: '2px solid #b91f1f', background: '#fff', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
       <div style={{ flexShrink: 0 }}>
         <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b91f1f' }}>GL Code — Internal Approval Required</div>
-        <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Route VIM work item to Cost Centre Owner and AP Lead to confirm the correct GL account via SAP VIM workflow.</div>
+        <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Send approval request to Cost Centre Owner and AP Lead to confirm the correct GL account before processing can continue.</div>
       </div>
       <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', flexShrink: 0 }}>
-        <button onClick={onSendApproval} style={{ padding: '9px 20px', background: '#1c3f6e', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px' }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="4.5" height="4.5" rx="0.8" fill="white" opacity="0.9"/><rect x="8.5" y="8.5" width="4.5" height="4.5" rx="0.8" fill="white" opacity="0.9"/><path d="M3.25 5.5v3.5Q3.25 11 6 11h2.5" stroke="white" strokeWidth="1.3" strokeLinecap="round" fill="none"/><polyline points="7.5,9.5 8.5,11 7.5,12.5" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
-          Route VIM Approval
+        <button onClick={onSendApproval} style={{ padding: '9px 20px', background: '#7C3AED', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px' }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 6-12 6V8.5l8-2.5-8-2.5V1z" fill="white"/></svg>
+          Send Approval Request
         </button>
-        <button style={{ padding: '9px 18px', background: '#fff', color: '#b91f1f', border: '1.5px solid #b91f1f', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
       </div>
     </div>
   )
@@ -3902,7 +4116,6 @@ function StickyPRTPanel({ prtCodingConfirmed, onConfirm, onSendEmail, glApproval
             <CheckIcon size={16} />
             Post to SAP
           </button>
-          <button style={{ padding: '9px 18px', background: '#fff', color: '#b91f1f', border: '1.5px solid #b91f1f', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
         </div>
       </div>
     )
@@ -3914,8 +4127,8 @@ function StickyPRTPanel({ prtCodingConfirmed, onConfirm, onSendEmail, glApproval
       <div style={{ flexShrink: 0, borderTop: '2px solid #b06b00', background: '#fff3d6', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: '2.5px solid #b06b00', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
         <div>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>VIM Work Item Routed — Awaiting DOA Approval</div>
-          <div style={{ fontSize: '13px', color: '#7a4a00', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>WI-2026-5390 sent to Claudia Bauer's SAP VIM worklist. Marc Olivier-Leblanc (VP Finance Content) also notified.</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#b06b00' }}>Approval Request Sent — Awaiting DOA Approval</div>
+          <div style={{ fontSize: '13px', color: '#7a4a00', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>Request sent to Claudia Bauer (Finance Controller). Marc Olivier-Leblanc (VP Finance Content) also notified. Awaiting DOA approval.</div>
         </div>
       </div>
     )
@@ -3926,15 +4139,14 @@ function StickyPRTPanel({ prtCodingConfirmed, onConfirm, onSendEmail, glApproval
     return (
       <div style={{ flexShrink: 0, borderTop: '2px solid #1a3a6b', background: '#fff', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
         <div style={{ flexShrink: 0 }}>
-          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1a3a6b' }}>GL Code Applied — Route VIM Approval Task</div>
-          <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>WBS coding string applied. Route VIM work item to Claudia Bauer & Marc Olivier-Leblanc for DOA approval before this invoice can be processed.</div>
+          <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1a3a6b' }}>GL Code Applied — Send DOA Approval Request</div>
+          <div style={{ fontSize: '13px', color: '#6b767b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>WBS coding string applied. Send approval request to Claudia Bauer & Marc Olivier-Leblanc for DOA approval before this invoice can be processed.</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', flexShrink: 0 }}>
-          <button onClick={onSendEmail} style={{ padding: '9px 20px', background: '#1c3f6e', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px' }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="4.5" height="4.5" rx="0.8" fill="white" opacity="0.9"/><rect x="8.5" y="8.5" width="4.5" height="4.5" rx="0.8" fill="white" opacity="0.9"/><path d="M3.25 5.5v3.5Q3.25 11 6 11h2.5" stroke="white" strokeWidth="1.3" strokeLinecap="round" fill="none"/><polyline points="7.5,9.5 8.5,11 7.5,12.5" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
-            Route VIM Approval Task
+          <button onClick={onSendEmail} style={{ padding: '9px 20px', background: '#7C3AED', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px' }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 6-12 6V8.5l8-2.5-8-2.5V1z" fill="white"/></svg>
+            Send Approval Request
           </button>
-          <button style={{ padding: '9px 18px', background: '#fff', color: '#b91f1f', border: '1.5px solid #b91f1f', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
         </div>
       </div>
     )
@@ -3951,7 +4163,6 @@ function StickyPRTPanel({ prtCodingConfirmed, onConfirm, onSendEmail, glApproval
         <button onClick={onConfirm} style={{ padding: '9px 20px', background: '#1a3a6b', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '15px', fontFamily: 'Cabin, sans-serif', fontWeight: 700, cursor: 'pointer' }}>
           Apply GL Code
         </button>
-        <button style={{ padding: '9px 18px', background: '#fff', color: '#b91f1f', border: '1.5px solid #b91f1f', borderRadius: '6px', fontSize: '14px', fontFamily: 'Lato, sans-serif', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
       </div>
     </div>
   )
@@ -4095,7 +4306,9 @@ function DocumentPanel({ children, scrollRef, onScroll, hasContent }: {
       </div>
       {!isCollapsed && (
         <div ref={scrollRef} onScroll={onScroll} style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', background: '#f6f7f7' }}>
-          {children}
+          <div style={{ maxWidth: '860px' }}>
+            {children}
+          </div>
         </div>
       )}
     </div>
@@ -4155,6 +4368,7 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
   const [metroInvoiceApproved, setMetroInvoiceApproved] = useState(metroInvoiceApprovedIds?.has(invoice.id) ?? false)
   const [agentPanelCollapsed, setAgentPanelCollapsed] = useState(false)
   const [agentPanelMaximized, setAgentPanelMaximized] = useState(false)
+  const [agentExpandAll, setAgentExpandAll] = useState(false)
   const [showICCommsModal, setShowICCommsModal] = useState(false)
   const [icEmailSent, setIcEmailSent] = useState(false)
   const [royaltySent, setRoyaltySent] = useState(false)
@@ -4403,7 +4617,7 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
       )}
       {isFailed && invoice.failType === 'duplicate' && <StickyDuplicatePanel notificationSent={duplicateNotificationSent} onDraftEmail={() => setShowDuplicateCommsModal(true)} />}
       {isFailed && invoice.failType === 'ic-mismatch' && !icEmailSent && !icMismatchAutoResolved && (
-        <StickyResolvePanel title="Intercompany Mismatch — ICE Reconciliation Required" subtitle="Route VIM work item to Pieter Janssen (IC Accounting, Bertelsmann Finance) to trigger ICE reconciliation and clear the €15,500 variance" buttonLabel="Route VIM Work Item" onResolve={() => setShowICCommsModal(true)} />
+        <StickyResolvePanel title="Intercompany Mismatch — ICE Reconciliation Required" subtitle="Escalate to Pieter Janssen (IC Accounting, Bertelsmann Finance) to trigger ICE reconciliation and clear the €15,500 variance" buttonLabel="Escalate to Exception Queue" onResolve={() => setShowICCommsModal(true)} />
       )}
       {isFailed && invoice.failType === 'ic-mismatch' && icEmailSent && !icMismatchAutoResolved && (
         <div style={{ flexShrink: 0, borderTop: '2px solid #1a3a6b', background: '#f0f4fa', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
@@ -4411,16 +4625,16 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
             <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="#fff" style={{ display: 'block' }}><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200ZM160-640v-80 480-400Z"/></svg>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1a3a6b' }}>VIM Work Item Routed — Awaiting ICE Reconciliation</div>
+            <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1a3a6b' }}>Exception Escalated — Awaiting ICE Reconciliation</div>
             <div style={{ fontSize: '13px', color: '#3a4a6b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>
-              WI-2026-6647 sent to <strong>Pieter Janssen's</strong> SAP VIM worklist. Awaiting reconciliation of ICE-REC-2026-0619 and confirmation that both entities are balanced.
+              Exception raised to <strong>Pieter Janssen</strong> (IC Accounting, Bertelsmann Finance). Awaiting reconciliation of ICE-REC-2026-0619 and confirmation that both entities are balanced.
             </div>
           </div>
         </div>
       )}
       {isFailed && invoice.failType === 'ic-mismatch' && icMismatchAutoResolved && <AutoApprovePanel invoice={invoice} onViewPosting={() => setShowSAPPosting(true)} />}
       {isFailed && invoice.failType === 'royalty-mismatch' && !royaltySent && !royaltyMismatchAutoResolved && (
-        <StickyResolvePanel title="Royalty vs Contract Deviation — Review Required" subtitle="Route VIM work item to Claire Newton (Royalties Manager, PRH) to confirm the contract rate" buttonLabel="Route VIM Work Item" onResolve={() => setShowRoyaltyCommsModal(true)} />
+        <StickyResolvePanel title="Royalty vs Contract Deviation — Review Required" subtitle="Escalate to Claire Newton (Royalties Manager, PRH) to confirm the contract rate and resolve the deviation" buttonLabel="Escalate to Exception Queue" onResolve={() => setShowRoyaltyCommsModal(true)} />
       )}
       {isFailed && invoice.failType === 'royalty-mismatch' && royaltySent && !royaltyMismatchAutoResolved && (
         <div style={{ flexShrink: 0, borderTop: '2px solid #1a3a6b', background: '#f0f4fa', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 -4px 16px rgba(0,0,0,0.08)' }}>
@@ -4428,9 +4642,9 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
             <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="#fff" style={{ display: 'block' }}><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200ZM160-640v-80 480-400Z"/></svg>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1a3a6b' }}>VIM Work Item Routed — Awaiting Rate Confirmation</div>
+            <div style={{ fontFamily: 'Cabin, sans-serif', fontSize: '15px', fontWeight: 700, color: '#1a3a6b' }}>Exception Escalated — Awaiting Rate Confirmation</div>
             <div style={{ fontSize: '13px', color: '#3a4a6b', fontFamily: 'Lato, sans-serif', marginTop: '2px' }}>
-              WI-2026-3312 sent to <strong>Claire Newton's</strong> SAP VIM worklist. Awaiting royalty rate confirmation from Penguin Random House Royalties Management.
+              Exception raised to <strong>Claire Newton</strong> (Royalties Manager, PRH). Awaiting royalty rate confirmation from Penguin Random House Royalties Management.
             </div>
           </div>
         </div>
@@ -4481,6 +4695,7 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
           isDone={agentIsFullyDone}
           invoice={invoice}
           hideHeader={true}
+          expandAll={agentExpandAll}
           onViewPosting={() => setShowSAPPosting(true)}
         />
       </div>
@@ -4513,18 +4728,8 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
       {/* Main content area + right agent panel */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
 
-        {/* Main content: scanned invoice (if shown) + document details */}
+        {/* Main content: document details */}
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          {showInvoice && (
-            <div style={{ height: '45%', borderBottom: '1px solid #e4e6e7', flexShrink: 0, overflow: 'hidden' }}>
-              <ScannedInvoice
-                invoice={taxMismatchAutoResolved && invoice.id === 'inv-5' ? correctedTaxInvoice : invoice}
-                isExtractionActive={currentStep === 1}
-                isExtractionDone={completed.has(1)}
-                extractionAgentIdx={currentStep === 1 ? agentIdx : -1}
-              />
-            </div>
-          )}
           <DocumentPanel
             scrollRef={contentScrollRef}
             onScroll={() => setContentScrolled((contentScrollRef.current?.scrollTop ?? 0) > 40)}
@@ -4537,7 +4742,8 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
         {/* Right Agent Panel — sidebar (hidden when maximized) */}
         {!agentPanelMaximized && (
           <div style={{
-            width: agentPanelCollapsed ? '48px' : '420px',
+            width: agentPanelCollapsed ? '48px' : '50%',
+            minWidth: agentPanelCollapsed ? '48px' : '400px',
             flexShrink: 0,
             borderLeft: '1px solid #e4e6e7',
             display: 'flex',
@@ -4553,6 +4759,20 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
                 <>
                   <span style={{ fontFamily: 'Cabin, sans-serif', fontSize: '11px', fontWeight: 700, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Agent Activity</span>
                   <span style={{ fontSize: '11px', color: '#94A3B8', fontFamily: 'Lato, sans-serif', flexShrink: 0 }}>{completed.size}/{steps.length}</span>
+                  {/* Expand All / Collapse All */}
+                  <button
+                    onClick={() => setAgentExpandAll(v => !v)}
+                    title={agentExpandAll ? 'Collapse all agents' : 'Expand all agents'}
+                    style={{ background: agentExpandAll ? '#EDE9FE' : 'none', border: agentExpandAll ? '1px solid #DDD6FE' : '1px solid #e4e6e7', borderRadius: '4px', cursor: 'pointer', padding: '3px 7px', display: 'flex', alignItems: 'center', gap: '4px', color: agentExpandAll ? '#7C3AED' : '#94A3B8', flexShrink: 0 }}
+                  >
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                      {agentExpandAll
+                        ? <><path d="M1 4h9M5.5 4V1M1 7h9M5.5 7v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></>
+                        : <><path d="M1 3.5h9M1 5.5h9M1 7.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><path d="M8 1.5l2 2-2 2M8 5.5l2 2-2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></>
+                      }
+                    </svg>
+                    <span style={{ fontSize: '10px', fontFamily: 'Lato, sans-serif', fontWeight: 600 }}>{agentExpandAll ? 'Collapse' : 'Expand'}</span>
+                  </button>
                   {/* Maximize button */}
                   <button
                     onClick={() => setAgentPanelMaximized(true)}
@@ -4583,6 +4803,40 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
 
       {stickyPanels}
 
+      {/* Invoice document modal — opened by Show Invoice toggle */}
+      {showInvoice && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 800, background: 'rgba(15,25,52,0.55)', display: 'flex', alignItems: 'stretch' }}
+          onClick={() => setShowInvoice(false)}
+        >
+          <div
+            style={{ width: '600px', maxWidth: '56vw', background: '#fff', display: 'flex', flexDirection: 'column', boxShadow: '8px 0 40px rgba(0,0,0,0.25)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ padding: '11px 20px', borderBottom: '1px solid #e4e6e7', display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0, background: '#fff' }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="1.5" stroke="#64748B" strokeWidth="1.4"/><line x1="4" y1="4" x2="10" y2="4" stroke="#64748B" strokeWidth="1.1" strokeLinecap="round"/><line x1="4" y1="7" x2="10" y2="7" stroke="#64748B" strokeWidth="1.1" strokeLinecap="round"/><line x1="4" y1="10" x2="7" y2="10" stroke="#64748B" strokeWidth="1.1" strokeLinecap="round"/></svg>
+              <span style={{ fontFamily: 'Cabin, sans-serif', fontSize: '14px', fontWeight: 700, color: '#1E293B' }}>{invoice.invoiceNumber}</span>
+              <span style={{ fontSize: '12px', color: '#64748B', fontFamily: 'Lato, sans-serif' }}>· Invoice Document</span>
+              <button
+                onClick={() => setShowInvoice(false)}
+                style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: '18px', lineHeight: 1, padding: '2px 6px', borderRadius: '4px' }}
+              >×</button>
+            </div>
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <ScannedInvoice
+                invoice={taxMismatchAutoResolved && invoice.id === 'inv-5' ? correctedTaxInvoice : invoice}
+                isExtractionActive={currentStep === 1}
+                isExtractionDone={completed.has(1)}
+                extractionAgentIdx={currentStep === 1 ? agentIdx : -1}
+              />
+            </div>
+          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', padding: '16px 20px' }}>
+            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontFamily: 'Lato, sans-serif' }}>Click anywhere to close</span>
+          </div>
+        </div>
+      )}
+
       {/* Maximized agent panel overlay */}
       {agentPanelMaximized && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 950, background: '#fff', display: 'flex', flexDirection: 'column' }}>
@@ -4591,13 +4845,28 @@ export function ProcessingView({ invoice, onBack, onTaxMismatchSent, taxMismatch
             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: dotColor, animation: (!agentIsFullyDone && !effectiveFailed) ? 'pulse-ring 1.5s infinite' : 'none' }} />
             <span style={{ fontFamily: 'Cabin, sans-serif', fontSize: '14px', fontWeight: 700, color: '#1E293B', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Agent Activity</span>
             <span style={{ fontSize: '13px', color: '#64748B', fontFamily: 'Lato, sans-serif' }}>{completed.size} / {steps.length} stages</span>
-            <button
-              onClick={() => setAgentPanelMaximized(false)}
-              style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', color: '#475569', fontSize: '13px', fontFamily: 'Lato, sans-serif', fontWeight: 600, cursor: 'pointer' }}
-            >
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M5 1.5H2.5v2.5M10.5 1.5H13v2.5M13 8.5v2.5h-2.5M2.5 11H5V8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Collapse
-            </button>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => setAgentExpandAll(v => !v)}
+                title={agentExpandAll ? 'Collapse all agents' : 'Expand all agents'}
+                style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 12px', background: agentExpandAll ? '#EDE9FE' : '#F8FAFC', border: agentExpandAll ? '1px solid #DDD6FE' : '1px solid #E2E8F0', borderRadius: '6px', color: agentExpandAll ? '#7C3AED' : '#475569', fontSize: '12px', fontFamily: 'Lato, sans-serif', fontWeight: 600, cursor: 'pointer' }}
+              >
+                <svg width="12" height="12" viewBox="0 0 11 11" fill="none">
+                  {agentExpandAll
+                    ? <><path d="M1 4h9M5.5 4V1M1 7h9M5.5 7v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></>
+                    : <><path d="M1 3.5h9M1 5.5h9M1 7.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><path d="M8 1.5l2 2-2 2M8 5.5l2 2-2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></>
+                  }
+                </svg>
+                {agentExpandAll ? 'Collapse All' : 'Expand All'}
+              </button>
+              <button
+                onClick={() => setAgentPanelMaximized(false)}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', color: '#475569', fontSize: '12px', fontFamily: 'Lato, sans-serif', fontWeight: 600, cursor: 'pointer' }}
+              >
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M5 1.5H2.5v2.5M10.5 1.5H13v2.5M13 8.5v2.5h-2.5M2.5 11H5V8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Exit Full Screen
+              </button>
+            </div>
           </div>
           {agentPanelContent}
         </div>
